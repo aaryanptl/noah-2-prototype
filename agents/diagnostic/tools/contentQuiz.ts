@@ -549,6 +549,54 @@ function buildQuestion(row: ContentQuestionRow): QuestionBankQuestion {
   };
 }
 
+const DIAGNOSTIC_BANK_CTE = `(
+  SELECT
+    id,
+    question_type,
+    question_text,
+    question_svg,
+    subject,
+    grade,
+    topic,
+    subtopic,
+    learning_objective,
+    blooms_level,
+    difficulty_level,
+    difficulty_rating,
+    options,
+    explanation,
+    generation_metadata,
+    lower(region) AS region,
+    parent_id,
+    visual_mode,
+    created_at
+  FROM final_content_questions_1
+  
+  UNION ALL
+  
+  SELECT
+    id,
+    question_type,
+    question_text,
+    question_svg,
+    subject,
+    grade,
+    topic,
+    subtopic,
+    learning_objective,
+    blooms_level,
+    difficulty_level,
+    difficulty_rating,
+    options,
+    explanation,
+    generation_metadata,
+    lower(region) AS region,
+    NULL AS parent_id,
+    visual_mode,
+    created_at
+  FROM english_content_questions
+)`;
+
 const CONTENT_QUESTION_SELECT = `
   SELECT
     id::text,
@@ -568,7 +616,7 @@ const CONTENT_QUESTION_SELECT = `
     generation_metadata,
     region,
     parent_id::text AS parent_id
-  FROM final_content_questions_1
+  FROM ${DIAGNOSTIC_BANK_CTE} AS final_content_questions_1
 `;
 
 const QUESTION_VISUAL_MODE_TYPE_FILTER = `
@@ -619,7 +667,7 @@ async function loadDiagnosticQuizCatalog(): Promise<DemoQuizCatalog> {
         WHERE learning_objective IS NOT NULL AND btrim(learning_objective) <> ''
       ) AS learning_objectives,
       count(*)::int AS question_count
-    FROM final_content_questions_1
+    FROM ${DIAGNOSTIC_BANK_CTE} AS final_content_questions_1
     WHERE question_text IS NOT NULL
       AND question_type IS NOT NULL
       AND region IN ('global', '${DEFAULT_DIAGNOSTIC_REGION}')
@@ -758,7 +806,7 @@ async function loadGradeQuestions(input: {
               END,
               random()
           ) AS topic_difficulty_rank
-        FROM final_content_questions_1
+        FROM ${DIAGNOSTIC_BANK_CTE} AS final_content_questions_1
         WHERE subject = $1
           AND grade = $2
           AND region IN ('global', $4)
@@ -2377,7 +2425,7 @@ function buildQuestionFilters(filters: ServeQuestionsFilters): {
   const isPlacement = filters.source === "placement";
   const table = isPlacement
     ? "placement_test_questions_v2"
-    : "final_content_questions_1";
+    : `${DIAGNOSTIC_BANK_CTE} AS final_content_questions_1`;
 
   const conditions: string[] = [
     "question_text IS NOT NULL",
