@@ -5,9 +5,19 @@ import {
   Stethoscope,
   Database,
   BookOpen,
+  Users
 } from "lucide-react";
 
 const ASSESSMENT_OPTIONS = [
+  {
+    href: "/student-profile",
+    title: "Student Profile",
+    tagline: "Track Performance",
+    description:
+      "View detailed analytics and student progress across all assessments and generate action plans.",
+    icon: Users,
+    accent: "#6366f1",
+  },
   {
     href: "/diagnostic-test",
     title: "Diagnostic Test",
@@ -59,7 +69,7 @@ export default function HomePage() {
           </p>
         </div>
 
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="flex flex-wrap justify-center gap-6 [&>*]:w-full sm:[&>*]:w-[calc(50%-12px)] lg:[&>*]:w-[calc(33.333%-16px)] xl:[&>*]:w-[calc(20%-20px)]">
           {ASSESSMENT_OPTIONS.map(
             ({ href, title, tagline, description, icon: Icon, accent }) => (
               <Link
