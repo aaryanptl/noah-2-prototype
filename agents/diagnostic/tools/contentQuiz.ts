@@ -673,7 +673,6 @@ async function loadDiagnosticQuizCatalog(): Promise<DemoQuizCatalog> {
     FROM ${DIAGNOSTIC_BANK_CTE} AS final_content_questions_1
     WHERE question_text IS NOT NULL
       AND question_type IS NOT NULL
-      AND region IN ('global', '${DEFAULT_DIAGNOSTIC_REGION}')
       ${QUESTION_VISUAL_MODE_TYPE_FILTER}
       AND subject IS NOT NULL
       AND grade IS NOT NULL
@@ -751,7 +750,7 @@ async function loadTopicQuestions(input: {
       WHERE subject = $1
         AND grade = $2
         AND topic = $3
-        AND region IN ('global', $4)
+        AND region IN ('global', lower($4))
         AND question_text IS NOT NULL
         AND question_type IS NOT NULL
         ${QUESTION_VISUAL_MODE_TYPE_FILTER}
@@ -812,7 +811,7 @@ async function loadGradeQuestions(input: {
         FROM ${DIAGNOSTIC_BANK_CTE} AS final_content_questions_1
         WHERE subject = $1
           AND grade = $2
-          AND region IN ('global', $4)
+          AND region IN ('global', lower($4))
           AND question_text IS NOT NULL
           AND question_type IS NOT NULL
           ${QUESTION_VISUAL_MODE_TYPE_FILTER}
@@ -886,7 +885,7 @@ async function getPreviouslyAnsweredQuestionIds(input: {
           AND a.subject = $4
           AND a.class_level = $2
           AND ($5::text IS NULL OR a.topic = $5)
-          AND COALESCE(a.region, '${DEFAULT_DIAGNOSTIC_REGION}') = $6
+          AND COALESCE(a.region, lower('${DEFAULT_DIAGNOSTIC_REGION}')) = lower($6)
         LIMIT 1000
       `,
       [
@@ -972,7 +971,7 @@ async function loadRecurringTestQuestions(input: {
           topic = ANY($3::text[])
           OR learning_objective = ANY($5::text[])
         )
-        AND region IN ('global', $6)
+        AND region IN ('global', lower($6))
         AND id::text != ALL($4::text[])
         AND question_text IS NOT NULL
         AND question_type IS NOT NULL
@@ -2504,8 +2503,8 @@ function buildQuestionFilters(filters: ServeQuestionsFilters): {
   }
 
   // Region + visual-mode filters only exist on the diagnostic bank.
-  if (!isPlacement) {
-    conditions.push(`region IN ('global', ${bind(filters.region)})`);
+  if (table.includes(DIAGNOSTIC_BANK_CTE)) {
+    conditions.push(`region IN ('global', lower(${bind(filters.region)}))`);
     conditions.push(`(
       visual_mode IS NULL
       OR lower(btrim(visual_mode)) <> 'question_svg'
