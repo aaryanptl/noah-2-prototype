@@ -589,7 +589,10 @@ const DIAGNOSTIC_BANK_CTE = `(
     difficulty_rating,
     options,
     explanation,
-    generation_metadata,
+    CASE 
+      WHEN payload IS NOT NULL THEN generation_metadata::jsonb || jsonb_build_object('payload', payload::jsonb)
+      ELSE generation_metadata::jsonb
+    END AS generation_metadata,
     lower(region) AS region,
     NULL AS parent_id,
     visual_mode,

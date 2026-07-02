@@ -1397,6 +1397,13 @@ function TopicBrowseScreen({
   onSelectEntry: (entry: DemoQuizCatalogEntry) => void;
 }) {
   const defaultEntry = defaultTopicEntry ?? getDefaultCatalogEntry(quizCatalog);
+  const subjects = useMemo(
+    () => Array.from(new Set(quizCatalog.entries.map((e) => e.subject))).sort(),
+    [quizCatalog.entries],
+  );
+  const [selectedSubject, setSelectedSubject] = useState<string>(
+    () => form.subject || defaultEntry?.subject || subjects[0] || "",
+  );
   const [selectedTopic, setSelectedTopic] = useState<string | null>(
     () => form.topic || defaultEntry?.topic || null,
   );
@@ -1411,8 +1418,11 @@ function TopicBrowseScreen({
   );
 
   const filteredEntries = useMemo(
-    () => quizCatalog.entries.filter((e) => e.classLevel === activeTab),
-    [activeTab, quizCatalog.entries],
+    () =>
+      quizCatalog.entries.filter(
+        (e) => e.classLevel === activeTab && e.subject === selectedSubject,
+      ),
+    [activeTab, selectedSubject, quizCatalog.entries],
   );
 
   const handleSelectTopic = (entry: DemoQuizCatalogEntry) => {
@@ -1453,6 +1463,26 @@ function TopicBrowseScreen({
         <p className="mt-1 text-[14px] text-[#6B7280]">
           {assessmentCopy.topicBrowseIntro}
         </p>
+      </div>
+
+      {/* Subject tabs */}
+      <div className="mb-4 flex flex-wrap justify-center gap-2">
+        {subjects.map((sub) => (
+          <button
+            key={sub}
+            onClick={() => {
+              setSelectedSubject(sub);
+              setSelectedTopic(null);
+            }}
+            className={`rounded-full px-5 py-2 font-mono text-[12px] font-bold transition-all ${
+              selectedSubject === sub
+                ? "bg-[#2EC4B6] text-white shadow-sm"
+                : "bg-white border border-gray-200 text-[#6B7280] hover:border-[#2EC4B6]"
+            }`}
+          >
+            {sub}
+          </button>
+        ))}
       </div>
 
       {/* Class tabs */}
@@ -1547,12 +1577,20 @@ function TopicStartScreen({
   onBack: () => void;
   isBusy: boolean;
 }) {
-  const selectedTopic = topicEntries.some((entry) => entry.topic === form.topic)
+  const subjects = useMemo(() => Array.from(new Set(topicEntries.map((e) => e.subject))).sort(), [topicEntries]);
+  const [selectedSubject, setSelectedSubject] = useState(form.subject || topicEntries[0]?.subject || "Maths");
+
+  const filteredTopicEntries = useMemo(
+    () => topicEntries.filter((entry) => entry.subject === selectedSubject),
+    [topicEntries, selectedSubject]
+  );
+
+  const selectedTopic = filteredTopicEntries.some((entry) => entry.topic === form.topic)
     ? form.topic
-    : (topicEntries[0]?.topic ?? "");
+    : (filteredTopicEntries[0]?.topic ?? "");
   const selectedEntry =
-    topicEntries.find((entry) => entry.topic === selectedTopic) ??
-    topicEntries[0];
+    filteredTopicEntries.find((entry) => entry.topic === selectedTopic) ??
+    filteredTopicEntries[0];
   const questionCount = getTopicQuestionCountForEntry(selectedEntry);
   const estimatedTime = getEstimatedTestTimeLabel(questionCount);
 
@@ -1579,6 +1617,37 @@ function TopicStartScreen({
           {assessmentCopy.topicStartIntro}
         </p>
 
+        <label className="mb-4 block">
+          <span className="mb-2 block font-mono text-[10px] font-bold uppercase tracking-widest text-[#9CA3AF]">
+            Subject
+          </span>
+          <div className="relative">
+            <select
+              value={selectedSubject}
+              onChange={(event) => {
+                const newSubject = event.target.value;
+                setSelectedSubject(newSubject);
+                const nextEntry = topicEntries.find(
+                  (entry) => entry.subject === newSubject,
+                );
+                if (nextEntry) onSelectTopic(nextEntry);
+              }}
+              disabled={subjects.length <= 1 || isBusy}
+              className="h-12 w-full appearance-none rounded-[14px] border border-gray-200 bg-[#F8F9FA] px-4 pr-11 text-[15px] font-semibold text-[#1a1a1a] outline-none transition-all focus:border-[#2EC4B6] focus:bg-white focus:ring-4 focus:ring-[#2EC4B6]/10 disabled:opacity-60"
+            >
+              {subjects.map((sub) => (
+                <option key={sub} value={sub}>
+                  {sub}
+                </option>
+              ))}
+            </select>
+            <ChevronDown
+              className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6B7280]"
+              aria-hidden="true"
+            />
+          </div>
+        </label>
+
         <label className="mb-6 block">
           <span className="mb-2 block font-mono text-[10px] font-bold uppercase tracking-widest text-[#9CA3AF]">
             Topic
@@ -1587,15 +1656,15 @@ function TopicStartScreen({
             <select
               value={selectedTopic}
               onChange={(event) => {
-                const nextEntry = topicEntries.find(
+                const nextEntry = filteredTopicEntries.find(
                   (entry) => entry.topic === event.target.value,
                 );
                 if (nextEntry) onSelectTopic(nextEntry);
               }}
-              disabled={topicEntries.length === 0 || isBusy}
+              disabled={filteredTopicEntries.length === 0 || isBusy}
               className="h-12 w-full appearance-none rounded-[14px] border border-gray-200 bg-[#F8F9FA] px-4 pr-11 text-[15px] font-semibold text-[#1a1a1a] outline-none transition-all focus:border-[#2EC4B6] focus:bg-white focus:ring-4 focus:ring-[#2EC4B6]/10 disabled:opacity-60"
             >
-              {topicEntries.map((entry) => (
+              {filteredTopicEntries.map((entry) => (
                 <option
                   key={`${entry.subject}-${entry.classLevel}-${entry.topic}`}
                   value={entry.topic}
@@ -1665,9 +1734,17 @@ function GradeBrowseScreen({
 }: {
   quizCatalog: DemoQuizCatalog;
   assessmentCopy: (typeof ASSESSMENT_COPY)[AssessmentKind];
-  onSelect: (classLevel: string) => void;
+  onSelect: (classLevel: string, subject: string) => void;
   onBack: () => void;
 }) {
+  const subjects = useMemo(
+    () => Array.from(new Set(quizCatalog.entries.map((e) => e.subject))).sort(),
+    [quizCatalog.entries],
+  );
+  const [selectedSubject, setSelectedSubject] = useState<string>(
+    () => subjects[0] || "",
+  );
+
   const classLevels = useMemo(
     () =>
       Array.from(new Set(quizCatalog.entries.map((e) => e.classLevel))).sort(),
@@ -1705,16 +1782,34 @@ function GradeBrowseScreen({
         </p>
       </div>
 
+      {/* Subject tabs */}
+      <div className="mb-8 flex flex-wrap justify-center gap-2">
+        {subjects.map((sub) => (
+          <button
+            key={sub}
+            onClick={() => setSelectedSubject(sub)}
+            className={`rounded-full px-5 py-2 font-mono text-[12px] font-bold transition-all ${
+              selectedSubject === sub
+                ? "bg-[#2EC4B6] text-white shadow-sm"
+                : "bg-white border border-gray-200 text-[#6B7280] hover:border-[#2EC4B6]"
+            }`}
+          >
+            {sub}
+          </button>
+        ))}
+      </div>
+
       <div className="mx-auto grid max-w-[700px] grid-cols-2 gap-5 sm:grid-cols-3">
         {classLevels.map((cl) => {
           const topicsForClass = quizCatalog.entries.filter(
-            (e) => e.classLevel === cl,
+            (e) => e.classLevel === cl && e.subject === selectedSubject,
           );
+          if (topicsForClass.length === 0) return null;
           return (
             <button
               type="button"
               key={cl}
-              onClick={() => onSelect(cl)}
+              onClick={() => onSelect(cl, selectedSubject)}
               className="cursor-pointer rounded-[20px] border border-gray-100 bg-white p-7 text-center shadow-sm transition-all duration-200 hover:-translate-y-1 hover:border-[#F5A623] hover:shadow-[0_8px_28px_rgba(245,166,35,0.14)]"
             >
               <div className="mb-3 text-[40px] leading-none">
@@ -4421,6 +4516,8 @@ export function DiagnosticDemo({
   >("topic");
   const [selectedGradeClass, setSelectedGradeClass] =
     useState<string>(initialClassLevel);
+  const [selectedGradeSubject, setSelectedGradeSubject] =
+    useState<string>(initialTopicEntry?.subject ?? "Maths");
   const [selectedTopicEntry, setSelectedTopicEntry] =
     useState<DemoQuizCatalogEntry | null>(() => initialTopicEntry);
   const [toast, setToast] = useState<{
@@ -4745,20 +4842,13 @@ export function DiagnosticDemo({
 
   // Grade test: get topics for selected class
   const gradeTopics = useMemo(() => {
-    if (!selectedGradeClass) return [];
+    if (!selectedGradeClass || !selectedGradeSubject) return [];
     return visibleQuizCatalog.entries
-      .filter((e) => e.classLevel === selectedGradeClass)
+      .filter((e) => e.classLevel === selectedGradeClass && e.subject === selectedGradeSubject)
       .map((e) => e.topic);
-  }, [visibleQuizCatalog.entries, selectedGradeClass]);
+  }, [visibleQuizCatalog.entries, selectedGradeClass, selectedGradeSubject]);
 
-  const gradeSubject = useMemo(() => {
-    if (!selectedGradeClass) return "Maths";
-    return (
-      visibleQuizCatalog.entries.find(
-        (e) => e.classLevel === selectedGradeClass,
-      )?.subject ?? "Maths"
-    );
-  }, [visibleQuizCatalog.entries, selectedGradeClass]);
+  const gradeSubject = selectedGradeSubject;
 
   const topicEntriesForFormGrade = useMemo(
     () =>
@@ -4823,10 +4913,11 @@ export function DiagnosticDemo({
     setAppScreen("grade-start");
   };
 
-  const handleSelectGradeClass = (cl: string) => {
+  const handleSelectGradeClass = (cl: string, subject: string) => {
     setSelectedGradeClass(cl);
+    setSelectedGradeSubject(subject);
     const firstEntry = visibleQuizCatalog.entries.find(
-      (e) => e.classLevel === cl,
+      (e) => e.classLevel === cl && e.subject === subject,
     );
     if (firstEntry) {
       setForm((prev) => ({
