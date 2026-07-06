@@ -73,7 +73,16 @@ async function generateDynamicProfile(studentName: string, history: DiagnosticRe
         },
         {
           role: "user",
-          content: `Existing profile:\n${existingProfile || "(empty)"}\n\nRecent assessment history:\n${JSON.stringify(history, null, 2)}`
+          content: `Existing profile:\n${existingProfile || "(empty)"}\n\nRecent assessment history:\n${JSON.stringify(history.slice(0, 5).map((h: any) => ({
+            subject: h.subject,
+            topic: h.topic,
+            score: h.score,
+            learningObjectives: h.learningObjectives?.map((lo: any) => ({
+              objective: lo.learningObjective,
+              score: lo.score,
+              masteryState: lo.masteryState
+            }))
+          })), null, 2)}`
         }
       ],
       temperature: 0.2

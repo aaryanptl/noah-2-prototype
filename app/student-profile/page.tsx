@@ -2,7 +2,8 @@ import { getStudentList, getStudentProfile } from "@/lib/profile-agent";
 import { Sidebar } from "./Sidebar";
 import { DashboardClient } from "./DashboardClient";
 import { StudentSelector } from "./StudentSelector";
-import { Users, Bell, ChevronDown, Mail, Phone, MapPin, IdCard } from "lucide-react";
+import { Users, Bell, ChevronDown, Mail, Phone, MapPin, IdCard, ChevronLeft } from "lucide-react";
+import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 

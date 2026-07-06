@@ -261,6 +261,14 @@ export function DashboardClient({ profile, avgScore }: { profile: any, avgScore:
             <h2 className="font-[family-name:var(--font-bricolage)] font-bold text-[1.4rem] tracking-[-0.01em] text-[#09090b]">
               Activity <em className="not-italic text-[#a1a1aa] font-medium">log</em>
             </h2>
+            {isActivityExpanded && (
+              <button 
+                onClick={() => setIsActivityExpanded(false)}
+                className="text-[0.74rem] font-bold uppercase tracking-[0.05em] text-[#7c3ade] hover:text-[#6b21a8] transition-colors"
+              >
+                Collapse
+              </button>
+            )}
           </div>
           <div className="bg-white border border-[rgba(9,9,11,0.06)] rounded-[16px] overflow-hidden relative shadow-[0_1px_3px_0_rgba(0,0,0,0.05)]">
             {(isActivityExpanded ? s.events : s.events.slice(0, 3)).map((e: any, idx: number) => (
