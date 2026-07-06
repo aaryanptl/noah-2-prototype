@@ -107,14 +107,15 @@ Return EXACTLY this structure:
 - <point 3>
 - <point 4>`;
 
-async function generateDynamicProfile(studentName: string, history: any[]): Promise<string> {
+async function generateDynamicProfile(studentId: string, studentName: string, history: any[]): Promise<string> {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) return "";
 
   const client = new OpenAI({ apiKey });
   
   try {
-    const existingProfileRes = await query(`SELECT profile_markdown FROM diagnostic_ai_profiles WHERE normalized_name = $1`, [studentName]);
+    // BUG FIX: query by student_id (UUID), not normalized_name
+    const existingProfileRes = await query(`SELECT profile_markdown FROM diagnostic_ai_profiles WHERE student_id = $1`, [studentId]);
     const existingProfile = existingProfileRes.rows[0]?.profile_markdown || "";
 
     const response = await client.chat.completions.create({
@@ -309,8 +310,11 @@ export async function getStudentProfile(studentId: string): Promise<StudentProfi
     // If it's empty OR outdated, generate it!
     if (!markdown || markdown.trim() === "" || isOutdated) {
       console.log(`Generating (or updating) AI Profile for ${student.normalized_name}...`);
-      markdown = await generateDynamicProfile(student.normalized_name, history);
-      if (markdown) {
+      // BUG FIX: pass student.id so generateDynamicProfile fetches existing profile correctly
+      const freshMarkdown = await generateDynamicProfile(student.id, student.normalized_name, history);
+      // BUG FIX: only overwrite if we actually got a valid response — don't wipe good cached data on OpenAI errors
+      if (freshMarkdown) {
+        markdown = freshMarkdown;
         await query(
           `INSERT INTO diagnostic_ai_profiles (student_id, profile_markdown) 
            VALUES ($1, $2)
