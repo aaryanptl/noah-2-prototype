@@ -107,7 +107,7 @@ Return EXACTLY this structure:
 - <point 3>
 - <point 4>`;
 
-async function generateDynamicProfile(studentName: string, history: DiagnosticReport[]): Promise<string> {
+async function generateDynamicProfile(studentName: string, history: any[]): Promise<string> {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) return "";
 
