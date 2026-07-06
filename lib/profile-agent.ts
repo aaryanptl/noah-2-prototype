@@ -297,7 +297,7 @@ export async function getStudentProfile(studentId: string): Promise<StudentProfi
 
   try {
     // Attempt to load the real profile from PostgreSQL
-    const res = await query(`SELECT profile_markdown FROM diagnostic_ai_profiles WHERE normalized_name = $1`, [student.normalized_name]);
+    const res = await query(`SELECT profile_markdown FROM diagnostic_ai_profiles WHERE student_id = $1`, [student.id]);
     let markdown = res.rows[0]?.profile_markdown || "";
     
     // If it's empty, generate it!
@@ -306,10 +306,10 @@ export async function getStudentProfile(studentId: string): Promise<StudentProfi
       markdown = await generateDynamicProfile(student.normalized_name, history);
       if (markdown) {
         await query(
-          `INSERT INTO diagnostic_ai_profiles (normalized_name, profile_markdown) 
+          `INSERT INTO diagnostic_ai_profiles (student_id, profile_markdown) 
            VALUES ($1, $2)
-           ON CONFLICT (normalized_name) DO UPDATE SET profile_markdown = $2, updated_at = CURRENT_TIMESTAMP`,
-          [student.normalized_name, markdown]
+           ON CONFLICT (student_id) DO UPDATE SET profile_markdown = $2, updated_at = CURRENT_TIMESTAMP`,
+          [student.id, markdown]
         );
       }
     }
