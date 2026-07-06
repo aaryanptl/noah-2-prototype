@@ -1,7 +1,58 @@
 import { query } from "@/lib/db";
 import type { DiagnosticReport, LearningObjectiveResult } from "@/agents/diagnostic/types";
-import { readExistingProfile, extractConfidence, extractSectionBullets, extractSummary, writeProfile } from "@/profile-agent/profile-tools";
 import OpenAI from "openai";
+
+export function extractConfidence(markdown: string): number {
+  const normalized = markdown.replace(/\r\n/g, "\n");
+  const confidencePatterns = [
+    /\*\*Confidence:\*\*\s*(\d+(?:\.\d+)?)\s*\/\s*10/i,
+    /Overall Confidence:\s*(\d+(?:\.\d+)?)\s*\/\s*10/i,
+    /Confidence Level:\s*(\d+(?:\.\d+)?)/i,
+  ];
+
+  for (const pattern of confidencePatterns) {
+    const match = normalized.match(pattern);
+    if (match) {
+      const value = Number(match[1]);
+      if (Number.isFinite(value)) {
+        return Math.max(0, Math.min(10, Math.round(value)));
+      }
+    }
+  }
+
+  return 0;
+}
+
+export function extractSectionBullets(markdown: string, heading: string): string[] {
+  const normalized = markdown.replace(/\r\n/g, "\n");
+  const escapedHeading = heading.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const sectionRegex = new RegExp(
+    `(?:^|\\n)#{1,6}\\s*${escapedHeading}[^\\n]*\\n([\\s\\S]*?)(?=\\n#{1,6}\\s|$)`,
+    "i"
+  );
+  const match = normalized.match(sectionRegex);
+
+  if (!match) {
+    return [];
+  }
+
+  return match[1]
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line.startsWith("- "))
+    .map((line) => line.slice(2).trim())
+    .filter(Boolean);
+}
+
+export function extractSummary(markdown: string): string {
+  const headingFirst = extractSectionBullets(markdown, "Summary");
+  if (headingFirst.length > 0) {
+    return headingFirst.join(" ");
+  }
+
+  const lineMatch = markdown.match(/summary\s*:\s*(.+)$/im);
+  return lineMatch?.[1]?.trim() ?? "";
+}
 
 const PROFILE_PROMPT = `You are an AI student profiling system that maintains a structured, evolving student profile.
 
@@ -63,7 +114,9 @@ async function generateDynamicProfile(studentName: string, history: DiagnosticRe
   const client = new OpenAI({ apiKey });
   
   try {
-    const existingProfile = await readExistingProfile(studentName);
+    const existingProfileRes = await query(`SELECT profile_markdown FROM diagnostic_ai_profiles WHERE normalized_name = $1`, [studentName]);
+    const existingProfile = existingProfileRes.rows[0]?.profile_markdown || "";
+
     const response = await client.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
@@ -243,15 +296,21 @@ export async function getStudentProfile(studentId: string): Promise<StudentProfi
   let aiConfidence = 0;
 
   try {
-    // Attempt to load the real profile
-    let markdown = await readExistingProfile(student.normalized_name);
+    // Attempt to load the real profile from PostgreSQL
+    const res = await query(`SELECT profile_markdown FROM diagnostic_ai_profiles WHERE normalized_name = $1`, [student.normalized_name]);
+    let markdown = res.rows[0]?.profile_markdown || "";
     
-    // If it's empty (or fell back to the empty default seed), generate it!
+    // If it's empty, generate it!
     if (!markdown || markdown.trim() === "") {
       console.log(`Generating AI Profile for ${student.normalized_name}...`);
       markdown = await generateDynamicProfile(student.normalized_name, history);
       if (markdown) {
-        await writeProfile(student.normalized_name, markdown);
+        await query(
+          `INSERT INTO diagnostic_ai_profiles (normalized_name, profile_markdown) 
+           VALUES ($1, $2)
+           ON CONFLICT (normalized_name) DO UPDATE SET profile_markdown = $2, updated_at = CURRENT_TIMESTAMP`,
+          [student.normalized_name, markdown]
+        );
       }
     }
 
