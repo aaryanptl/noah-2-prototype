@@ -41,8 +41,7 @@ interface Try {
 
 type Noah =
   | { phase: "intro" }
-  | { phase: "checking" }
-  | { phase: "offer" }
+  | { phase: "offer"; message: string }
   | { phase: "loading"; level: number }
   | {
       phase: "hint";
@@ -79,8 +78,30 @@ const TRANSITIONS = [
   "Keep it up! Here's your next challenge.",
 ];
 
+// Noah's line when a wrong answer opens the help flow. Varied so it doesn't
+// read the same on every miss.
+const OFFERS = [
+  "Good try — you're close. Want to look at it together?",
+  "Not quite yet. Want me to help you work it out?",
+  "Hmm, that's not it. Shall we figure it out together?",
+  "So close! Want a little help with this one?",
+  "Let's take another look at this one together?",
+  "That one's tricky. Want me to walk through it with you?",
+];
+
 function pickRandom<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)] as T;
+}
+
+/** POST the answer to the check endpoint; returns whether it's correct. */
+async function postCheck(id: string, studentAnswer: unknown): Promise<boolean> {
+  const res = await fetch("/api/prototype/practice/check", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id, studentAnswer }),
+  });
+  const json = await res.json();
+  return json?.data?.isCorrect ?? false;
 }
 
 function formatElapsed(ms: number): string {
@@ -145,6 +166,8 @@ export default function PracticeRunner({
   const [hintCount, setHintCount] = useState(0); // total AI hints taken (all levels, all questions)
   const [wrongCount, setWrongCount] = useState(0);
   const [noah, setNoah] = useState<Noah>({ phase: "intro" });
+  const [checking, setChecking] = useState(false);
+  const [shaking, setShaking] = useState(false);
   const [elapsed, setElapsed] = useState(0);
   // One random intro/transition line per question, fixed for this run.
   const [introMsgs] = useState<string[]>(() =>
@@ -153,13 +176,25 @@ export default function PracticeRunner({
     ),
   );
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const shakeRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     timerRef.current = setInterval(() => setElapsed((e) => e + 1000), 1000);
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
+      if (shakeRef.current) clearTimeout(shakeRef.current);
     };
   }, []);
+
+  // Briefly shake the Noah panel to signal "still not right, stay on this hint".
+  const triggerShake = () => {
+    setShaking(false);
+    requestAnimationFrame(() => {
+      setShaking(true);
+      if (shakeRef.current) clearTimeout(shakeRef.current);
+      shakeRef.current = setTimeout(() => setShaking(false), 500);
+    });
+  };
 
   const questions = practice.questions;
   const step = questions[index];
@@ -197,43 +232,69 @@ export default function PracticeRunner({
     }
   };
 
+  const answerSvg = (a: unknown): string | undefined =>
+    step.questionType === "mcq" && typeof a === "number"
+      ? step.options?.[a]?.svg
+      : undefined;
+
+  const recordTry = (display: string, correct: boolean) =>
+    setTries((prev) => ({
+      ...prev,
+      [step.id]: [...(prev[step.id] ?? []), { answer: display, correct }],
+    }));
+
   // The single CTA: check the answer, then advance if correct / already resolved,
   // otherwise open the Noah help flow (and stay on the question).
   const handleNext = async () => {
     const id = step.id;
     const rev = revealed[id];
+    const answered = hasAnswer(step, answer);
+
+    // After the answer has been revealed, the student may still edit and submit
+    // their own answer (we record it), or just move on with the revealed one.
     if (rev) {
-      proceed(rev.answer, rev.svg);
+      if (!answered) {
+        proceed(rev.answer, rev.svg);
+        return;
+      }
+      setChecking(true);
+      try {
+        const isCorrect = await postCheck(id, answer);
+        const display = answerDisplay(step, answer);
+        recordTry(display, isCorrect);
+        proceed(display, answerSvg(answer));
+      } catch {
+        setNoah({ phase: "error", message: "Couldn't check that — try again." });
+      } finally {
+        setChecking(false);
+      }
       return;
     }
-    if (!hasAnswer(step, answer)) return;
 
-    setNoah({ phase: "checking" });
+    if (!answered) return;
+
+    setChecking(true);
     try {
-      const res = await fetch("/api/prototype/practice/check", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, studentAnswer: answer }),
-      });
-      const json = await res.json();
-      const isCorrect: boolean = json?.data?.isCorrect ?? false;
+      const isCorrect = await postCheck(id, answer);
       const display = answerDisplay(step, answer);
-      setTries((prev) => ({
-        ...prev,
-        [id]: [...(prev[id] ?? []), { answer: display, correct: isCorrect }],
-      }));
+      recordTry(display, isCorrect);
       if (isCorrect) {
-        const svg =
-          step.questionType === "mcq" && typeof answer === "number"
-            ? step.options?.[answer]?.svg
-            : undefined;
-        proceed(display, svg);
+        proceed(display, answerSvg(answer));
       } else {
         setWrongCount((c) => c + 1);
-        setNoah({ phase: "offer" });
+        if (noah.phase === "offer" || noah.phase === "hint") {
+          // A help card (offer or hint) is already showing and it's still wrong:
+          // keep it exactly where it is and just shake. Only the help buttons advance.
+          triggerShake();
+        } else {
+          // First wrong answer: open the offer (no shake here).
+          setNoah({ phase: "offer", message: pickRandom(OFFERS) });
+        }
       }
     } catch {
       setNoah({ phase: "error", message: "Couldn't check that — try again." });
+    } finally {
+      setChecking(false);
     }
   };
 
@@ -287,8 +348,6 @@ export default function PracticeRunner({
     }
   };
 
-  const solvedThis = revealed[step.id] !== undefined;
-
   return (
     <div className="pr">
       <style>{STYLES}</style>
@@ -328,7 +387,7 @@ export default function PracticeRunner({
             <DiagnosticBody
               step={step}
               answer={answer}
-              disabled={solvedThis}
+              disabled={checking}
               onAnswer={setAnswer}
             />
           </div>
@@ -337,14 +396,10 @@ export default function PracticeRunner({
             <button
               type="button"
               className="pr-next"
-              disabled={noah.phase === "checking"}
+              disabled={checking}
               onClick={handleNext}
             >
-              {noah.phase === "checking"
-                ? "Checking…"
-                : isLast
-                  ? "Finish"
-                  : "Next question"}{" "}
+              {checking ? "Checking…" : isLast ? "Finish" : "Next question"}{" "}
               <span aria-hidden>➜</span>
             </button>
           </div>
@@ -352,11 +407,14 @@ export default function PracticeRunner({
 
         <NoahPanel
           noah={noah}
+          shaking={shaking}
           introMessage={introMsgs[index] ?? introMsgs[0] ?? ""}
           onOfferYes={() => requestHint(1)}
           onMore={() => requestHint(2)}
           onReveal={() => requestHint(3)}
-          onRetry={() => setNoah({ phase: "offer" })}
+          onRetry={() =>
+            setNoah({ phase: "offer", message: pickRandom(OFFERS) })
+          }
         />
       </div>
     </div>
@@ -365,6 +423,7 @@ export default function PracticeRunner({
 
 function NoahPanel({
   noah,
+  shaking,
   introMessage,
   onOfferYes,
   onMore,
@@ -372,6 +431,7 @@ function NoahPanel({
   onRetry,
 }: {
   noah: Noah;
+  shaking: boolean;
   introMessage: string;
   onOfferYes: () => void;
   onMore: () => void;
@@ -384,10 +444,8 @@ function NoahPanel({
 
   if (noah.phase === "intro") {
     body = introMessage;
-  } else if (noah.phase === "checking") {
-    body = "Checking your answer…";
   } else if (noah.phase === "offer") {
-    body = "Good try — you're close. Want to look at it together?";
+    body = noah.message;
     button = (
       <button type="button" className="pn-btn" onClick={onOfferYes}>
         Yes, help me solve this
@@ -432,7 +490,7 @@ function NoahPanel({
   }
 
   return (
-    <aside className="pn">
+    <aside className={shaking ? "pn pn-shake" : "pn"}>
       <div className="pn-head">
         <span className="pn-spark" aria-hidden>
           ✦
@@ -525,7 +583,9 @@ function DiagnosticBody({
               value={current[item] ?? ""}
               onChange={(e) => onAnswer({ ...current, [item]: e.target.value })}
             >
-              <option value="">Pick a group…</option>
+              <option value="" disabled hidden>
+                Pick a group…
+              </option>
               {zones.map((z, zi) => (
                 <option key={`${step.id}-zone-${zi}`} value={z}>
                   {z}
@@ -597,6 +657,14 @@ const STYLES = `
 .pn { background: linear-gradient(150deg, #3b4ea8 0%, #5b3f9d 62%, #8a5ea0 100%); border-radius: 18px; padding: 22px 20px; color: #fff; box-shadow: 0 6px 22px rgba(60,52,137,.28); position: relative; overflow: hidden; min-height: 190px; }
 /* decorative glow — must NOT intercept clicks on the button */
 .pn::after { content: ''; position: absolute; right: -40px; bottom: -50px; width: 180px; height: 180px; background: radial-gradient(circle, rgba(245,180,120,.55), transparent 70%); pointer-events: none; }
+/* wrong answer while a hint is up: small shake, hint stays put */
+.pn-shake { animation: pn-shake .45s cubic-bezier(.36,.07,.19,.97) both; }
+@keyframes pn-shake {
+  10%, 90% { transform: translateX(-1px); }
+  20%, 80% { transform: translateX(2px); }
+  30%, 50%, 70% { transform: translateX(-5px); }
+  40%, 60% { transform: translateX(5px); }
+}
 .pn-head { display: flex; align-items: center; gap: 8px; font-weight: 900; font-size: 1.02rem; text-align: center; justify-content: center; position: relative; z-index: 1; }
 .pn-spark { color: #ffd98a; }
 .pn-body { margin: 12px 4px 16px; font-size: 0.95rem; line-height: 1.5; font-weight: 600; text-align: center; position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; }

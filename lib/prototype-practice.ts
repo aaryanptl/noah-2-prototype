@@ -242,16 +242,18 @@ export interface PracticeTry {
 const REVEAL_LEVEL: HintLevel = 3;
 
 const HINT_SYSTEM = `You are Noah, a warm, encouraging elementary-school math buddy helping a young student who is stuck on ONE practice question.
-Rules:
-- Speak to the child directly, warmly, in 1–2 short sentences. Simple words, grade-appropriate.
-- NEVER shame a wrong answer. Acknowledge the effort.
-- Match the help to the requested level:
-  • level 1 (nudge): point to the key word/idea or ask one leading question. DO NOT reveal the operation's result or the final answer.
-  • level 2 (method): show HOW to set it up (the operation / steps), e.g. "3 groups of $3 means 3 × 3" — but DO NOT state the final number.
-  • level 3 (reveal): walk through the solution in one or two short steps AND clearly state the final answer.
-- Use the student's recent tries to gently correct their specific mistake when helpful.
+
+General rules:
+- Speak to the child directly and warmly, in 1–2 short sentences. Simple words, grade-appropriate.
+- NEVER shame a wrong answer. Acknowledge effort, but VARY how you open every hint. Do NOT begin each hint with the same phrase (avoid repeating "Nice try", "Good job", "Good effort", "Almost"). It is fine to skip the praise and go straight to the help.
+- You are given the student's recent tries and the correct answer. If their tries are moving toward the right idea, you may gently say they are on the right track; if not, stay encouraging without implying they are right.
 - Do NOT use em dashes or long dashes (— or –); keep punctuation simple (commas, periods).
-- Output ONLY the message text for the "content" field, no preamble, no markdown headers.`;
+- Output ONLY the message text for the "content" field, no preamble, no markdown headers.
+
+Level rules (STRICT):
+- level 1 (nudge): point to the key word/idea or ask one leading question. You MUST NOT reveal, state, or strongly imply the correct answer or its final value.
+- level 2 (method): FIRST briefly address the student's most recent answer by name and gently explain why it is not right, THEN show HOW to set the problem up (the operation / steps), e.g. "3 groups of 3 means 3 × 3". You MUST NOT reveal or state the correct final answer.
+- level 3 (reveal): walk through the solution in one or two short steps AND clearly state the final answer.`;
 
 const HintSchema = z.object({ content: z.string() });
 // Prototypes use OpenAI only. Call OpenAI directly here (not the provider-
@@ -293,19 +295,20 @@ export async function generatePracticeHint(opts: {
   const gradeLabelText = grade <= 0 ? "KG" : `Grade ${grade}`;
   const levelWord = level === 1 ? "nudge" : level === 2 ? "method" : "reveal";
 
-  // Level 1 (nudge) gets just the question — no previous-answer context.
-  // Levels 2 and 3 include the student's recent wrong tries to target the mistake.
-  let triesBlock = "";
-  if (level >= 2) {
-    const recent = tries
-      .slice(-3)
-      .map(
-        (t, i) =>
-          `  ${i + 1}. "${t.answer}" (${t.correct ? "correct" : "wrong"})`,
-      )
-      .join("\n");
-    triesBlock = `\nStudent's recent tries:\n${recent || "  (none yet)"}`;
-  }
+  // Always pass the student's recent tries (last 3) at every level so Noah can
+  // reference the student's actual input, cut hallucination, and give directional
+  // feedback ("you're on the right track"). The correct answer is always passed
+  // too (below) but the level rules forbid revealing it before level 3.
+  const recent = tries.slice(-3);
+  const triesBlock =
+    recent.length > 0
+      ? `\nStudent's recent tries (oldest to newest):\n${recent
+          .map((t, i) => {
+            const marker = i === recent.length - 1 ? "  <- most recent" : "";
+            return `  ${i + 1}. "${t.answer}" (${t.correct ? "correct" : "wrong"})${marker}`;
+          })
+          .join("\n")}`
+      : `\nStudent's recent tries: (none yet)`;
 
   const user = `Student: ${gradeLabelText}
 Question: ${q.question}
