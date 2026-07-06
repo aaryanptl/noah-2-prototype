@@ -52,7 +52,6 @@
     "babel-plugin-react-compiler": "1.0.0",
     "playwright": "^1.49.0",
     "postcss": "^8",
-    "tailwindcss": "^4",
     "tsx": "^4.19.0",
     "typescript": "^5"
   }
