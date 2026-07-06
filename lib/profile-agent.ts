@@ -297,12 +297,17 @@ export async function getStudentProfile(studentId: string): Promise<StudentProfi
 
   try {
     // Attempt to load the real profile from PostgreSQL
-    const res = await query(`SELECT profile_markdown FROM diagnostic_ai_profiles WHERE student_id = $1`, [student.id]);
+    const res = await query(`SELECT profile_markdown, updated_at FROM diagnostic_ai_profiles WHERE student_id = $1`, [student.id]);
     let markdown = res.rows[0]?.profile_markdown || "";
+    const profileUpdatedAt = res.rows[0]?.updated_at ? new Date(res.rows[0].updated_at).getTime() : 0;
     
-    // If it's empty, generate it!
-    if (!markdown || markdown.trim() === "") {
-      console.log(`Generating AI Profile for ${student.normalized_name}...`);
+    // Check if the student has taken a new test since the profile was last generated
+    const latestTestTime = history.length > 0 ? new Date(history[0].submittedAt).getTime() : 0;
+    const isOutdated = latestTestTime > profileUpdatedAt;
+
+    // If it's empty OR outdated, generate it!
+    if (!markdown || markdown.trim() === "" || isOutdated) {
+      console.log(`Generating (or updating) AI Profile for ${student.normalized_name}...`);
       markdown = await generateDynamicProfile(student.normalized_name, history);
       if (markdown) {
         await query(
