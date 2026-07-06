@@ -237,6 +237,7 @@ export async function getStudentProfile(studentId: string): Promise<StudentProfi
     ORDER BY submitted_at DESC
   `, [studentId]);
 
+  const totalAssessmentCount = assessmentsRes.rows.length;
   const history = assessmentsRes.rows.slice(0, 50).map((r) => ({
     id: r.id,
     testMode: r.test_mode,
@@ -343,7 +344,7 @@ export async function getStudentProfile(studentId: string): Promise<StudentProfi
       normalizedName: student.normalized_name,
       currentClassLevel: student.current_class_level,
       lastActive: history[0]?.submittedAt ?? "",
-      totalAssessments: history.length,
+      totalAssessments: totalAssessmentCount,
     },
     strongAreas,
     weakAreas,
