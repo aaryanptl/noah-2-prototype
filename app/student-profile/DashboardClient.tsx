@@ -50,6 +50,15 @@ export function DashboardClient({ profile, avgScore }: { profile: any, avgScore:
     meta: test.testMode
   }));
 
+  // Build a list of all scores per topic (history is already sorted newest first)
+  const topicScoreHistory = new Map<string, number[]>();
+  profile.assessmentHistory.forEach((a: any) => {
+    const topicName = a.topic || a.subject;
+    if (!topicName) return;
+    if (!topicScoreHistory.has(topicName)) topicScoreHistory.set(topicName, []);
+    topicScoreHistory.get(topicName)!.push(a.score);
+  });
+
   const uniqueTopics = new Map();
   
   profile.assessmentHistory.forEach((a: any) => {
@@ -58,6 +67,19 @@ export function DashboardClient({ profile, avgScore }: { profile: any, avgScore:
     
     const isStrong = a.score >= 80;
     const isWarn = a.score < 50;
+    
+    // Calculate real delta from the two most recent tests for this topic
+    const scores = topicScoreHistory.get(topicName) || [];
+    const mostRecent = scores[0] ?? a.score;
+    const previous = scores[1]; // undefined if only one test
+    const delta = previous !== undefined ? mostRecent - previous : null;
+    const recentDelta = delta === null 
+      ? "New" 
+      : delta > 0 
+        ? `+${delta}%` 
+        : delta < 0 
+          ? `${delta}%` 
+          : "±0%";
     
     uniqueTopics.set(topicName, {
       title: topicName,
@@ -73,8 +95,8 @@ export function DashboardClient({ profile, avgScore }: { profile: any, avgScore:
       effort: isStrong ? "High" : isWarn ? "Low" : "Medium",
       effortSub: isWarn ? "Needs more practice" : "Consistent attempts",
       recentTest: `${a.score}%`,
-      recentDelta: a.score > 70 ? "+5%" : "-2%", // Mocked delta since we only have single score per assessment easily accessible
-      recentSub: "Recent Assessment"
+      recentDelta,
+      recentSub: previous !== undefined ? "vs previous attempt" : "First attempt"
     });
   });
 
