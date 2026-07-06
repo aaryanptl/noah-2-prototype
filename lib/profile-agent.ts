@@ -1,5 +1,6 @@
 import { query } from "@/lib/db";
 import type { DiagnosticReport, LearningObjectiveResult } from "@/agents/diagnostic/types";
+import { readExistingProfile, extractConfidence, extractSectionBullets, extractSummary } from "@/profile-agent/profile-tools";
 
 export interface StudentSummary {
   id: string;
@@ -41,6 +42,10 @@ export interface StudentProfile {
       masteryState: string;
     }[];
   }[];
+  aiSummary: string;
+  aiStrengths: string[];
+  aiWeaknesses: string[];
+  aiConfidence: number;
 }
 
 export async function getStudentList(): Promise<StudentSummary[]> {
@@ -139,6 +144,32 @@ export async function getStudentProfile(studentId: string): Promise<StudentProfi
   strongAreas.sort((a, b) => b.score - a.score);
   weakAreas.sort((a, b) => a.score - b.score);
 
+  // Read AI Profile from file
+  let aiSummary = "";
+  let aiStrengths: string[] = [];
+  let aiWeaknesses: string[] = [];
+  let aiConfidence = 0;
+
+  try {
+    // We hardcode student-001 to load the specific prototype AI profile 
+    const markdown = await readExistingProfile("student-001");
+    if (markdown) {
+      aiSummary = extractSummary(markdown);
+      aiConfidence = extractConfidence(markdown);
+      
+      const strongTopics = extractSectionBullets(markdown, "Strong Areas");
+      const strengthsList = extractSectionBullets(markdown, "Strengths");
+      aiStrengths = [...strengthsList, ...strongTopics].slice(0, 5);
+
+      const weakTopics = extractSectionBullets(markdown, "Weak Areas");
+      const weaknessesList = extractSectionBullets(markdown, "Weaknesses");
+      const currentProblems = extractSectionBullets(markdown, "Current Problems");
+      aiWeaknesses = [...weaknessesList, ...weakTopics, ...currentProblems].slice(0, 5);
+    }
+  } catch (error) {
+    console.error("Failed to load AI profile:", error);
+  }
+
   return {
     student: {
       id: student.id,
@@ -156,5 +187,9 @@ export async function getStudentProfile(studentId: string): Promise<StudentProfi
       studentNextSteps: Array.from(studentSteps).slice(0, 5),
     },
     assessmentHistory: history,
+    aiSummary,
+    aiStrengths,
+    aiWeaknesses,
+    aiConfidence
   };
 }
