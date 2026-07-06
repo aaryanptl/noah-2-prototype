@@ -1,6 +1,89 @@
 import { query } from "@/lib/db";
 import type { DiagnosticReport, LearningObjectiveResult } from "@/agents/diagnostic/types";
-import { readExistingProfile, extractConfidence, extractSectionBullets, extractSummary } from "@/profile-agent/profile-tools";
+import { readExistingProfile, extractConfidence, extractSectionBullets, extractSummary, writeProfile } from "@/profile-agent/profile-tools";
+import OpenAI from "openai";
+
+const PROFILE_PROMPT = `You are an AI student profiling system that maintains a structured, evolving student profile.
+
+You will receive:
+1) Existing profile (if any)
+2) Recent assessment history
+
+Your job:
+- Update the existing profile with recency-aware evidence
+- Keep it clean, consistent, and non-redundant
+- Make strengths and weaknesses align with the supplied learning objective analysis
+- Mention concrete learning objectives or topic patterns instead of vague statements
+
+CRITICAL OUTPUT RULES:
+- Output ONLY the final profile markdown.
+- Do NOT output any instructional phrases or placeholders.
+- Do NOT include empty bullets like "-" or "- ".
+- If a list has no valid item, write exactly: "- None yet."
+
+Return EXACTLY this structure:
+
+# Student Profile
+
+## Academic Snapshot
+- Subjects
+  - <Subject name>
+- Current Level by Subject
+  - <Subject> - <beginner|intermediate|advanced>
+- Strengths
+  - <specific recurring strength or strong learning objective>
+- Weaknesses
+  - <specific recurring weakness or weak learning objective>
+- Overall Confidence: <0-10>/10
+
+## Progress Memory
+- Topics Tried
+  - <topic>
+- Strong Areas
+  - <topic or learning objective>
+- Weak Areas
+  - <topic or learning objective>
+- Current Problems
+  - <skill> - <short concrete reason>
+- Common Mistake Patterns
+  - <recurring mistake pattern>
+- Confidence by Topic
+  - <topic>: <0-10>/10
+
+## Summary
+- <point 1>
+- <point 2>
+- <point 3>
+- <point 4>`;
+
+async function generateDynamicProfile(studentName: string, history: DiagnosticReport[]): Promise<string> {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) return "";
+
+  const client = new OpenAI({ apiKey });
+  
+  try {
+    const existingProfile = await readExistingProfile(studentName);
+    const response = await client.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "system",
+          content: PROFILE_PROMPT
+        },
+        {
+          role: "user",
+          content: `Existing profile:\n${existingProfile || "(empty)"}\n\nRecent assessment history:\n${JSON.stringify(history, null, 2)}`
+        }
+      ],
+      temperature: 0.2
+    });
+    return response.choices[0]?.message?.content?.trim() || "";
+  } catch (error) {
+    console.error("OpenAI Generation Error:", error);
+    return "";
+  }
+}
 
 export interface StudentSummary {
   id: string;
@@ -151,8 +234,18 @@ export async function getStudentProfile(studentId: string): Promise<StudentProfi
   let aiConfidence = 0;
 
   try {
-    // We hardcode student-001 to load the specific prototype AI profile 
-    const markdown = await readExistingProfile("student-001");
+    // Attempt to load the real profile
+    let markdown = await readExistingProfile(student.normalized_name);
+    
+    // If it's empty (or fell back to the empty default seed), generate it!
+    if (!markdown || markdown.trim() === "") {
+      console.log(`Generating AI Profile for ${student.normalized_name}...`);
+      markdown = await generateDynamicProfile(student.normalized_name, history);
+      if (markdown) {
+        await writeProfile(student.normalized_name, markdown);
+      }
+    }
+
     if (markdown) {
       aiSummary = extractSummary(markdown);
       aiConfidence = extractConfidence(markdown);
