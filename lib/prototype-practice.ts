@@ -30,13 +30,23 @@ import {
  * returns one hint. Nothing is persisted — tries live in client state.
  */
 
-const DIFFICULTIES: DifficultyBand[] = ["easy", "medium", "hard"];
 const VARIETY_TYPES = ["mcq", "drag_drop", "fitb"];
-// Fixed difficulty spread for the 10-question practice set.
-const SPREAD: Record<DifficultyBand, number> = { easy: 4, medium: 3, hard: 3 };
+
+// Adaptive practice: how many questions to keep buffered ahead of the student so
+// serving never blocks. We serve 1 current + this many ahead at session start.
+export const PRACTICE_BUFFER_AHEAD = 2;
+// Default session length (configurable per session in the prototype start screen).
+export const PRACTICE_DEFAULT_COUNT = 5;
+
+// When a band runs dry, fall back to these bands (in order) so we can still serve.
+const BAND_FALLBACK: Record<DifficultyBand, DifficultyBand[]> = {
+  easy: ["medium", "hard"],
+  medium: ["easy", "hard"],
+  hard: ["medium", "easy"],
+};
 
 export interface PracticeQuestion {
-  index: number; // 1-based position (1..10)
+  index: number; // 1-based position in the session
   id: string;
   questionType: string;
   difficulty: string;
@@ -44,15 +54,6 @@ export interface PracticeQuestion {
   questionSvg?: string;
   options?: PrototypeDiagnosticOption[];
   payload?: Record<string, unknown>;
-}
-
-export interface PracticeSet {
-  grade: number;
-  gradeLabel: string;
-  subject: string;
-  topic: string;
-  total: number;
-  questions: PracticeQuestion[];
 }
 
 function gradeToClassLevel(grade: number): ClassLevel {
@@ -152,48 +153,87 @@ function pickWithVariety(
   return picked;
 }
 
-/** Build the ordered 10-question practice set (read-only). */
-export async function buildPrototypePractice(
+/**
+ * Serve up to `count` FRESH questions at `band`, falling back to the other
+ * bands (in BAND_FALLBACK order) if that band runs dry, and never repeating an
+ * id in `excludeIds`. Read-only — used both for the session-start buffer and
+ * the just-in-time "serve one more" call. Type variety is spread across picks.
+ */
+async function serveAtBand(
   grade: number,
   topic: string,
-): Promise<PracticeSet> {
-  const candidates: Record<DifficultyBand, PracticeQuestion[]> = {
-    easy: await loadCandidates(grade, topic, "easy"),
-    medium: await loadCandidates(grade, topic, "medium"),
-    hard: await loadCandidates(grade, topic, "hard"),
-  };
-
-  const fallback: Record<DifficultyBand, DifficultyBand[]> = {
-    easy: ["medium", "hard"],
-    medium: ["easy", "hard"],
-    hard: ["medium", "easy"],
-  };
-
-  const used = new Set<string>();
-  const ordered: PracticeQuestion[] = [];
-  for (const band of DIFFICULTIES) {
-    const want = SPREAD[band];
-    const picked = pickWithVariety(candidates[band], want, used);
-    if (picked.length < want) {
-      for (const alt of fallback[band]) {
-        if (picked.length >= want) break;
-        picked.push(
-          ...pickWithVariety(candidates[alt], want - picked.length, used),
-        );
-      }
-    }
-    ordered.push(...picked);
+  band: DifficultyBand,
+  count: number,
+  excludeIds: Set<string>,
+): Promise<PracticeQuestion[]> {
+  const used = new Set(excludeIds);
+  const picked: PracticeQuestion[] = [];
+  for (const b of [band, ...BAND_FALLBACK[band]]) {
+    if (picked.length >= count) break;
+    const candidates = await loadCandidates(grade, topic, b);
+    picked.push(...pickWithVariety(candidates, count - picked.length, used));
   }
+  return picked;
+}
 
-  const questions = ordered.map((q, i) => ({ ...q, index: i + 1 }));
+export interface PracticeSession {
+  grade: number;
+  gradeLabel: string;
+  subject: string;
+  topic: string;
+  /** Session length — runs to this many answered questions. */
+  targetCount: number;
+  /** Difficulty band the session was seeded at (the student's practice level). */
+  seedBand: DifficultyBand;
+  /** The initial buffer: 1 current + PRACTICE_BUFFER_AHEAD ahead (capped at targetCount). */
+  questions: PracticeQuestion[];
+}
+
+/**
+ * Start an adaptive practice session: seed the band (the student's current
+ * practice level) and immediately serve the first buffer of questions (up to
+ * 1 + PRACTICE_BUFFER_AHEAD, capped at targetCount) so serving never blocks.
+ * From here the client drives it just-in-time via `serveNextPracticeQuestion`.
+ */
+export async function startPracticeSession(
+  grade: number,
+  topic: string,
+  seedBand: DifficultyBand,
+  targetCount: number,
+): Promise<PracticeSession> {
+  const seedCount = Math.min(1 + PRACTICE_BUFFER_AHEAD, targetCount);
+  const picked = await serveAtBand(
+    grade,
+    topic,
+    seedBand,
+    seedCount,
+    new Set(),
+  );
+  const questions = picked.map((q, i) => ({ ...q, index: i + 1 }));
   return {
     grade,
     gradeLabel: gradeLabel(grade),
     subject: "Math",
     topic,
-    total: questions.length,
+    targetCount,
+    seedBand,
     questions,
   };
+}
+
+/**
+ * Serve the next single question at `band` (the band the Streak Ladder currently
+ * says), excluding everything already served this session. Returns null when the
+ * pool is exhausted even after band fallback.
+ */
+export async function serveNextPracticeQuestion(
+  grade: number,
+  topic: string,
+  band: DifficultyBand,
+  excludeIds: string[],
+): Promise<PracticeQuestion | null> {
+  const [q] = await serveAtBand(grade, topic, band, 1, new Set(excludeIds));
+  return q ? { ...q, index: excludeIds.length + 1 } : null;
 }
 
 // ---- Check one answer (correctness for the hint flow) ---------------------

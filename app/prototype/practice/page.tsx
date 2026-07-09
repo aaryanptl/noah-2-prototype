@@ -39,11 +39,22 @@ function formatTime(ms: number): string {
   return `${Math.round(ms / 1000)}s`;
 }
 
+const LEVELS: Array<{ value: "easy" | "medium" | "hard"; label: string }> = [
+  { value: "easy", label: "Easy" },
+  { value: "medium", label: "Medium" },
+  { value: "hard", label: "Hard" },
+];
+
+const COUNTS = [5, 10, 15];
+
 export default function PracticePage() {
   const [screen, setScreen] = useState<Screen>("start");
   const [grade, setGrade] = useState(5);
   const [topics, setTopics] = useState<TopicOption[]>([]);
   const [topic, setTopic] = useState("");
+  // Prototype-only knobs: seed band (student's "current practice level") + length.
+  const [seedBand, setSeedBand] = useState<"easy" | "medium" | "hard">("easy");
+  const [count, setCount] = useState(5);
   const [loadingTopics, setLoadingTopics] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState("");
@@ -79,7 +90,7 @@ export default function PracticePage() {
       const res = await fetch("/api/prototype/practice", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ grade, topic: t }),
+        body: JSON.stringify({ grade, topic: t, seedBand, targetCount: count }),
       });
       const json = await res.json();
       if (!json?.success) throw new Error(json?.error?.message ?? "failed");
@@ -230,8 +241,9 @@ export default function PracticePage() {
         <span className="pp-badge">Prototype · Practice</span>
         <h1 className="pp-h1">Practice test</h1>
         <p className="pp-lead">
-          A 10-question practice set from the diagnostic pool, with Noah AI
-          ready to nudge, hint, and — if you're stuck — reveal the answer.
+          An adaptive practice session from the diagnostic pool. It starts at
+          the level you pick and the Streak Ladder moves it up or down as you
+          go, with Noah AI ready to nudge, hint, and — if you're stuck — reveal.
         </p>
 
         <label className="pp-label" htmlFor="grade">
@@ -274,6 +286,45 @@ export default function PracticePage() {
           ))}
         </select>
 
+        <div className="pp-row">
+          <div className="pp-col">
+            <label className="pp-label" htmlFor="level">
+              Starting level
+            </label>
+            <select
+              id="level"
+              className="pp-select"
+              value={seedBand}
+              onChange={(e) =>
+                setSeedBand(e.target.value as "easy" | "medium" | "hard")
+              }
+            >
+              {LEVELS.map((l) => (
+                <option key={l.value} value={l.value}>
+                  {l.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="pp-col">
+            <label className="pp-label" htmlFor="count">
+              Questions
+            </label>
+            <select
+              id="count"
+              className="pp-select"
+              value={count}
+              onChange={(e) => setCount(Number(e.target.value))}
+            >
+              {COUNTS.map((c) => (
+                <option key={c} value={c}>
+                  {c} questions
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
         {error && <div className="pp-error">{error}</div>}
 
         <button
@@ -297,6 +348,8 @@ const STYLES = `
 .pp-h1 { font-size: 1.9rem; font-weight: 900; margin: 14px 0 6px; letter-spacing: -0.02em; }
 .pp-lead { color: #6b7280; font-size: 0.98rem; line-height: 1.5; margin: 0 0 22px; }
 .pp-label { display: block; font-size: 0.8rem; font-weight: 800; color: #8a8fa3; margin: 16px 0 6px; text-transform: uppercase; letter-spacing: .05em; }
+.pp-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.pp-col { min-width: 0; }
 .pp-select { width: 100%; height: 50px; border: 1.5px solid #dfe1ea; border-radius: 12px; padding: 0 14px; font-size: 1rem; background: #fff; cursor: pointer; }
 .pp-select:focus { outline: none; border-color: #8a5ea0; box-shadow: 0 0 0 3px #efe7f8; }
 .pp-error { margin-top: 14px; background: #fdecec; color: #c0392b; border-radius: 10px; padding: 10px 14px; font-size: 0.9rem; font-weight: 700; }

@@ -13,12 +13,64 @@ export interface PracticeQ {
   payload?: Record<string, unknown>;
 }
 
+export type Band = "easy" | "medium" | "hard";
+
 export interface PracticeData {
   grade: number;
   gradeLabel: string;
   topic: string;
-  total: number;
+  /** Session length — runs to this many answered questions. */
+  targetCount: number;
+  /** Band the session was seeded at (the student's current practice level). */
+  seedBand: Band;
+  /** Initial buffer of questions (1 current + up to 2 ahead). */
   questions: PracticeQ[];
+}
+
+type Verdict = "correct" | "wrong" | "partial";
+
+const BANDS: Band[] = ["easy", "medium", "hard"];
+const BAND_LABEL: Record<Band, string> = {
+  easy: "Easy",
+  medium: "Medium",
+  hard: "Hard",
+};
+
+const promote = (b: Band): Band => BANDS[Math.min(BANDS.indexOf(b) + 1, 2)];
+const demote = (b: Band): Band => BANDS[Math.max(BANDS.indexOf(b) - 1, 0)];
+
+/**
+ * Streak Ladder: two correct in a row promotes the band up (resetting the
+ * streak); one wrong (or skip/reveal) demotes it down; a partial holds the band
+ * but resets the streak. Returns the band + streak to use for the NEXT question.
+ */
+function ladderNext(
+  band: Band,
+  streak: number,
+  verdict: Verdict,
+): { band: Band; streak: number } {
+  if (verdict === "correct") {
+    const s = streak + 1;
+    return s >= 2 ? { band: promote(band), streak: 0 } : { band, streak: s };
+  }
+  if (verdict === "wrong") return { band: demote(band), streak: 0 };
+  return { band, streak: 0 }; // partial: hold band, reset streak
+}
+
+/** Fetch one more question at `band` (just-in-time). Returns null if exhausted. */
+async function fetchNextQuestion(
+  grade: number,
+  topic: string,
+  band: Band,
+  excludeIds: string[],
+): Promise<PracticeQ | null> {
+  const res = await fetch("/api/prototype/practice/next", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ grade, topic, band, excludeIds }),
+  });
+  const json = await res.json();
+  return json?.success ? ((json.data?.question as PracticeQ) ?? null) : null;
 }
 
 export interface PracticeResult {
@@ -93,15 +145,21 @@ function pickRandom<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)] as T;
 }
 
-/** POST the answer to the check endpoint; returns whether it's correct. */
-async function postCheck(id: string, studentAnswer: unknown): Promise<boolean> {
+/** POST the answer to the check endpoint; returns correctness + performance. */
+async function postCheck(
+  id: string,
+  studentAnswer: unknown,
+): Promise<{ isCorrect: boolean; performance: number }> {
   const res = await fetch("/api/prototype/practice/check", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ id, studentAnswer }),
   });
   const json = await res.json();
-  return json?.data?.isCorrect ?? false;
+  return {
+    isCorrect: json?.data?.isCorrect ?? false,
+    performance: json?.data?.performance ?? 0,
+  };
 }
 
 function formatElapsed(ms: number): string {
@@ -154,27 +212,32 @@ export default function PracticeRunner({
   onComplete: (result: PracticeResult) => void;
   onExit: () => void;
 }) {
+  // The question buffer grows just-in-time: it starts with the seed batch and
+  // gains one question per answer (fetched at the Streak Ladder's current band).
+  const [buffer, setBuffer] = useState<PracticeQ[]>(practice.questions);
   const [index, setIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, unknown>>({});
   const [tries, setTries] = useState<Record<string, Try[]>>({});
+  // Best performance (0..1) seen per question — lets a revealed drag_drop that
+  // was partially right count as a "partial" verdict rather than a full "wrong".
+  const [bestPerf, setBestPerf] = useState<Record<string, number>>({});
   const [revealed, setRevealed] = useState<
     Record<string, { answer: string; svg?: string }>
   >({});
   const [finals, setFinals] = useState<
     Record<string, { answer: string; svg?: string }>
   >({});
+  // Streak Ladder state: the band the next question is served at, and how many
+  // correct answers in a row we're on.
+  const [band, setBand] = useState<Band>(practice.seedBand);
+  const [streak, setStreak] = useState(0);
   const [hintCount, setHintCount] = useState(0); // total AI hints taken (all levels, all questions)
   const [wrongCount, setWrongCount] = useState(0);
   const [noah, setNoah] = useState<Noah>({ phase: "intro" });
   const [checking, setChecking] = useState(false);
   const [shaking, setShaking] = useState(false);
   const [elapsed, setElapsed] = useState(0);
-  // One random intro/transition line per question, fixed for this run.
-  const [introMsgs] = useState<string[]>(() =>
-    practice.questions.map((_, i) =>
-      i === 0 ? pickRandom(FIRST_INTROS) : pickRandom(TRANSITIONS),
-    ),
-  );
+  const [intro, setIntro] = useState<string>(() => pickRandom(FIRST_INTROS));
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const shakeRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -196,41 +259,17 @@ export default function PracticeRunner({
     });
   };
 
-  const questions = practice.questions;
-  const step = questions[index];
+  const target = practice.targetCount;
+  const step = buffer[index];
   if (!step) return null;
 
   const answer = answers[step.id];
   const stepTries = tries[step.id] ?? [];
-  const isLast = index + 1 >= questions.length;
+  // "Last" = answering this one reaches the target length.
+  const isLast = index + 1 >= target;
 
   const setAnswer = (a: unknown) =>
     setAnswers((prev) => ({ ...prev, [step.id]: a }));
-
-  const proceed = (finalAnswer: string, answerSvg?: string) => {
-    const nextFinals = {
-      ...finals,
-      [step.id]: { answer: finalAnswer, svg: answerSvg },
-    };
-    setFinals(nextFinals);
-    if (isLast) {
-      onComplete({
-        elapsedMs: elapsed,
-        aiHelpCount: hintCount,
-        incorrectAttempts: wrongCount,
-        log: questions.map((q) => ({
-          index: q.index,
-          question: q.question,
-          questionSvg: q.questionSvg,
-          answer: nextFinals[q.id]?.answer ?? "",
-          answerSvg: nextFinals[q.id]?.svg,
-        })),
-      });
-    } else {
-      setIndex((i) => i + 1);
-      setNoah({ phase: "intro" });
-    }
-  };
 
   const answerSvg = (a: unknown): string | undefined =>
     step.questionType === "mcq" && typeof a === "number"
@@ -243,6 +282,99 @@ export default function PracticeRunner({
       [step.id]: [...(prev[step.id] ?? []), { answer: display, correct }],
     }));
 
+  // Verdict for a question the student had REVEALED (they needed the answer):
+  // "partial" if a prior try was partially right, else "wrong".
+  const revealVerdict = (): Verdict => {
+    const bp = bestPerf[step.id] ?? 0;
+    return bp > 0 && bp < 1 ? "partial" : "wrong";
+  };
+
+  const finish = (
+    finalsMap: Record<string, { answer: string; svg?: string }>,
+    resolvedCount: number,
+  ) => {
+    onComplete({
+      elapsedMs: elapsed,
+      aiHelpCount: hintCount,
+      incorrectAttempts: wrongCount,
+      log: buffer.slice(0, resolvedCount).map((q, i) => ({
+        index: i + 1,
+        question: q.question,
+        questionSvg: q.questionSvg,
+        answer: finalsMap[q.id]?.answer ?? "",
+        answerSvg: finalsMap[q.id]?.svg,
+      })),
+    });
+  };
+
+  // Resolve the current question, advance the Streak Ladder, then move to the
+  // next buffered question (fetching one more in the background to stay ~2 ahead).
+  const resolveAndAdvance = async (
+    finalAnswer: string,
+    svg: string | undefined,
+    verdict: Verdict,
+  ) => {
+    const nextFinals = {
+      ...finals,
+      [step.id]: { answer: finalAnswer, svg },
+    };
+    setFinals(nextFinals);
+
+    const resolvedCount = index + 1;
+    const next = ladderNext(band, streak, verdict);
+    setBand(next.band);
+    setStreak(next.streak);
+
+    if (resolvedCount >= target) {
+      finish(nextFinals, resolvedCount);
+      return;
+    }
+
+    const servedIds = buffer.map((b) => b.id);
+
+    // Normal path: the next question is already buffered, so advance instantly
+    // and refill the buffer in the background at the ladder's new band.
+    if (index + 1 < buffer.length) {
+      setIndex((i) => i + 1);
+      setIntro(pickRandom(TRANSITIONS));
+      setNoah({ phase: "intro" });
+      if (buffer.length < target) {
+        const q = await fetchNextQuestion(
+          practice.grade,
+          practice.topic,
+          next.band,
+          servedIds,
+        );
+        if (q) setBuffer((prev) => [...prev, { ...q, index: prev.length + 1 }]);
+      }
+      return;
+    }
+
+    // Buffer ran dry — fetch synchronously before advancing (rare).
+    setChecking(true);
+    try {
+      const q =
+        buffer.length < target
+          ? await fetchNextQuestion(
+              practice.grade,
+              practice.topic,
+              next.band,
+              servedIds,
+            )
+          : null;
+      if (q) {
+        setBuffer((prev) => [...prev, { ...q, index: prev.length + 1 }]);
+        setIndex((i) => i + 1);
+        setIntro(pickRandom(TRANSITIONS));
+        setNoah({ phase: "intro" });
+      } else {
+        finish(nextFinals, resolvedCount); // pool exhausted — end here
+      }
+    } finally {
+      setChecking(false);
+    }
+  };
+
   // The single CTA: check the answer, then advance if correct / already resolved,
   // otherwise open the Noah help flow (and stay on the question).
   const handleNext = async () => {
@@ -250,51 +382,50 @@ export default function PracticeRunner({
     const rev = revealed[id];
     const answered = hasAnswer(step, answer);
 
-    // After the answer has been revealed, the student may still edit and submit
-    // their own answer (we record it), or just move on with the revealed one.
-    if (rev) {
-      if (!answered) {
-        proceed(rev.answer, rev.svg);
-        return;
-      }
-      setChecking(true);
-      try {
-        const isCorrect = await postCheck(id, answer);
-        const display = answerDisplay(step, answer);
-        recordTry(display, isCorrect);
-        proceed(display, answerSvg(answer));
-      } catch {
-        setNoah({ phase: "error", message: "Couldn't check that — try again." });
-      } finally {
-        setChecking(false);
-      }
+    // Revealed and nothing entered: move on with the revealed answer.
+    if (rev && !answered) {
+      resolveAndAdvance(rev.answer, rev.svg, revealVerdict());
       return;
     }
-
     if (!answered) return;
 
     setChecking(true);
+    let graded: { isCorrect: boolean; performance: number };
     try {
-      const isCorrect = await postCheck(id, answer);
-      const display = answerDisplay(step, answer);
-      recordTry(display, isCorrect);
-      if (isCorrect) {
-        proceed(display, answerSvg(answer));
-      } else {
-        setWrongCount((c) => c + 1);
-        if (noah.phase === "offer" || noah.phase === "hint") {
-          // A help card (offer or hint) is already showing and it's still wrong:
-          // keep it exactly where it is and just shake. Only the help buttons advance.
-          triggerShake();
-        } else {
-          // First wrong answer: open the offer (no shake here).
-          setNoah({ phase: "offer", message: pickRandom(OFFERS) });
-        }
-      }
+      graded = await postCheck(id, answer);
     } catch {
-      setNoah({ phase: "error", message: "Couldn't check that — try again." });
-    } finally {
       setChecking(false);
+      setNoah({ phase: "error", message: "Couldn't check that — try again." });
+      return;
+    }
+    setChecking(false);
+
+    const display = answerDisplay(step, answer);
+    recordTry(display, graded.isCorrect);
+    setBestPerf((prev) => ({
+      ...prev,
+      [id]: Math.max(prev[id] ?? 0, graded.performance),
+    }));
+
+    // Already revealed: record the student's own (edited) answer, but the ladder
+    // verdict reflects that they needed the reveal.
+    if (rev) {
+      resolveAndAdvance(display, answerSvg(answer), revealVerdict());
+      return;
+    }
+
+    if (graded.isCorrect) {
+      resolveAndAdvance(display, answerSvg(answer), "correct");
+    } else {
+      setWrongCount((c) => c + 1);
+      if (noah.phase === "offer" || noah.phase === "hint") {
+        // A help card (offer or hint) is already showing and it's still wrong:
+        // keep it exactly where it is and just shake. Only the help buttons advance.
+        triggerShake();
+      } else {
+        // First wrong answer: open the offer (no shake here).
+        setNoah({ phase: "offer", message: pickRandom(OFFERS) });
+      }
     }
   };
 
@@ -364,12 +495,20 @@ export default function PracticeRunner({
           <span className="pr-pill">Practice</span>
           <div className="pr-banner-topic">{practice.topic}</div>
           <div className="pr-banner-activity">
-            <strong>Activity {index + 1}</strong> of {questions.length}
+            <strong>Activity {index + 1}</strong> of {target}
           </div>
         </div>
-        <div className="pr-banner-time">
-          <div className="pr-time-label">TIME TAKEN</div>
-          <div className="pr-time-val">{formatElapsed(elapsed)}</div>
+        <div className="pr-banner-right">
+          <div className="pr-banner-level">
+            <div className="pr-time-label">LEVEL</div>
+            <div className={`pr-level-val pr-level-${band}`}>
+              {BAND_LABEL[band]}
+            </div>
+          </div>
+          <div className="pr-banner-time">
+            <div className="pr-time-label">TIME TAKEN</div>
+            <div className="pr-time-val">{formatElapsed(elapsed)}</div>
+          </div>
         </div>
       </div>
 
@@ -408,7 +547,7 @@ export default function PracticeRunner({
         <NoahPanel
           noah={noah}
           shaking={shaking}
-          introMessage={introMsgs[index] ?? introMsgs[0] ?? ""}
+          introMessage={intro}
           onOfferYes={() => requestHint(1)}
           onMore={() => requestHint(2)}
           onReveal={() => requestHint(3)}
@@ -612,9 +751,15 @@ const STYLES = `
 .pr-banner-topic { margin: 8px 0 2px; color: #3b6ef6; font-size: 0.92rem; font-weight: 800; }
 .pr-banner-activity { font-size: 1.15rem; color: #4b5168; font-weight: 600; }
 .pr-banner-activity strong { color: #1f2430; font-weight: 900; }
+.pr-banner-right { display: flex; align-items: center; gap: 22px; }
+.pr-banner-level { text-align: right; }
 .pr-banner-time { text-align: right; }
 .pr-time-label { font-size: 0.66rem; font-weight: 800; letter-spacing: .08em; color: #9aa0b4; }
 .pr-time-val { font-size: 1.35rem; font-weight: 900; color: #1f2430; font-variant-numeric: tabular-nums; }
+.pr-level-val { font-size: 1.05rem; font-weight: 900; }
+.pr-level-easy { color: #1e9e5b; }
+.pr-level-medium { color: #d98a00; }
+.pr-level-hard { color: #d1495b; }
 
 .pr-body { display: grid; grid-template-columns: 1fr 320px; gap: 20px; align-items: start; }
 @media (max-width: 900px) { .pr-body { grid-template-columns: 1fr; } }
