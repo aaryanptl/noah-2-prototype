@@ -1,12 +1,12 @@
-import Link from "next/link";
 import {
   ArrowRight,
+  BookOpen,
+  Database,
   GraduationCap,
   Stethoscope,
-  Database,
-  BookOpen,
-  Users
+  Users,
 } from "lucide-react";
+import Link from "next/link";
 
 const ASSESSMENT_OPTIONS = [
   {
@@ -58,8 +58,8 @@ const ASSESSMENT_OPTIONS = [
 
 export default function HomePage() {
   return (
-    <main className="flex min-h-screen items-center justify-center bg-[var(--bg-warm)] px-6 py-16">
-      <div className="w-full max-w-7xl">
+    <main className="flex min-h-screen items-center justify-center overflow-x-hidden bg-[var(--bg-warm)] px-5 py-12 sm:px-8 sm:py-16">
+      <div className="w-full max-w-[1440px]">
         <div className="mb-12 text-center">
           <h1 className="text-4xl font-bold tracking-tight text-[var(--heading)] sm:text-5xl">
             Choose your assessment
@@ -69,7 +69,7 @@ export default function HomePage() {
           </p>
         </div>
 
-        <div className="flex flex-wrap justify-center gap-6 [&>*]:w-full sm:[&>*]:w-[calc(50%-12px)] lg:[&>*]:w-[calc(33.333%-16px)] xl:[&>*]:w-[calc(20%-20px)]">
+        <div className="grid grid-cols-1 items-stretch gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
           {ASSESSMENT_OPTIONS.map(
             ({ href, title, tagline, description, icon: Icon, accent }) => {
               if (href === "/student-profile") {
@@ -77,14 +77,14 @@ export default function HomePage() {
                   <Link
                     key={href}
                     href={href}
-                    className="group flex flex-col rounded-[24px] bg-white shadow-[0_4px_14px_rgba(26,26,46,0.04)] overflow-hidden transition-all hover:-translate-y-1 hover:shadow-[0_8px_24px_rgba(26,26,46,0.08)] border border-slate-100"
+                    className="group flex min-w-0 flex-col overflow-hidden rounded-[24px] border border-rose-100 bg-white shadow-[0_4px_14px_rgba(26,26,46,0.04)] transition-all hover:-translate-y-1 hover:shadow-[0_8px_24px_rgba(26,26,46,0.08)]"
                   >
                     {/* Top Section - Mockup */}
-                    <div className="bg-[#fff0f5] pt-8 px-6 pb-0 relative flex justify-center h-48 overflow-hidden">
+                    <div className="relative flex h-48 shrink-0 justify-center overflow-hidden bg-[#fff0f5] px-4 pt-7">
                       <div className="absolute top-4 left-4 w-12 h-12 rounded-full bg-[#ffe4e6] opacity-70" />
                       <div className="absolute bottom-4 right-4 w-10 h-10 rounded-2xl bg-[#f3e8ff] opacity-80 rotate-12" />
-                      
-                      <div className="w-[280px] bg-white rounded-t-xl shadow-[0_10px_30px_rgba(0,0,0,0.05)] border border-slate-100 overflow-hidden relative z-10 flex flex-col mt-2">
+
+                      <div className="relative z-10 mt-2 flex w-full min-w-0 max-w-[260px] flex-col overflow-hidden rounded-t-xl border border-slate-100 bg-white shadow-[0_10px_30px_rgba(0,0,0,0.05)]">
                         <div className="bg-[#f8fafc] px-3 py-2.5 flex gap-1.5 border-b border-slate-100">
                           <div className="w-2 h-2 rounded-full bg-[#f87171]" />
                           <div className="w-2 h-2 rounded-full bg-[#fbbf24]" />
@@ -92,29 +92,49 @@ export default function HomePage() {
                         </div>
                         <div className="p-4 flex-1">
                           <div className="flex gap-3 mb-4 items-center">
-                            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center text-white font-bold text-sm shadow-sm">A</div>
+                            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center text-white font-bold text-sm shadow-sm">
+                              A
+                            </div>
                             <div className="leading-tight">
-                              <div className="font-extrabold text-slate-800 text-[13px]">Aarav Patel</div>
-                              <div className="text-slate-500 text-[10px] mt-0.5 font-medium">Grade 5 · Intermediate</div>
+                              <div className="font-extrabold text-slate-800 text-[13px]">
+                                Aarav Patel
+                              </div>
+                              <div className="text-slate-500 text-[10px] mt-0.5 font-medium">
+                                Grade 5 · Intermediate
+                              </div>
                             </div>
                           </div>
                           <div className="flex justify-between items-center mb-4">
                             <div className="text-[9px] font-bold text-rose-500 bg-rose-50 px-2 py-0.5 rounded-full flex items-center gap-1 border border-rose-100/50">
-                              <span className="text-[10px] text-slate-800">👤</span> Profile Calibrated
+                              <span className="text-[10px] text-slate-800">
+                                👤
+                              </span>{" "}
+                              Profile Calibrated
                             </div>
                             <div className="text-[9px] font-bold text-emerald-500 flex items-center gap-1">
-                              <span className="text-emerald-400">⚡</span> Live Ingestion
+                              <span className="text-emerald-400">⚡</span> Live
+                              Ingestion
                             </div>
                           </div>
                           <div className="border border-rose-50 rounded-lg p-2.5 bg-[#fafafa]">
                             <div className="flex justify-between items-center mb-2">
-                              <span className="text-[10px] text-slate-500 font-medium">Cognitive Mastery:</span>
-                              <span className="text-xs font-bold text-rose-500">84%</span>
+                              <span className="text-[10px] text-slate-500 font-medium">
+                                Cognitive Mastery:
+                              </span>
+                              <span className="text-xs font-bold text-rose-500">
+                                84%
+                              </span>
                             </div>
                             <div className="flex gap-1.5">
-                              <span className="text-[9px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-100/50 px-1.5 py-0.5 rounded">Fractions</span>
-                              <span className="text-[9px] font-bold text-blue-600 bg-blue-50 border border-blue-100/50 px-1.5 py-0.5 rounded">Geometry</span>
-                              <span className="text-[9px] font-bold text-orange-600 bg-orange-50 border border-orange-100/50 px-1.5 py-0.5 rounded">Decimals</span>
+                              <span className="text-[9px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-100/50 px-1.5 py-0.5 rounded">
+                                Fractions
+                              </span>
+                              <span className="text-[9px] font-bold text-blue-600 bg-blue-50 border border-blue-100/50 px-1.5 py-0.5 rounded">
+                                Geometry
+                              </span>
+                              <span className="text-[9px] font-bold text-orange-600 bg-orange-50 border border-orange-100/50 px-1.5 py-0.5 rounded">
+                                Decimals
+                              </span>
                             </div>
                           </div>
                         </div>
@@ -122,11 +142,14 @@ export default function HomePage() {
                     </div>
 
                     {/* Bottom Section */}
-                    <div className="p-6 bg-white flex flex-col justify-between flex-1">
+                    <div className="flex flex-1 flex-col justify-between bg-white p-6">
                       <div>
-                        <h2 className="text-[22px] font-extrabold text-[#1e293b] mb-3">Profile Agent</h2>
+                        <h2 className="text-[22px] font-extrabold text-[#1e293b] mb-3">
+                          Profile Agent
+                        </h2>
                         <p className="text-[13.5px] leading-[1.6] text-slate-500 font-medium">
-                          Maintains the unified student learning profile as the primary source of truth across all evidence vectors.
+                          Maintains the unified student learning profile as the
+                          primary source of truth across all evidence vectors.
                         </p>
                       </div>
                       <div
@@ -145,7 +168,7 @@ export default function HomePage() {
                 <Link
                   key={href}
                   href={href}
-                  className="group relative flex flex-col justify-between rounded-[24px] bg-white p-8 transition-all hover:-translate-y-1"
+                  className="group relative flex min-w-0 flex-col justify-between rounded-[24px] bg-white p-7 transition-all hover:-translate-y-1 2xl:p-8"
                   style={{
                     border: `2px solid ${accent}40`,
                     boxShadow: `0 6px 0 ${accent}33, 0 4px 14px rgba(26,26,46,0.06)`,
@@ -188,7 +211,7 @@ export default function HomePage() {
                   </div>
                 </Link>
               );
-            }
+            },
           )}
         </div>
       </div>

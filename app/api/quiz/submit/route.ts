@@ -21,6 +21,7 @@ export async function POST(request: Request) {
       subject?: string;
       classLevel?: string;
       topic?: string | null;
+      topics?: string[];
       maxQuestions?: number;
       region?: string;
       parentAssessmentId?: string;
@@ -48,11 +49,13 @@ export async function POST(request: Request) {
     const testMode =
       body.testMode === "placement"
         ? "placement"
-        : body.testMode === "grade"
-          ? "grade"
-          : body.testMode === "recurring"
-            ? "recurring"
-            : "topic";
+        : body.testMode === "multi_topic"
+          ? "multi_topic"
+          : body.testMode === "grade"
+            ? "grade"
+            : body.testMode === "recurring"
+              ? "recurring"
+              : "topic";
     const region = DIAGNOSTIC_REGIONS.includes(body.region as DiagnosticRegion)
       ? (body.region as DiagnosticRegion)
       : DEFAULT_DIAGNOSTIC_REGION;
@@ -64,6 +67,7 @@ export async function POST(request: Request) {
       subject: body.subject as never,
       classLevel: body.classLevel as never,
       topic: body.topic ?? "",
+      topics: Array.isArray(body.topics) ? body.topics : undefined,
       maxQuestions: Number(body.maxQuestions) || 1,
       questionIds: (body.answers ?? [])
         .map((item) => String(item.questionId ?? ""))

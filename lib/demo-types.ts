@@ -25,6 +25,7 @@ export interface CreateSessionInput {
   subject: Subject;
   classLevel: ClassLevel;
   topic: string;
+  topics?: string[];
   maxQuestions: number;
   region?: DiagnosticRegion;
 }
@@ -47,6 +48,7 @@ export interface DemoLoadedQuiz {
   subject: Subject;
   classLevel: ClassLevel;
   topic: string | null;
+  selectedTopics?: string[];
   expectedLearningObjectives: string[];
   topicsInGrade?: string[];
   maxQuestions: number;

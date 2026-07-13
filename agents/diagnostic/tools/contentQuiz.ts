@@ -6,7 +6,11 @@ import type {
   DemoQuizCatalogEntry,
   DemoQuizQuestion,
 } from "@/lib/demo-types";
-import { getGradeTestPlan, getTopicTestQuestionCount } from "@/lib/quiz-counts";
+import {
+  getGradeTestPlan,
+  getTopicTestQuestionCount,
+  getValidMultiTopicQuestionCounts,
+} from "@/lib/quiz-counts";
 import type {
   BloomLevel,
   ClassLevel,
@@ -849,9 +853,55 @@ async function loadGradeQuestions(input: {
   return toQuestions(result.rows as ContentQuestionRow[]);
 }
 
+async function loadMultiTopicQuestions(input: {
+  subject: Subject;
+  classLevel: ClassLevel;
+  topics: string[];
+  region: DiagnosticRegion;
+}) {
+  const selectedTopicByRawTopic = new Map<string, string>();
+
+  for (const topic of input.topics) {
+    for (const rawTopic of new Set([
+      topic,
+      ...getRawTopicNames(input.classLevel, topic),
+    ])) {
+      selectedTopicByRawTopic.set(rawTopic.trim().toLowerCase(), topic);
+    }
+  }
+
+  const result = await query(
+    `
+      ${CONTENT_QUESTION_SELECT}
+      WHERE subject = $1
+        AND grade = $2
+        AND lower(btrim(topic)) = ANY($3::text[])
+        AND region IN ('global', lower($4))
+        AND question_text IS NOT NULL
+        AND question_type IS NOT NULL
+        ${QUESTION_VISUAL_MODE_TYPE_FILTER}
+      ORDER BY topic, learning_objective, difficulty_level, id
+    `,
+    [
+      input.subject,
+      toDbGrade(input.classLevel),
+      Array.from(selectedTopicByRawTopic.keys()),
+      input.region,
+    ],
+  );
+
+  const questions = toQuestions(result.rows as ContentQuestionRow[]);
+  for (const question of questions) {
+    question.topic =
+      selectedTopicByRawTopic.get(question.topic.trim().toLowerCase()) ??
+      question.topic;
+  }
+  return questions;
+}
+
 async function getPreviouslyAnsweredQuestionIds(input: {
   studentId: string;
-  testMode: "topic" | "grade";
+  testMode: "topic" | "multi_topic" | "grade";
   subject: Subject;
   classLevel: ClassLevel;
   region: DiagnosticRegion;
@@ -1988,6 +2038,104 @@ export async function getGradeQuizQuestions(input: {
   };
 }
 
+function selectExactTopicQuestionShare(
+  questions: QuestionBankQuestion[],
+  requestedCount: number,
+) {
+  const balanced = selectQuestionsAcrossLearningObjectives(
+    questions,
+    requestedCount,
+  ).questions;
+  const selectedIds = new Set(balanced.map((question) => question.id));
+  const fill = shuffleItems(
+    sortQuestionsForTopicQuiz(questions).filter(
+      (question) => !selectedIds.has(question.id),
+    ),
+  );
+
+  return mixQuestionTypes([...balanced, ...fill].slice(0, requestedCount));
+}
+
+function interleaveTopicQuestions(
+  topics: string[],
+  questionsByTopic: Map<string, QuestionBankQuestion[]>,
+  perTopic: number,
+) {
+  const interleaved: QuestionBankQuestion[] = [];
+  for (let questionIndex = 0; questionIndex < perTopic; questionIndex += 1) {
+    for (const topic of topics) {
+      const question = questionsByTopic.get(topic)?.[questionIndex];
+      if (question) interleaved.push(question);
+    }
+  }
+  return interleaved;
+}
+
+export async function getMultiTopicQuizQuestions(input: {
+  subject: Subject;
+  classLevel: ClassLevel;
+  topics: string[];
+  maxQuestions: number;
+  region?: DiagnosticRegion;
+  questions?: QuestionBankQuestion[];
+}) {
+  const topics = Array.from(
+    new Set(input.topics.map((topic) => normalizeText(topic)).filter(Boolean)),
+  );
+  const validQuestionCounts = getValidMultiTopicQuestionCounts(topics.length);
+
+  if (topics.length < 1 || topics.length > 5) {
+    throw new Error("Select between 1 and 5 topics for a multi-topic test.");
+  }
+  if (!validQuestionCounts.includes(input.maxQuestions)) {
+    throw new Error(
+      "Choose 10 to 30 questions with an equal whole-number share for every topic.",
+    );
+  }
+
+  const perTopic = input.maxQuestions / topics.length;
+  const availableQuestions =
+    input.questions ??
+    (await loadMultiTopicQuestions({
+      ...input,
+      topics,
+      region: input.region ?? DEFAULT_DIAGNOSTIC_REGION,
+    }));
+  const questionsByTopic = new Map<string, QuestionBankQuestion[]>();
+
+  for (const topic of topics) {
+    const candidates = availableQuestions.filter(
+      (question) => question.topic === topic,
+    );
+    const selected = selectExactTopicQuestionShare(candidates, perTopic);
+    if (selected.length !== perTopic) {
+      throw new Error(
+        `${topic} can currently provide ${selected.length} of the required ${perTopic} questions. Choose fewer questions or another topic.`,
+      );
+    }
+    questionsByTopic.set(topic, selected);
+  }
+
+  const questions = interleaveTopicQuestions(
+    topics,
+    questionsByTopic,
+    perTopic,
+  );
+
+  return {
+    subject: input.subject,
+    classLevel: input.classLevel,
+    topic: null,
+    selectedTopics: topics,
+    expectedLearningObjectives: Array.from(
+      new Set(
+        questions.map((question) => question.learningObjective).filter(Boolean),
+      ),
+    ) as string[],
+    questions,
+  };
+}
+
 export async function getTopicQuizForClient(input: {
   studentId: string;
   subject: Subject;
@@ -2075,6 +2223,72 @@ export async function getGradeQuizForClient(input: {
     gradeTargets: targets,
     questions: quiz.questions.map(toClientQuizQuestion),
     coverageWarnings: quiz.coverageWarnings,
+  };
+}
+
+export async function getMultiTopicQuizForClient(input: {
+  studentId: string;
+  subject: Subject;
+  classLevel: ClassLevel;
+  topics: string[];
+  maxQuestions: number;
+  region?: DiagnosticRegion;
+}) {
+  const region = input.region ?? DEFAULT_DIAGNOSTIC_REGION;
+  const topics = Array.from(
+    new Set(input.topics.map((topic) => normalizeText(topic)).filter(Boolean)),
+  );
+  const validQuestionCounts = getValidMultiTopicQuestionCounts(topics.length);
+  if (topics.length < 1 || topics.length > 5) {
+    throw new Error("Select between 1 and 5 topics for a multi-topic test.");
+  }
+  if (!validQuestionCounts.includes(input.maxQuestions)) {
+    throw new Error(
+      "Choose 10 to 30 questions with an equal whole-number share for every topic.",
+    );
+  }
+  const allQuestions = await loadMultiTopicQuestions({
+    ...input,
+    topics,
+    region,
+  });
+  const seenQuestionIds = await getPreviouslyAnsweredQuestionIds({
+    studentId: input.studentId,
+    testMode: "multi_topic",
+    subject: input.subject,
+    classLevel: input.classLevel,
+    region,
+  });
+  const perTopic = input.maxQuestions / topics.length;
+  const preferredQuestions = topics.flatMap((topic) => {
+    const topicQuestions = allQuestions.filter(
+      (question) => question.topic === topic,
+    );
+    return preferUnseenQuestions({
+      questions: topicQuestions,
+      seenQuestionIds,
+      requestedCount: perTopic,
+    });
+  });
+  const quiz = await getMultiTopicQuizQuestions({
+    ...input,
+    topics,
+    region,
+    questions: preferredQuestions,
+  });
+
+  return {
+    studentId: input.studentId,
+    region,
+    testMode: "multi_topic" as const,
+    subject: input.subject,
+    classLevel: input.classLevel,
+    topic: null,
+    selectedTopics: quiz.selectedTopics,
+    topicsInGrade: quiz.selectedTopics,
+    expectedLearningObjectives: quiz.expectedLearningObjectives,
+    maxQuestions: quiz.questions.length,
+    questions: quiz.questions.map(toClientQuizQuestion),
   };
 }
 

@@ -34,7 +34,9 @@ function gradeForStorage(classLevel: DiagnosticReport["classLevel"]) {
 }
 
 function reportTopicForStorage(report: DiagnosticReport) {
-  return report.mode === "grade" ? null : report.topic;
+  return report.mode === "grade" || report.mode === "multi_topic"
+    ? null
+    : report.topic;
 }
 
 function reportRegionForStorage(report: DiagnosticReport) {
