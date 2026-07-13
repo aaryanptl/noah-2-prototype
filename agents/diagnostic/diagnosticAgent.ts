@@ -1,6 +1,7 @@
 import { buildLessonPlan, colorForStatus } from "./core/diagnosticEngine";
 import {
   getGradeQuizQuestions,
+  getMultiTopicQuizQuestions,
   getPlacementQuestionsByIds,
   getQuizQuestionsByIds,
   getTopicQuizQuestions,
@@ -1232,9 +1233,11 @@ export async function runDiagnostic(
       ? "Placement Test"
       : mode === "grade"
         ? "Grade Test"
-        : mode === "recurring"
-          ? "Recurring Test"
-          : config.topic;
+        : mode === "multi_topic"
+          ? "Multi-topic Test"
+          : mode === "recurring"
+            ? "Recurring Test"
+            : config.topic;
   let questionBank: {
     questions: QuestionBankQuestion[];
     expectedLearningObjectives: string[];
@@ -1277,13 +1280,21 @@ export async function runDiagnostic(
             classLevel: config.classLevel,
             region: config.region,
           })
-        : await getTopicQuizQuestions({
-            subject: config.subject,
-            classLevel: config.classLevel,
-            topic: config.topic,
-            maxQuestions: config.maxQuestions,
-            region: config.region,
-          });
+        : mode === "multi_topic"
+          ? await getMultiTopicQuizQuestions({
+              subject: config.subject,
+              classLevel: config.classLevel,
+              topics: config.topics ?? [],
+              maxQuestions: config.maxQuestions,
+              region: config.region,
+            })
+          : await getTopicQuizQuestions({
+              subject: config.subject,
+              classLevel: config.classLevel,
+              topic: config.topic,
+              maxQuestions: config.maxQuestions,
+              region: config.region,
+            });
   }
 
   if (questionBank.questions.length === 0) {
@@ -1330,19 +1341,20 @@ export async function runDiagnostic(
     totalQuestionsShown += 1;
   }
 
-  const topicResults =
-    mode === "grade"
-      ? Array.from(new Set(results.map((record) => record.question.topic)))
-          .filter(Boolean)
-          .map((topic) =>
-            buildTopicResult(
-              topic,
-              results.filter((record) => record.question.topic === topic),
-            ),
-          )
-      : [buildTopicResult(reportTopic, results)];
-  const summaryTopicResult =
-    mode === "grade" ? buildTopicResult(reportTopic, results) : topicResults[0];
+  const isMultiTopicReport = mode === "grade" || mode === "multi_topic";
+  const topicResults = isMultiTopicReport
+    ? Array.from(new Set(results.map((record) => record.question.topic)))
+        .filter(Boolean)
+        .map((topic) =>
+          buildTopicResult(
+            topic,
+            results.filter((record) => record.question.topic === topic),
+          ),
+        )
+    : [buildTopicResult(reportTopic, results)];
+  const summaryTopicResult = isMultiTopicReport
+    ? buildTopicResult(reportTopic, results)
+    : topicResults[0];
   const learningObjectiveResults = computeLearningObjectiveResults(
     config.studentId,
     results,

@@ -31,3 +31,11 @@ export function getTopicTestQuestionCount(learningObjectiveCount: number) {
 export function getGradeTestPlan(classLevel: ClassLevel) {
   return GRADE_TEST_PLANS[classLevel];
 }
+
+export function getValidMultiTopicQuestionCounts(topicCount: number) {
+  if (topicCount < 1 || topicCount > 5) return [];
+
+  return Array.from({ length: 21 }, (_, index) => index + 10).filter(
+    (total) => total % topicCount === 0,
+  );
+}

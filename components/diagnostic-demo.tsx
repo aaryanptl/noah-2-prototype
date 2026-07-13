@@ -2,11 +2,13 @@
 
 import {
   AlertCircle,
+  Check,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
   Globe2,
   GraduationCap,
+  Layers3,
   Pin,
   RotateCcw,
   Shuffle,
@@ -25,8 +27,8 @@ import {
   useTransition,
 } from "react";
 import type {
-  DiagnosticReport,
   DiagnosticRegion,
+  DiagnosticReport,
   DragDropQuestionPayload,
   MatchingQuestionPayload,
 } from "../agents/diagnostic/types/index";
@@ -43,6 +45,7 @@ import { DIAGNOSTIC_CONTENT_DEFAULTS } from "../lib/diagnostic-content-defaults"
 import {
   getGradeTestPlan,
   getTopicTestQuestionCount,
+  getValidMultiTopicQuestionCounts,
 } from "../lib/quiz-counts";
 import { MultiStageLoadingScreen } from "./loading-screen";
 import { PlacementTopicInsightsSection } from "./placement-result-view";
@@ -64,6 +67,7 @@ type AppScreen =
   | "selector"
   | "topic-browse"
   | "topic-start"
+  | "multi-topic-setup"
   | "grade-browse"
   | "grade-start";
 
@@ -1034,6 +1038,7 @@ export async function submitQuiz(
       classLevel: quiz.classLevel,
       region: quiz.region,
       topic: quiz.topic,
+      topics: quiz.selectedTopics,
       maxQuestions: quiz.maxQuestions,
       parentAssessmentId: quiz.parentAssessmentId,
       questions: quiz.questions, // Send full questions for re-evaluation
@@ -1279,12 +1284,14 @@ function StudentInfoScreen({
 
 function SelectorScreen({
   onSelectTopic,
+  onSelectMultiTopic,
   onSelectGrade,
   studentName,
   classLevel,
   assessmentCopy,
 }: {
   onSelectTopic: () => void;
+  onSelectMultiTopic: () => void;
   onSelectGrade: () => void;
   studentName: string;
   classLevel: string;
@@ -1305,7 +1312,7 @@ function SelectorScreen({
         </p>
       </div>
 
-      <div className="mx-auto grid max-w-[860px] grid-cols-1 gap-6 sm:grid-cols-2">
+      <div className="mx-auto grid max-w-[1120px] grid-cols-1 gap-6 md:grid-cols-3">
         {/* Topic Test Card */}
         <button
           type="button"
@@ -1337,6 +1344,40 @@ function SelectorScreen({
           <div className="flex items-center gap-1 font-semibold text-[14px] text-[#F5A623]">
             Start a topic test{" "}
             <span className="text-[18px] leading-none">›</span>
+          </div>
+        </button>
+
+        {/* Multi-topic Test Card */}
+        <button
+          type="button"
+          onClick={onSelectMultiTopic}
+          className="group cursor-pointer rounded-[20px] border border-gray-100 bg-white p-5 text-left shadow-sm transition-all duration-200 hover:-translate-y-1 hover:border-[#7C5CFC] hover:shadow-[0_8px_32px_rgba(124,92,252,0.12)] sm:p-8"
+        >
+          <div className="mb-4 flex h-[60px] w-[60px] items-center justify-center rounded-[14px] bg-[#F0ECFF] text-[#7C5CFC]">
+            <Layers3 className="h-8 w-8" strokeWidth={2.2} />
+          </div>
+          <h3 className="mb-2 text-[22px] font-bold text-[#1B4A4A]">
+            Multi-topic Test
+          </h3>
+          <p className="mb-5 text-[14px] leading-relaxed text-[#6B7280]">
+            Choose up to five topics and give each one an equal share of the
+            test. Good for focused revision across related skills.
+          </p>
+          <div className="mb-5 flex flex-wrap gap-2">
+            {["1–5 topics", "10–30 questions", "Equal topic mix"].map(
+              (pill) => (
+                <span
+                  key={pill}
+                  className="rounded-full border border-gray-100 bg-[#F8F9FA] px-3 py-1.5 font-mono text-[12px] text-[#6B7280]"
+                >
+                  {pill}
+                </span>
+              ),
+            )}
+          </div>
+          <div className="flex items-center gap-1 font-semibold text-[14px] text-[#7C5CFC]">
+            Build a multi-topic test
+            <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
           </div>
         </button>
 
@@ -1377,6 +1418,290 @@ function SelectorScreen({
 }
 
 // ─── Topic Browse Screen ───────────────────────────────────────────────────────
+function MultiTopicSetupScreen({
+  quizCatalog,
+  classLevel,
+  isBusy,
+  onBack,
+  onBegin,
+}: {
+  quizCatalog: DemoQuizCatalog;
+  classLevel: CreateSessionInput["classLevel"];
+  isBusy: boolean;
+  onBack: () => void;
+  onBegin: (input: {
+    subject: CreateSessionInput["subject"];
+    topics: string[];
+    maxQuestions: number;
+  }) => void;
+}) {
+  const entriesForGrade = useMemo(
+    () =>
+      quizCatalog.entries.filter((entry) => entry.classLevel === classLevel),
+    [classLevel, quizCatalog.entries],
+  );
+  const subjects = useMemo(() => {
+    const available = Array.from(
+      new Set(entriesForGrade.map((entry) => entry.subject)),
+    ).sort();
+    const mathsAndEnglish = available.filter(
+      (subject) => subject === "Maths" || subject === "English",
+    );
+    return mathsAndEnglish.length > 0 ? mathsAndEnglish : available;
+  }, [entriesForGrade]);
+  const [selectedSubject, setSelectedSubject] = useState<
+    CreateSessionInput["subject"]
+  >(() => subjects[0] ?? "Maths");
+  const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
+  const [questionCount, setQuestionCount] = useState(10);
+  const [selectionMessage, setSelectionMessage] = useState<string | null>(null);
+
+  const topicEntries = useMemo(
+    () => entriesForGrade.filter((entry) => entry.subject === selectedSubject),
+    [entriesForGrade, selectedSubject],
+  );
+  const selectedEntries = selectedTopics.flatMap((topic) => {
+    const entry = topicEntries.find((candidate) => candidate.topic === topic);
+    return entry ? [entry] : [];
+  });
+  const minimumAvailableQuestions =
+    selectedEntries.length > 0
+      ? Math.min(...selectedEntries.map((entry) => entry.questionCount))
+      : 0;
+  const validQuestionCounts = getValidMultiTopicQuestionCounts(
+    selectedTopics.length,
+  ).filter(
+    (total) => total / selectedTopics.length <= minimumAvailableQuestions,
+  );
+  const effectiveQuestionCount = validQuestionCounts.includes(questionCount)
+    ? questionCount
+    : (validQuestionCounts[0] ?? 0);
+  const questionsPerTopic = selectedTopics.length
+    ? effectiveQuestionCount / selectedTopics.length
+    : 0;
+
+  const toggleTopic = (topic: string) => {
+    setSelectionMessage(null);
+    setSelectedTopics((current) => {
+      if (current.includes(topic)) {
+        return current.filter((selectedTopic) => selectedTopic !== topic);
+      }
+      if (current.length >= 5) {
+        setSelectionMessage("You can select up to 5 topics.");
+        return current;
+      }
+      return [...current, topic];
+    });
+  };
+
+  return (
+    <div className="mx-auto max-w-[980px] animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <button
+        type="button"
+        onClick={onBack}
+        className="mb-4 flex items-center gap-1 text-[13px] font-medium text-[#6B7280] transition-colors hover:text-[#1a1a1a]"
+      >
+        <ChevronLeft className="h-4 w-4" /> Back
+      </button>
+
+      <div className="overflow-hidden rounded-[20px] border border-gray-100 bg-white shadow-sm">
+        <div className="border-b border-gray-100 p-5 sm:p-8">
+          <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-[#F0ECFF] px-3 py-1 font-mono text-[11px] font-bold tracking-wider text-[#6547D8]">
+            <Layers3 className="h-3.5 w-3.5" /> MULTI-TOPIC TEST
+          </div>
+          <h2 className="text-[24px] font-extrabold tracking-tight text-[#1B4A4A] sm:text-[30px]">
+            Build an equal-topic test
+          </h2>
+          <p className="mt-2 max-w-[680px] text-[14px] leading-relaxed text-[#6B7280]">
+            Select up to five {classLabel(classLevel)} topics. Every available
+            question total divides evenly across your selection.
+          </p>
+        </div>
+
+        <div className="grid lg:grid-cols-[1fr_320px]">
+          <div className="border-b border-gray-100 p-5 lg:border-r lg:border-b-0 sm:p-8">
+            <div className="mb-6 flex flex-wrap gap-2">
+              {subjects.map((subject) => (
+                <button
+                  type="button"
+                  key={subject}
+                  onClick={() => {
+                    setSelectedSubject(subject);
+                    setSelectedTopics([]);
+                    setQuestionCount(10);
+                    setSelectionMessage(null);
+                  }}
+                  className={`rounded-full px-5 py-2 font-mono text-[12px] font-bold transition-all ${
+                    selectedSubject === subject
+                      ? "bg-[#7C5CFC] text-white shadow-sm"
+                      : "border border-gray-200 bg-white text-[#6B7280] hover:border-[#7C5CFC]"
+                  }`}
+                >
+                  {subject}
+                </button>
+              ))}
+            </div>
+
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-[#9CA3AF]">
+                Choose topics
+              </span>
+              <span className="text-[12px] font-bold text-[#7C5CFC]">
+                {selectedTopics.length} of 5 selected
+              </span>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              {topicEntries.map((entry) => {
+                const isSelected = selectedTopics.includes(entry.topic);
+                return (
+                  <button
+                    type="button"
+                    key={`${entry.subject}-${entry.classLevel}-${entry.topic}`}
+                    onClick={() => toggleTopic(entry.topic)}
+                    aria-pressed={isSelected}
+                    className={`flex min-h-[64px] items-start gap-3 rounded-[14px] border p-3.5 text-left transition-all ${
+                      isSelected
+                        ? "border-[#7C5CFC] bg-[#F7F4FF] shadow-[0_0_0_2px_rgba(124,92,252,0.08)]"
+                        : "border-gray-200 bg-white hover:border-[#7C5CFC]/50"
+                    }`}
+                  >
+                    <span
+                      className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md border ${
+                        isSelected
+                          ? "border-[#7C5CFC] bg-[#7C5CFC] text-white"
+                          : "border-gray-300 bg-white text-transparent"
+                      }`}
+                    >
+                      <Check className="h-3.5 w-3.5" strokeWidth={3} />
+                    </span>
+                    <span className="min-w-0">
+                      <strong className="block text-[13px] leading-snug text-[#1B4A4A]">
+                        {entry.topic}
+                      </strong>
+                      <span className="mt-1 block text-[11px] text-[#9CA3AF]">
+                        {entry.questionCount} available
+                      </span>
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {selectionMessage && (
+              <p className="mt-3 text-[12px] font-semibold text-[#F46853]">
+                {selectionMessage}
+              </p>
+            )}
+          </div>
+
+          <aside className="bg-[#FCFBFF] p-5 sm:p-8">
+            <h3 className="text-[19px] font-extrabold text-[#1B4A4A]">
+              Your test
+            </h3>
+            <div className="mt-5 space-y-2">
+              {selectedTopics.length > 0 ? (
+                selectedTopics.map((topic) => (
+                  <div
+                    key={topic}
+                    className="flex items-center justify-between gap-3 rounded-[11px] border border-[#7C5CFC]/10 bg-white px-3 py-2.5 text-[12px]"
+                  >
+                    <span className="min-w-0 truncate font-semibold text-[#4B5563]">
+                      {topic}
+                    </span>
+                    <strong className="shrink-0 font-mono text-[11px] text-[#7C5CFC]">
+                      {questionsPerTopic} questions
+                    </strong>
+                  </div>
+                ))
+              ) : (
+                <div className="rounded-[12px] border border-dashed border-gray-200 bg-white px-4 py-6 text-center text-[12px] text-[#9CA3AF]">
+                  Select at least one topic.
+                </div>
+              )}
+            </div>
+
+            <div className="mt-6">
+              <div className="mb-2 flex items-end justify-between gap-3">
+                <span className="text-[13px] font-bold text-[#1B4A4A]">
+                  Total questions
+                </span>
+                <span className="font-mono text-[9px] font-bold text-[#9CA3AF]">
+                  MIN 10 · MAX 30
+                </span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {validQuestionCounts.map((count) => (
+                  <button
+                    type="button"
+                    key={count}
+                    onClick={() => setQuestionCount(count)}
+                    className={`min-w-10 rounded-[9px] border px-2.5 py-2 font-mono text-[12px] font-bold transition-all ${
+                      effectiveQuestionCount === count
+                        ? "border-[#7C5CFC] bg-[#7C5CFC] text-white"
+                        : "border-gray-200 bg-white text-[#6B7280] hover:border-[#7C5CFC]"
+                    }`}
+                  >
+                    {count}
+                  </button>
+                ))}
+              </div>
+              {selectedTopics.length > 0 &&
+                validQuestionCounts.length === 0 && (
+                  <p className="mt-2 text-[11px] leading-relaxed text-[#F46853]">
+                    One selected topic does not have enough questions for an
+                    equal test of at least 10 questions.
+                  </p>
+                )}
+            </div>
+
+            <div className="mt-6 grid grid-cols-2 gap-2">
+              <div className="rounded-[12px] bg-white p-3">
+                <div className="font-mono text-[9px] font-bold uppercase tracking-wider text-[#9CA3AF]">
+                  Per topic
+                </div>
+                <div className="mt-1 text-[18px] font-extrabold text-[#1B4A4A]">
+                  {questionsPerTopic || "—"}
+                </div>
+              </div>
+              <div className="rounded-[12px] bg-white p-3">
+                <div className="font-mono text-[9px] font-bold uppercase tracking-wider text-[#9CA3AF]">
+                  Est. time
+                </div>
+                <div className="mt-1 text-[18px] font-extrabold text-[#1B4A4A]">
+                  {effectiveQuestionCount
+                    ? getEstimatedTestTimeLabel(effectiveQuestionCount)
+                    : "—"}
+                </div>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              disabled={
+                isBusy ||
+                selectedTopics.length === 0 ||
+                effectiveQuestionCount === 0
+              }
+              onClick={() =>
+                onBegin({
+                  subject: selectedSubject,
+                  topics: selectedTopics,
+                  maxQuestions: effectiveQuestionCount,
+                })
+              }
+              className="mt-6 flex w-full items-center justify-center gap-2 rounded-full bg-[#7C5CFC] py-3.5 font-bold text-white shadow-[0_6px_20px_rgba(124,92,252,0.25)] transition-all hover:-translate-y-0.5 hover:bg-[#6C4CEB] disabled:translate-y-0 disabled:opacity-45"
+            >
+              {isBusy ? "Preparing…" : "Begin Test"}
+              {!isBusy && <ChevronRight className="h-4 w-4" />}
+            </button>
+          </aside>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function TopicBrowseScreen({
   form,
   setForm,
@@ -1397,6 +1722,13 @@ function TopicBrowseScreen({
   onSelectEntry: (entry: DemoQuizCatalogEntry) => void;
 }) {
   const defaultEntry = defaultTopicEntry ?? getDefaultCatalogEntry(quizCatalog);
+  const subjects = useMemo(
+    () => Array.from(new Set(quizCatalog.entries.map((e) => e.subject))).sort(),
+    [quizCatalog.entries],
+  );
+  const [selectedSubject, setSelectedSubject] = useState<string>(
+    () => form.subject || defaultEntry?.subject || subjects[0] || "",
+  );
   const [selectedTopic, setSelectedTopic] = useState<string | null>(
     () => form.topic || defaultEntry?.topic || null,
   );
@@ -1411,8 +1743,11 @@ function TopicBrowseScreen({
   );
 
   const filteredEntries = useMemo(
-    () => quizCatalog.entries.filter((e) => e.classLevel === activeTab),
-    [activeTab, quizCatalog.entries],
+    () =>
+      quizCatalog.entries.filter(
+        (e) => e.classLevel === activeTab && e.subject === selectedSubject,
+      ),
+    [activeTab, selectedSubject, quizCatalog.entries],
   );
 
   const handleSelectTopic = (entry: DemoQuizCatalogEntry) => {
@@ -1453,6 +1788,26 @@ function TopicBrowseScreen({
         <p className="mt-1 text-[14px] text-[#6B7280]">
           {assessmentCopy.topicBrowseIntro}
         </p>
+      </div>
+
+      {/* Subject tabs */}
+      <div className="mb-4 flex flex-wrap justify-center gap-2">
+        {subjects.map((sub) => (
+          <button
+            key={sub}
+            onClick={() => {
+              setSelectedSubject(sub);
+              setSelectedTopic(null);
+            }}
+            className={`rounded-full px-5 py-2 font-mono text-[12px] font-bold transition-all ${
+              selectedSubject === sub
+                ? "bg-[#2EC4B6] text-white shadow-sm"
+                : "bg-white border border-gray-200 text-[#6B7280] hover:border-[#2EC4B6]"
+            }`}
+          >
+            {sub}
+          </button>
+        ))}
       </div>
 
       {/* Class tabs */}
@@ -1547,12 +1902,27 @@ function TopicStartScreen({
   onBack: () => void;
   isBusy: boolean;
 }) {
-  const selectedTopic = topicEntries.some((entry) => entry.topic === form.topic)
+  const subjects = useMemo(
+    () => Array.from(new Set(topicEntries.map((e) => e.subject))).sort(),
+    [topicEntries],
+  );
+  const [selectedSubject, setSelectedSubject] = useState(
+    form.subject || topicEntries[0]?.subject || "Maths",
+  );
+
+  const filteredTopicEntries = useMemo(
+    () => topicEntries.filter((entry) => entry.subject === selectedSubject),
+    [topicEntries, selectedSubject],
+  );
+
+  const selectedTopic = filteredTopicEntries.some(
+    (entry) => entry.topic === form.topic,
+  )
     ? form.topic
-    : (topicEntries[0]?.topic ?? "");
+    : (filteredTopicEntries[0]?.topic ?? "");
   const selectedEntry =
-    topicEntries.find((entry) => entry.topic === selectedTopic) ??
-    topicEntries[0];
+    filteredTopicEntries.find((entry) => entry.topic === selectedTopic) ??
+    filteredTopicEntries[0];
   const questionCount = getTopicQuestionCountForEntry(selectedEntry);
   const estimatedTime = getEstimatedTestTimeLabel(questionCount);
 
@@ -1579,6 +1949,38 @@ function TopicStartScreen({
           {assessmentCopy.topicStartIntro}
         </p>
 
+        <label className="mb-4 block">
+          <span className="mb-2 block font-mono text-[10px] font-bold uppercase tracking-widest text-[#9CA3AF]">
+            Subject
+          </span>
+          <div className="relative">
+            <select
+              value={selectedSubject}
+              onChange={(event) => {
+                const newSubject = event.target
+                  .value as CreateSessionInput["subject"];
+                setSelectedSubject(newSubject);
+                const nextEntry = topicEntries.find(
+                  (entry) => entry.subject === newSubject,
+                );
+                if (nextEntry) onSelectTopic(nextEntry);
+              }}
+              disabled={subjects.length <= 1 || isBusy}
+              className="h-12 w-full appearance-none rounded-[14px] border border-gray-200 bg-[#F8F9FA] px-4 pr-11 text-[15px] font-semibold text-[#1a1a1a] outline-none transition-all focus:border-[#2EC4B6] focus:bg-white focus:ring-4 focus:ring-[#2EC4B6]/10 disabled:opacity-60"
+            >
+              {subjects.map((sub) => (
+                <option key={sub} value={sub}>
+                  {sub}
+                </option>
+              ))}
+            </select>
+            <ChevronDown
+              className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6B7280]"
+              aria-hidden="true"
+            />
+          </div>
+        </label>
+
         <label className="mb-6 block">
           <span className="mb-2 block font-mono text-[10px] font-bold uppercase tracking-widest text-[#9CA3AF]">
             Topic
@@ -1587,15 +1989,15 @@ function TopicStartScreen({
             <select
               value={selectedTopic}
               onChange={(event) => {
-                const nextEntry = topicEntries.find(
+                const nextEntry = filteredTopicEntries.find(
                   (entry) => entry.topic === event.target.value,
                 );
                 if (nextEntry) onSelectTopic(nextEntry);
               }}
-              disabled={topicEntries.length === 0 || isBusy}
+              disabled={filteredTopicEntries.length === 0 || isBusy}
               className="h-12 w-full appearance-none rounded-[14px] border border-gray-200 bg-[#F8F9FA] px-4 pr-11 text-[15px] font-semibold text-[#1a1a1a] outline-none transition-all focus:border-[#2EC4B6] focus:bg-white focus:ring-4 focus:ring-[#2EC4B6]/10 disabled:opacity-60"
             >
-              {topicEntries.map((entry) => (
+              {filteredTopicEntries.map((entry) => (
                 <option
                   key={`${entry.subject}-${entry.classLevel}-${entry.topic}`}
                   value={entry.topic}
@@ -1665,9 +2067,17 @@ function GradeBrowseScreen({
 }: {
   quizCatalog: DemoQuizCatalog;
   assessmentCopy: (typeof ASSESSMENT_COPY)[AssessmentKind];
-  onSelect: (classLevel: string) => void;
+  onSelect: (classLevel: string, subject: string) => void;
   onBack: () => void;
 }) {
+  const subjects = useMemo(
+    () => Array.from(new Set(quizCatalog.entries.map((e) => e.subject))).sort(),
+    [quizCatalog.entries],
+  );
+  const [selectedSubject, setSelectedSubject] = useState<string>(
+    () => subjects[0] || "",
+  );
+
   const classLevels = useMemo(
     () =>
       Array.from(new Set(quizCatalog.entries.map((e) => e.classLevel))).sort(),
@@ -1705,16 +2115,34 @@ function GradeBrowseScreen({
         </p>
       </div>
 
+      {/* Subject tabs */}
+      <div className="mb-8 flex flex-wrap justify-center gap-2">
+        {subjects.map((sub) => (
+          <button
+            key={sub}
+            onClick={() => setSelectedSubject(sub)}
+            className={`rounded-full px-5 py-2 font-mono text-[12px] font-bold transition-all ${
+              selectedSubject === sub
+                ? "bg-[#2EC4B6] text-white shadow-sm"
+                : "bg-white border border-gray-200 text-[#6B7280] hover:border-[#2EC4B6]"
+            }`}
+          >
+            {sub}
+          </button>
+        ))}
+      </div>
+
       <div className="mx-auto grid max-w-[700px] grid-cols-2 gap-5 sm:grid-cols-3">
         {classLevels.map((cl) => {
           const topicsForClass = quizCatalog.entries.filter(
-            (e) => e.classLevel === cl,
+            (e) => e.classLevel === cl && e.subject === selectedSubject,
           );
+          if (topicsForClass.length === 0) return null;
           return (
             <button
               type="button"
               key={cl}
-              onClick={() => onSelect(cl)}
+              onClick={() => onSelect(cl, selectedSubject)}
               className="cursor-pointer rounded-[20px] border border-gray-100 bg-white p-7 text-center shadow-sm transition-all duration-200 hover:-translate-y-1 hover:border-[#F5A623] hover:shadow-[0_8px_28px_rgba(245,166,35,0.14)]"
             >
               <div className="mb-3 text-[40px] leading-none">
@@ -2947,6 +3375,27 @@ function ReportView({
 
   const totalQuestions = results.length || report.totalQuestionsShown || 0;
   const correctCount = results.filter((r) => r.verdict === "correct").length;
+  const selectedReportTopics =
+    report.mode === "multi_topic"
+      ? Array.from(
+          new Set(
+            results
+              .map((record) => record.question.topic)
+              .filter((topic): topic is string => Boolean(topic)),
+          ),
+        ).map((topic) => {
+          const topicResults = results.filter(
+            (record) => record.question.topic === topic,
+          );
+          return {
+            topic,
+            questionCount: topicResults.length,
+            correctCount: topicResults.filter(
+              (record) => record.verdict === "correct",
+            ).length,
+          };
+        })
+      : [];
   const rapidCount = results.filter(
     (r) =>
       (r.timeTakenMs ?? 0) > 0 &&
@@ -3466,6 +3915,43 @@ function ReportView({
             ))}
           </div>
         </div>
+      )}
+
+      {selectedReportTopics.length > 0 && (
+        <section className="v1-card p-5 sm:p-6">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <div className="font-mono text-[0.65rem] font-extrabold uppercase tracking-[0.16em] text-[#7C5CFC]">
+                Multi-topic test
+              </div>
+              <h2 className="mt-1 text-[1.05rem] font-extrabold text-[#1B4A4A]">
+                Selected topics
+              </h2>
+            </div>
+            <span className="rounded-full bg-[#F0ECFF] px-3 py-1 font-mono text-[0.68rem] font-bold text-[#6547D8]">
+              {selectedReportTopics.length} topic
+              {selectedReportTopics.length === 1 ? "" : "s"}
+            </span>
+          </div>
+
+          <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
+            {selectedReportTopics.map((item) => (
+              <div
+                key={item.topic}
+                className="rounded-[13px] border border-[#7C5CFC]/15 bg-[#FAF8FF] px-4 py-3"
+              >
+                <div className="text-[0.84rem] font-extrabold leading-snug text-[#1B4A4A]">
+                  {item.topic}
+                </div>
+                <div className="mt-1.5 font-mono text-[0.65rem] font-bold text-[#7A7890]">
+                  {item.questionCount} question
+                  {item.questionCount === 1 ? "" : "s"} · {item.correctCount}{" "}
+                  correct
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
       )}
 
       {report.mode === "placement" && (
@@ -4417,10 +4903,13 @@ export function DiagnosticDemo({
     region: DEFAULT_DIAGNOSTIC_REGION,
   });
   const [testMode, setTestMode] = useState<
-    "topic" | "grade" | "recurring" | "placement"
+    "topic" | "multi_topic" | "grade" | "recurring" | "placement"
   >("topic");
   const [selectedGradeClass, setSelectedGradeClass] =
     useState<string>(initialClassLevel);
+  const [selectedGradeSubject, setSelectedGradeSubject] = useState<string>(
+    initialTopicEntry?.subject ?? "Maths",
+  );
   const [selectedTopicEntry, setSelectedTopicEntry] =
     useState<DemoQuizCatalogEntry | null>(() => initialTopicEntry);
   const [toast, setToast] = useState<{
@@ -4430,7 +4919,11 @@ export function DiagnosticDemo({
   } | null>(null);
 
   const [form, setForm] = useState<CreateSessionInput>(() =>
-    buildDefaultForm(initialTopicEntry, "Riya Sharma", DEFAULT_DIAGNOSTIC_REGION),
+    buildDefaultForm(
+      initialTopicEntry,
+      "Riya Sharma",
+      DEFAULT_DIAGNOSTIC_REGION,
+    ),
   );
   const [quiz, setQuiz] = useState<DemoLoadedQuiz | null>(null);
   const [report, setReport] = useState<DiagnosticReport | null>(null);
@@ -4634,28 +5127,31 @@ export function DiagnosticDemo({
     });
   }, [form, isBusy]);
 
-  const startQuizRun = useCallback(() => {
-    setPendingAction("load");
-    startTransition(() => {
-      void (async () => {
-        try {
-          setError(null);
-          const loadedQuiz = await loadQuiz(form);
-          setQuiz(loadedQuiz);
-          setReport(null);
-          setCurrentIndex(0);
-          setAnswers({});
-          setQuestionElapsedMs(0);
-          setResponseMeta({});
-          setCurrentAnswer("");
-        } catch (err) {
-          setError(toErrorMessage(err));
-        } finally {
-          setPendingAction(null);
-        }
-      })();
-    });
-  }, [form]);
+  const startQuizRun = useCallback(
+    (sessionInput = form) => {
+      setPendingAction("load");
+      startTransition(() => {
+        void (async () => {
+          try {
+            setError(null);
+            const loadedQuiz = await loadQuiz(sessionInput);
+            setQuiz(loadedQuiz);
+            setReport(null);
+            setCurrentIndex(0);
+            setAnswers({});
+            setQuestionElapsedMs(0);
+            setResponseMeta({});
+            setCurrentAnswer("");
+          } catch (err) {
+            setError(toErrorMessage(err));
+          } finally {
+            setPendingAction(null);
+          }
+        })();
+      });
+    },
+    [form],
+  );
 
   const startRecurringTest = useCallback(
     (assessmentId: string) => {
@@ -4704,7 +5200,11 @@ export function DiagnosticDemo({
 
     if (assessmentKind === "placement") {
       setTestMode("placement");
-      setForm((prev) => ({ ...prev, testMode: "placement", region: undefined }));
+      setForm((prev) => ({
+        ...prev,
+        testMode: "placement",
+        region: undefined,
+      }));
       setAppScreen("grade-start");
     } else {
       setAppScreen("selector");
@@ -4745,20 +5245,17 @@ export function DiagnosticDemo({
 
   // Grade test: get topics for selected class
   const gradeTopics = useMemo(() => {
-    if (!selectedGradeClass) return [];
+    if (!selectedGradeClass || !selectedGradeSubject) return [];
     return visibleQuizCatalog.entries
-      .filter((e) => e.classLevel === selectedGradeClass)
+      .filter(
+        (e) =>
+          e.classLevel === selectedGradeClass &&
+          e.subject === selectedGradeSubject,
+      )
       .map((e) => e.topic);
-  }, [visibleQuizCatalog.entries, selectedGradeClass]);
+  }, [visibleQuizCatalog.entries, selectedGradeClass, selectedGradeSubject]);
 
-  const gradeSubject = useMemo(() => {
-    if (!selectedGradeClass) return "Maths";
-    return (
-      visibleQuizCatalog.entries.find(
-        (e) => e.classLevel === selectedGradeClass,
-      )?.subject ?? "Maths"
-    );
-  }, [visibleQuizCatalog.entries, selectedGradeClass]);
+  const gradeSubject = selectedGradeSubject;
 
   const topicEntriesForFormGrade = useMemo(
     () =>
@@ -4823,10 +5320,16 @@ export function DiagnosticDemo({
     setAppScreen("grade-start");
   };
 
-  const handleSelectGradeClass = (cl: string) => {
+  const selectMultiTopicTest = () => {
+    setTestMode("multi_topic");
+    setAppScreen("multi-topic-setup");
+  };
+
+  const handleSelectGradeClass = (cl: string, subject: string) => {
     setSelectedGradeClass(cl);
+    setSelectedGradeSubject(subject);
     const firstEntry = visibleQuizCatalog.entries.find(
-      (e) => e.classLevel === cl,
+      (e) => e.classLevel === cl && e.subject === subject,
     );
     if (firstEntry) {
       setForm((prev) => ({
@@ -4938,10 +5441,39 @@ export function DiagnosticDemo({
           appScreen === "selector" && (
             <SelectorScreen
               onSelectTopic={selectFixedTopicTest}
+              onSelectMultiTopic={selectMultiTopicTest}
               onSelectGrade={selectFixedGradeTest}
               studentName={studentSetup.studentId.trim() || "Student"}
               classLevel={studentSetup.classLevel}
               assessmentCopy={assessmentCopy}
+            />
+          )}
+
+        {/* Multi-topic Setup */}
+        {!isQuizActive &&
+          !isSubmitting &&
+          !showResult &&
+          appScreen === "multi-topic-setup" && (
+            <MultiTopicSetupScreen
+              quizCatalog={visibleQuizCatalog}
+              classLevel={studentSetup.classLevel}
+              isBusy={isBusy}
+              onBack={() => setAppScreen("selector")}
+              onBegin={({ subject, topics, maxQuestions }) => {
+                const multiTopicForm: CreateSessionInput = {
+                  studentId: studentSetup.studentId.trim() || "Student",
+                  testMode: "multi_topic",
+                  subject,
+                  classLevel: studentSetup.classLevel,
+                  topic: "",
+                  topics,
+                  maxQuestions,
+                  region: studentSetup.region,
+                };
+                setTestMode("multi_topic");
+                setForm(multiTopicForm);
+                startQuizRun(multiTopicForm);
+              }}
             />
           )}
 
@@ -5049,7 +5581,9 @@ export function DiagnosticDemo({
                       ? "PLACEMENT TEST"
                       : testMode === "grade"
                         ? "GRADE TEST"
-                        : "TOPIC TEST"}{" "}
+                        : testMode === "multi_topic"
+                          ? "MULTI-TOPIC TEST"
+                          : "TOPIC TEST"}{" "}
                     / {classLabel(quiz.classLevel)}
                   </div>
                   <div className="mt-0.5 flex flex-wrap items-center gap-2 text-[18px] font-extrabold text-[#1a1a1a] sm:text-[20px]">
@@ -5075,6 +5609,11 @@ export function DiagnosticDemo({
                   {quiz.topic && (
                     <div className="mt-1 text-[12px] font-medium text-[#6B7280]">
                       {quiz.topic}
+                    </div>
+                  )}
+                  {testMode === "multi_topic" && currentQuestion.topic && (
+                    <div className="mt-1 text-[12px] font-semibold text-[#7C5CFC]">
+                      {currentQuestion.topic}
                     </div>
                   )}
                 </div>

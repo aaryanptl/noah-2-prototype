@@ -9,7 +9,12 @@ export type ClassLevel =
   | "class6"
   | "class7"
   | "class8";
-export type TestMode = "topic" | "grade" | "recurring" | "placement";
+export type TestMode =
+  | "topic"
+  | "multi_topic"
+  | "grade"
+  | "recurring"
+  | "placement";
 export type DiagnosticRegion = "US" | "UK" | "UAE" | "Ontario" | "Australia";
 
 export type BloomLevel = "remember" | "understand" | "apply";
@@ -380,6 +385,7 @@ export interface DiagnosticConfig {
   subject: Subject;
   classLevel: ClassLevel;
   topic: string;
+  topics?: string[];
   maxQuestions: number;
   questionIds?: string[];
   onQuestion: (
@@ -392,7 +398,7 @@ export interface DiagnosticConfig {
 
 export interface DiagnosticReport {
   studentId: string;
-  mode: "topic" | "grade" | "recurring" | "placement";
+  mode: "topic" | "multi_topic" | "grade" | "recurring" | "placement";
   region?: DiagnosticRegion;
   subject: Subject;
   classLevel: ClassLevel;

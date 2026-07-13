@@ -6,7 +6,11 @@ import type {
   DemoQuizCatalogEntry,
   DemoQuizQuestion,
 } from "@/lib/demo-types";
-import { getGradeTestPlan, getTopicTestQuestionCount } from "@/lib/quiz-counts";
+import {
+  getGradeTestPlan,
+  getTopicTestQuestionCount,
+  getValidMultiTopicQuestionCounts,
+} from "@/lib/quiz-counts";
 import type {
   BloomLevel,
   ClassLevel,
@@ -549,6 +553,57 @@ function buildQuestion(row: ContentQuestionRow): QuestionBankQuestion {
   };
 }
 
+const DIAGNOSTIC_BANK_CTE = `(
+  SELECT
+    id,
+    question_type,
+    question_text,
+    question_svg,
+    subject,
+    grade,
+    topic,
+    subtopic,
+    learning_objective,
+    blooms_level,
+    difficulty_level,
+    difficulty_rating,
+    options,
+    explanation,
+    generation_metadata,
+    lower(region) AS region,
+    parent_id,
+    visual_mode,
+    created_at
+  FROM final_content_questions_1
+  
+  UNION ALL
+  
+  SELECT
+    id,
+    question_type,
+    question_text,
+    question_svg,
+    subject,
+    grade,
+    topic,
+    subtopic,
+    learning_objective,
+    blooms_level,
+    difficulty_level,
+    difficulty_rating,
+    options,
+    explanation,
+    CASE 
+      WHEN payload IS NOT NULL THEN generation_metadata::jsonb || jsonb_build_object('payload', payload::jsonb)
+      ELSE generation_metadata::jsonb
+    END AS generation_metadata,
+    lower(region) AS region,
+    NULL AS parent_id,
+    visual_mode,
+    created_at
+  FROM english_content_questions
+)`;
+
 const CONTENT_QUESTION_SELECT = `
   SELECT
     id::text,
@@ -568,7 +623,7 @@ const CONTENT_QUESTION_SELECT = `
     generation_metadata,
     region,
     parent_id::text AS parent_id
-  FROM final_content_questions_1
+  FROM ${DIAGNOSTIC_BANK_CTE} AS final_content_questions_1
 `;
 
 const QUESTION_VISUAL_MODE_TYPE_FILTER = `
@@ -619,10 +674,9 @@ async function loadDiagnosticQuizCatalog(): Promise<DemoQuizCatalog> {
         WHERE learning_objective IS NOT NULL AND btrim(learning_objective) <> ''
       ) AS learning_objectives,
       count(*)::int AS question_count
-    FROM final_content_questions_1
+    FROM ${DIAGNOSTIC_BANK_CTE} AS final_content_questions_1
     WHERE question_text IS NOT NULL
       AND question_type IS NOT NULL
-      AND region IN ('global', '${DEFAULT_DIAGNOSTIC_REGION}')
       ${QUESTION_VISUAL_MODE_TYPE_FILTER}
       AND subject IS NOT NULL
       AND grade IS NOT NULL
@@ -700,7 +754,7 @@ async function loadTopicQuestions(input: {
       WHERE subject = $1
         AND grade = $2
         AND topic = $3
-        AND region IN ('global', $4)
+        AND region IN ('global', lower($4))
         AND question_text IS NOT NULL
         AND question_type IS NOT NULL
         ${QUESTION_VISUAL_MODE_TYPE_FILTER}
@@ -758,10 +812,10 @@ async function loadGradeQuestions(input: {
               END,
               random()
           ) AS topic_difficulty_rank
-        FROM final_content_questions_1
+        FROM ${DIAGNOSTIC_BANK_CTE} AS final_content_questions_1
         WHERE subject = $1
           AND grade = $2
-          AND region IN ('global', $4)
+          AND region IN ('global', lower($4))
           AND question_text IS NOT NULL
           AND question_type IS NOT NULL
           ${QUESTION_VISUAL_MODE_TYPE_FILTER}
@@ -799,9 +853,55 @@ async function loadGradeQuestions(input: {
   return toQuestions(result.rows as ContentQuestionRow[]);
 }
 
+async function loadMultiTopicQuestions(input: {
+  subject: Subject;
+  classLevel: ClassLevel;
+  topics: string[];
+  region: DiagnosticRegion;
+}) {
+  const selectedTopicByRawTopic = new Map<string, string>();
+
+  for (const topic of input.topics) {
+    for (const rawTopic of new Set([
+      topic,
+      ...getRawTopicNames(input.classLevel, topic),
+    ])) {
+      selectedTopicByRawTopic.set(rawTopic.trim().toLowerCase(), topic);
+    }
+  }
+
+  const result = await query(
+    `
+      ${CONTENT_QUESTION_SELECT}
+      WHERE subject = $1
+        AND grade = $2
+        AND lower(btrim(topic)) = ANY($3::text[])
+        AND region IN ('global', lower($4))
+        AND question_text IS NOT NULL
+        AND question_type IS NOT NULL
+        ${QUESTION_VISUAL_MODE_TYPE_FILTER}
+      ORDER BY topic, learning_objective, difficulty_level, id
+    `,
+    [
+      input.subject,
+      toDbGrade(input.classLevel),
+      Array.from(selectedTopicByRawTopic.keys()),
+      input.region,
+    ],
+  );
+
+  const questions = toQuestions(result.rows as ContentQuestionRow[]);
+  for (const question of questions) {
+    question.topic =
+      selectedTopicByRawTopic.get(question.topic.trim().toLowerCase()) ??
+      question.topic;
+  }
+  return questions;
+}
+
 async function getPreviouslyAnsweredQuestionIds(input: {
   studentId: string;
-  testMode: "topic" | "grade";
+  testMode: "topic" | "multi_topic" | "grade";
   subject: Subject;
   classLevel: ClassLevel;
   region: DiagnosticRegion;
@@ -835,7 +935,7 @@ async function getPreviouslyAnsweredQuestionIds(input: {
           AND a.subject = $4
           AND a.class_level = $2
           AND ($5::text IS NULL OR a.topic = $5)
-          AND COALESCE(a.region, '${DEFAULT_DIAGNOSTIC_REGION}') = $6
+          AND COALESCE(a.region, lower('${DEFAULT_DIAGNOSTIC_REGION}')) = lower($6)
         LIMIT 1000
       `,
       [
@@ -921,7 +1021,7 @@ async function loadRecurringTestQuestions(input: {
           topic = ANY($3::text[])
           OR learning_objective = ANY($5::text[])
         )
-        AND region IN ('global', $6)
+        AND region IN ('global', lower($6))
         AND id::text != ALL($4::text[])
         AND question_text IS NOT NULL
         AND question_type IS NOT NULL
@@ -1938,6 +2038,104 @@ export async function getGradeQuizQuestions(input: {
   };
 }
 
+function selectExactTopicQuestionShare(
+  questions: QuestionBankQuestion[],
+  requestedCount: number,
+) {
+  const balanced = selectQuestionsAcrossLearningObjectives(
+    questions,
+    requestedCount,
+  ).questions;
+  const selectedIds = new Set(balanced.map((question) => question.id));
+  const fill = shuffleItems(
+    sortQuestionsForTopicQuiz(questions).filter(
+      (question) => !selectedIds.has(question.id),
+    ),
+  );
+
+  return mixQuestionTypes([...balanced, ...fill].slice(0, requestedCount));
+}
+
+function interleaveTopicQuestions(
+  topics: string[],
+  questionsByTopic: Map<string, QuestionBankQuestion[]>,
+  perTopic: number,
+) {
+  const interleaved: QuestionBankQuestion[] = [];
+  for (let questionIndex = 0; questionIndex < perTopic; questionIndex += 1) {
+    for (const topic of topics) {
+      const question = questionsByTopic.get(topic)?.[questionIndex];
+      if (question) interleaved.push(question);
+    }
+  }
+  return interleaved;
+}
+
+export async function getMultiTopicQuizQuestions(input: {
+  subject: Subject;
+  classLevel: ClassLevel;
+  topics: string[];
+  maxQuestions: number;
+  region?: DiagnosticRegion;
+  questions?: QuestionBankQuestion[];
+}) {
+  const topics = Array.from(
+    new Set(input.topics.map((topic) => normalizeText(topic)).filter(Boolean)),
+  );
+  const validQuestionCounts = getValidMultiTopicQuestionCounts(topics.length);
+
+  if (topics.length < 1 || topics.length > 5) {
+    throw new Error("Select between 1 and 5 topics for a multi-topic test.");
+  }
+  if (!validQuestionCounts.includes(input.maxQuestions)) {
+    throw new Error(
+      "Choose 10 to 30 questions with an equal whole-number share for every topic.",
+    );
+  }
+
+  const perTopic = input.maxQuestions / topics.length;
+  const availableQuestions =
+    input.questions ??
+    (await loadMultiTopicQuestions({
+      ...input,
+      topics,
+      region: input.region ?? DEFAULT_DIAGNOSTIC_REGION,
+    }));
+  const questionsByTopic = new Map<string, QuestionBankQuestion[]>();
+
+  for (const topic of topics) {
+    const candidates = availableQuestions.filter(
+      (question) => question.topic === topic,
+    );
+    const selected = selectExactTopicQuestionShare(candidates, perTopic);
+    if (selected.length !== perTopic) {
+      throw new Error(
+        `${topic} can currently provide ${selected.length} of the required ${perTopic} questions. Choose fewer questions or another topic.`,
+      );
+    }
+    questionsByTopic.set(topic, selected);
+  }
+
+  const questions = interleaveTopicQuestions(
+    topics,
+    questionsByTopic,
+    perTopic,
+  );
+
+  return {
+    subject: input.subject,
+    classLevel: input.classLevel,
+    topic: null,
+    selectedTopics: topics,
+    expectedLearningObjectives: Array.from(
+      new Set(
+        questions.map((question) => question.learningObjective).filter(Boolean),
+      ),
+    ) as string[],
+    questions,
+  };
+}
+
 export async function getTopicQuizForClient(input: {
   studentId: string;
   subject: Subject;
@@ -2025,6 +2223,72 @@ export async function getGradeQuizForClient(input: {
     gradeTargets: targets,
     questions: quiz.questions.map(toClientQuizQuestion),
     coverageWarnings: quiz.coverageWarnings,
+  };
+}
+
+export async function getMultiTopicQuizForClient(input: {
+  studentId: string;
+  subject: Subject;
+  classLevel: ClassLevel;
+  topics: string[];
+  maxQuestions: number;
+  region?: DiagnosticRegion;
+}) {
+  const region = input.region ?? DEFAULT_DIAGNOSTIC_REGION;
+  const topics = Array.from(
+    new Set(input.topics.map((topic) => normalizeText(topic)).filter(Boolean)),
+  );
+  const validQuestionCounts = getValidMultiTopicQuestionCounts(topics.length);
+  if (topics.length < 1 || topics.length > 5) {
+    throw new Error("Select between 1 and 5 topics for a multi-topic test.");
+  }
+  if (!validQuestionCounts.includes(input.maxQuestions)) {
+    throw new Error(
+      "Choose 10 to 30 questions with an equal whole-number share for every topic.",
+    );
+  }
+  const allQuestions = await loadMultiTopicQuestions({
+    ...input,
+    topics,
+    region,
+  });
+  const seenQuestionIds = await getPreviouslyAnsweredQuestionIds({
+    studentId: input.studentId,
+    testMode: "multi_topic",
+    subject: input.subject,
+    classLevel: input.classLevel,
+    region,
+  });
+  const perTopic = input.maxQuestions / topics.length;
+  const preferredQuestions = topics.flatMap((topic) => {
+    const topicQuestions = allQuestions.filter(
+      (question) => question.topic === topic,
+    );
+    return preferUnseenQuestions({
+      questions: topicQuestions,
+      seenQuestionIds,
+      requestedCount: perTopic,
+    });
+  });
+  const quiz = await getMultiTopicQuizQuestions({
+    ...input,
+    topics,
+    region,
+    questions: preferredQuestions,
+  });
+
+  return {
+    studentId: input.studentId,
+    region,
+    testMode: "multi_topic" as const,
+    subject: input.subject,
+    classLevel: input.classLevel,
+    topic: null,
+    selectedTopics: quiz.selectedTopics,
+    topicsInGrade: quiz.selectedTopics,
+    expectedLearningObjectives: quiz.expectedLearningObjectives,
+    maxQuestions: quiz.questions.length,
+    questions: quiz.questions.map(toClientQuizQuestion),
   };
 }
 
@@ -2377,7 +2641,7 @@ function buildQuestionFilters(filters: ServeQuestionsFilters): {
   const isPlacement = filters.source === "placement";
   const table = isPlacement
     ? "placement_test_questions_v2"
-    : "final_content_questions_1";
+    : `${DIAGNOSTIC_BANK_CTE} AS final_content_questions_1`;
 
   const conditions: string[] = [
     "question_text IS NOT NULL",
@@ -2453,8 +2717,8 @@ function buildQuestionFilters(filters: ServeQuestionsFilters): {
   }
 
   // Region + visual-mode filters only exist on the diagnostic bank.
-  if (!isPlacement) {
-    conditions.push(`region IN ('global', ${bind(filters.region)})`);
+  if (table.includes(DIAGNOSTIC_BANK_CTE)) {
+    conditions.push(`region IN ('global', lower(${bind(filters.region)}))`);
     conditions.push(`(
       visual_mode IS NULL
       OR lower(btrim(visual_mode)) <> 'question_svg'

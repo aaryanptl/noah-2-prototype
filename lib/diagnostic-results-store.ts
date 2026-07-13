@@ -34,7 +34,9 @@ function gradeForStorage(classLevel: DiagnosticReport["classLevel"]) {
 }
 
 function reportTopicForStorage(report: DiagnosticReport) {
-  return report.mode === "grade" ? null : report.topic;
+  return report.mode === "grade" || report.mode === "multi_topic"
+    ? null
+    : report.topic;
 }
 
 function reportRegionForStorage(report: DiagnosticReport) {
@@ -164,9 +166,10 @@ export async function saveDiagnosticResult(
           updated_at
         )
         VALUES ($1, $2, $3, now())
-        ON CONFLICT (normalized_name, current_class_level)
+        ON CONFLICT (normalized_name)
         DO UPDATE SET
           display_name = EXCLUDED.display_name,
+          current_class_level = EXCLUDED.current_class_level,
           updated_at = now()
         RETURNING id
       `,

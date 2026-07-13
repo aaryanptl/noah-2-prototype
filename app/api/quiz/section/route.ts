@@ -5,6 +5,7 @@ import {
   DIAGNOSTIC_REGIONS,
   getDiagnosticQuizCatalog,
   getGradeQuizForClient,
+  getMultiTopicQuizForClient,
   getPlacementQuizForClient,
   getTopicQuizForClient,
 } from "@/agents/diagnostic/tools/contentQuiz";
@@ -25,6 +26,7 @@ export async function POST(request: Request) {
       subject?: string;
       classLevel?: string;
       topic?: string;
+      topics?: string[];
       testMode?: string;
       maxQuestions?: number;
       region?: string;
@@ -34,9 +36,11 @@ export async function POST(request: Request) {
     const testMode =
       body.testMode === "placement"
         ? "placement"
-        : body.testMode === "grade"
-          ? "grade"
-          : "topic";
+        : body.testMode === "multi_topic"
+          ? "multi_topic"
+          : body.testMode === "grade"
+            ? "grade"
+            : "topic";
     const region = DIAGNOSTIC_REGIONS.includes(body.region as DiagnosticRegion)
       ? (body.region as DiagnosticRegion)
       : DEFAULT_DIAGNOSTIC_REGION;
@@ -70,6 +74,29 @@ export async function POST(request: Request) {
         studentId,
         subject: body.subject as Subject,
         classLevel: body.classLevel as ClassLevel,
+        region,
+      });
+
+      return NextResponse.json({ quiz });
+    }
+
+    if (testMode === "multi_topic") {
+      if (!body.subject || !body.classLevel) {
+        return NextResponse.json(
+          {
+            error:
+              "subject and classLevel are required for a multi-topic test.",
+          },
+          { status: 400 },
+        );
+      }
+
+      const quiz = await getMultiTopicQuizForClient({
+        studentId,
+        subject: body.subject as Subject,
+        classLevel: body.classLevel as ClassLevel,
+        topics: Array.isArray(body.topics) ? body.topics : [],
+        maxQuestions: Number(body.maxQuestions) || 0,
         region,
       });
 
