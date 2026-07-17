@@ -1,13 +1,8 @@
 "use client";
 
-import {
-  BarChart3,
-  Bell,
-  CircleHelp,
-  ClipboardCheck,
-  LibraryBig,
-  Users,
-} from "lucide-react";
+import { ArrowLeft, Bell, CircleHelp, LibraryBig, Users } from "lucide-react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import {
   Tooltip,
@@ -47,33 +42,48 @@ function NoahMark({ compact = false }: { compact?: boolean }) {
 }
 
 function Sidebar() {
+  const pathname = usePathname();
   const navigation = [
-    { label: "Overview", icon: BarChart3 },
-    { label: "My classes", icon: Users },
-    { label: "Curriculum", icon: LibraryBig, active: true },
-    { label: "Assessments", icon: ClipboardCheck },
+    {
+      label: "My students",
+      icon: Users,
+      href: "/teacher",
+      active:
+        pathname === "/teacher" || pathname.startsWith("/teacher/students"),
+    },
+    {
+      label: "Curriculum",
+      icon: LibraryBig,
+      href: "/teacher/syllabus",
+      active: pathname.startsWith("/teacher/syllabus"),
+    },
   ];
 
   return (
     <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-[#e6e6df] bg-[#fffdfa] px-4 py-5 lg:flex">
       <div className="px-2">
-        <NoahMark />
+        <Link href="/" aria-label="Back to home">
+          <NoahMark />
+        </Link>
       </div>
       <nav
         className="mt-10 flex flex-col gap-1"
         aria-label="Teacher navigation"
       >
-        {navigation.map(({ label, icon: Icon, active }) => (
-          <div
+        {navigation.map(({ label, icon: Icon, href, active }) => (
+          <Link
             key={label}
+            href={href}
             className={cn(
-              "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold",
-              active ? "bg-[#e8f3f1] text-[#1f5855]" : "text-[#697270]",
+              "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition",
+              active
+                ? "bg-[#e8f3f1] text-[#1f5855]"
+                : "text-[#697270] hover:bg-[#f3f1ea] hover:text-[#314845]",
             )}
           >
             <Icon />
             {label}
-          </div>
+          </Link>
         ))}
       </nav>
       <div className="mt-auto rounded-2xl bg-[#f5f0e8] p-4">
@@ -115,12 +125,35 @@ export function SyllabusShell({
           <Sidebar />
           <div className="min-w-0 flex-1">
             <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-[#e8e5de] bg-[#fffdfa]/90 px-5 backdrop-blur-xl md:px-8">
-              <div className="lg:hidden">
+              <div className="flex items-center gap-3 lg:hidden">
+                <Link
+                  href="/"
+                  aria-label="Back to home"
+                  className="grid size-9 place-items-center rounded-full border border-[#e6e2da] bg-white text-muted-foreground transition hover:bg-[#f3f1ea] hover:text-[#1f5855]"
+                >
+                  <ArrowLeft className="size-4" />
+                </Link>
                 <NoahMark compact />
               </div>
-              <div className="hidden text-sm font-semibold text-muted-foreground lg:block">
-                Teacher workspace <span className="mx-2 text-[#c4c0b8]">/</span>{" "}
-                {breadcrumb}
+              <div className="hidden items-center gap-3 lg:flex">
+                <Tooltip>
+                  <TooltipTrigger
+                    render={
+                      <Link
+                        href="/"
+                        aria-label="Back to home"
+                        className="grid size-9 place-items-center rounded-full border border-[#e6e2da] bg-white text-muted-foreground transition hover:bg-[#f3f1ea] hover:text-[#1f5855]"
+                      />
+                    }
+                  >
+                    <ArrowLeft className="size-4" />
+                  </TooltipTrigger>
+                  <TooltipContent>Back to home</TooltipContent>
+                </Tooltip>
+                <div className="text-sm font-semibold text-muted-foreground">
+                  Teacher workspace{" "}
+                  <span className="mx-2 text-[#c4c0b8]">/</span> {breadcrumb}
+                </div>
               </div>
               <div className="flex items-center gap-3">
                 <Tooltip>
