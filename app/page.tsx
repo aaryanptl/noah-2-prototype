@@ -3,12 +3,22 @@ import {
   BookOpen,
   Database,
   GraduationCap,
+  LibraryBig,
   Stethoscope,
   Users,
 } from "lucide-react";
 import Link from "next/link";
 
 const ASSESSMENT_OPTIONS = [
+  {
+    href: "/teacher/syllabus",
+    title: "Curriculum Library",
+    tagline: "Explore the syllabus",
+    description:
+      "Browse subjects, topics, learning objectives, and their active question versions in one teacher-friendly map.",
+    icon: LibraryBig,
+    accent: "#1F7169",
+  },
   {
     href: "/student-profile",
     title: "Student Profile",
@@ -59,7 +69,7 @@ const ASSESSMENT_OPTIONS = [
 export default function HomePage() {
   return (
     <main className="flex min-h-screen items-center justify-center overflow-x-hidden bg-[var(--bg-warm)] px-5 py-12 sm:px-8 sm:py-16">
-      <div className="w-full max-w-[1440px]">
+      <div className="w-full max-w-7xl">
         <div className="mb-12 text-center">
           <h1 className="text-4xl font-bold tracking-tight text-[var(--heading)] sm:text-5xl">
             Choose your assessment
@@ -69,7 +79,7 @@ export default function HomePage() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 items-stretch gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+        <div className="grid grid-cols-1 items-stretch gap-6 md:grid-cols-2 lg:grid-cols-3">
           {ASSESSMENT_OPTIONS.map(
             ({ href, title, tagline, description, icon: Icon, accent }) => {
               if (href === "/student-profile") {
