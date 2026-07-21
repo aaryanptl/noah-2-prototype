@@ -7,6 +7,7 @@ import {
   LibraryBig,
   Search,
   Sparkles,
+  WandSparkles,
 } from "lucide-react";
 import Link from "next/link";
 import { useDeferredValue, useMemo, useState } from "react";
@@ -16,6 +17,7 @@ import {
   titleCase,
 } from "@/components/syllabus/SyllabusShell";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import {
@@ -181,6 +183,12 @@ export function CurriculumDashboard({
               Choose a topic to open its full structure and question bank on a
               dedicated screen.
             </p>
+            <Button
+              render={<Link href="/teacher/plans/new" />}
+              className="mt-5 h-11 rounded-xl bg-[#1f5855] px-5 text-white hover:bg-[#194745]"
+            >
+              <WandSparkles className="size-4" /> Create learning plan
+            </Button>
           </div>
           <div className="flex items-center gap-4 rounded-2xl border border-[#e5e1d9] bg-[#fffdfa] px-5 py-3 shadow-sm">
             <div className="grid size-10 place-items-center rounded-xl bg-[#e4f1ee] text-[#1f7169]">
