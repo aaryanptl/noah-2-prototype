@@ -1,5 +1,6 @@
 import { Button as ButtonPrimitive } from "@base-ui/react/button";
 import { cva, type VariantProps } from "class-variance-authority";
+import { isValidElement } from "react";
 
 import { cn } from "@/lib/utils";
 
@@ -44,12 +45,23 @@ function Button({
   className,
   variant = "default",
   size = "default",
+  render,
+  nativeButton,
   ...props
 }: ButtonPrimitive.Props & VariantProps<typeof buttonVariants>) {
+  // Base UI warns (and drops native button semantics) when `render` swaps the
+  // <button> for something else — most often a Next.js <Link>, which is an <a>.
+  // Infer it from the rendered element so call sites don't have to. A render
+  // function is opaque, so it keeps the native default.
+  const isNativeButton =
+    nativeButton ?? (isValidElement(render) ? render.type === "button" : true);
+
   return (
     <ButtonPrimitive
       data-slot="button"
       className={cn(buttonVariants({ variant, size, className }))}
+      render={render}
+      nativeButton={isNativeButton}
       {...props}
     />
   );

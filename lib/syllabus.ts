@@ -258,6 +258,98 @@ export async function getTopicDetail(
   };
 }
 
+export interface CurriculumObjective {
+  code: string;
+  name: string;
+  subtopic: string | null;
+  /** Active question bank depth — the planner prefers objectives it can assess. */
+  activeQuestionCount: number;
+}
+
+export interface CurriculumTopic {
+  id: string;
+  name: string;
+  subject: string;
+  grade: string;
+  objectives: CurriculumObjective[];
+}
+
+interface CurriculumRow {
+  topic_id: string;
+  topic_name: string;
+  subject_name: string;
+  grade: string;
+  objective_code: string | null;
+  objective_name: string | null;
+  subtopic_name: string | null;
+  active_question_count: number;
+}
+
+/**
+ * Flat curriculum slice for one grade (optionally one subject), used as the
+ * source of truth when the AI drafts a learning plan. Grade is matched against
+ * both `topics.grade` (stored as an int 0–8) and `topics.class_level` so the
+ * caller can pass a student's class level directly.
+ */
+export async function getCurriculumForGrade(
+  grade: string,
+  subject?: string,
+): Promise<CurriculumTopic[]> {
+  const params: string[] = [grade];
+  let subjectFilter = "";
+  if (subject) {
+    params.push(subject);
+    subjectFilter = "AND lower(s.name) = lower($2)";
+  }
+
+  const result = await pool.query<CurriculumRow>(
+    `SELECT t.id::text AS topic_id, t.name AS topic_name,
+            initcap(s.name) AS subject_name, t.grade::text AS grade,
+            lo.code AS objective_code,
+            COALESCE(NULLIF(lo.display_name, ''), lo.description, lo.code)
+              AS objective_name,
+            st.name AS subtopic_name,
+            COUNT(q.id) FILTER (WHERE q.lifecycle_status::text = 'active')::int
+              AS active_question_count
+     FROM topics t
+     JOIN subjects s ON s.id = t.subject_id
+     LEFT JOIN learning_objectives lo ON lo.topic_id = t.id
+     LEFT JOIN subtopics st ON st.id = lo.subtopic_id
+     LEFT JOIN questions q ON q.learning_objective_id = lo.id
+     WHERE (t.grade::text = $1 OR t.class_level = $1)
+       AND t.status::text <> 'archived'
+       ${subjectFilter}
+     GROUP BY t.id, t.name, s.name, t.grade, lo.code, lo.display_name,
+              lo.description, st.name, lo.id
+     ORDER BY t.name, lo.code, lo.id`,
+    params,
+  );
+
+  const topics = new Map<string, CurriculumTopic>();
+  for (const row of result.rows) {
+    let topic = topics.get(row.topic_id);
+    if (!topic) {
+      topic = {
+        id: row.topic_id,
+        name: row.topic_name,
+        subject: row.subject_name,
+        grade: row.grade,
+        objectives: [],
+      };
+      topics.set(row.topic_id, topic);
+    }
+    if (row.objective_name) {
+      topic.objectives.push({
+        code: row.objective_code ?? "",
+        name: row.objective_name,
+        subtopic: row.subtopic_name,
+        activeQuestionCount: row.active_question_count,
+      });
+    }
+  }
+  return Array.from(topics.values());
+}
+
 interface QuestionRow {
   id: string;
   version_id: string;

@@ -1,6 +1,13 @@
 "use client";
 
-import { ArrowLeft, Bell, CircleHelp, LibraryBig, Users } from "lucide-react";
+import {
+  ArrowLeft,
+  Bell,
+  CircleHelp,
+  ClipboardList,
+  LibraryBig,
+  Users,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
@@ -56,6 +63,12 @@ function Sidebar() {
       icon: LibraryBig,
       href: "/teacher/syllabus",
       active: pathname.startsWith("/teacher/syllabus"),
+    },
+    {
+      label: "Learning plans",
+      icon: ClipboardList,
+      href: "/teacher/plans",
+      active: pathname.startsWith("/teacher/plans"),
     },
   ];
 
