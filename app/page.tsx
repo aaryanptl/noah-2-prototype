@@ -4,12 +4,22 @@ import {
   Database,
   GraduationCap,
   LibraryBig,
+  Mic,
   Stethoscope,
   Users,
 } from "lucide-react";
 import Link from "next/link";
 
 const ASSESSMENT_OPTIONS = [
+  {
+    href: "/speak-english",
+    title: "Speak with Noah",
+    tagline: "English speaking coach",
+    description:
+      "Practise stories, poems, and short speeches with a friendly realtime voice coach.",
+    icon: Mic,
+    accent: "#5B7CFA",
+  },
   {
     href: "/teacher/syllabus",
     title: "Curriculum Library",

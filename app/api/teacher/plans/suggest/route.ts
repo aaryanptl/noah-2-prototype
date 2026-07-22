@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getDemoStudent } from "@/lib/demo-students";
-import { generateAIPlan } from "@/lib/plan-ai";
+import { generateAIPlan, getAvailablePlanTopics } from "@/lib/plan-ai";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -12,7 +12,12 @@ const MAX_SESSION_DATES = 31;
 const MAX_INSTRUCTIONS = 2000;
 
 export async function POST(request: Request) {
-  let body: { studentId?: string; dates?: unknown; instructions?: unknown };
+  let body: {
+    studentId?: string;
+    dates?: unknown;
+    topics?: unknown;
+    instructions?: unknown;
+  };
   try {
     body = await request.json();
   } catch {
@@ -46,6 +51,37 @@ export async function POST(request: Request) {
     );
   }
 
+  const requestedTopics = Array.isArray(body.topics)
+    ? Array.from(
+        new Set(
+          body.topics.filter(
+            (topic): topic is string =>
+              typeof topic === "string" && topic.trim().length > 0,
+          ),
+        ),
+      )
+    : [];
+  if (requestedTopics.length === 0) {
+    return NextResponse.json(
+      { error: "Choose at least one topic for this plan." },
+      { status: 400 },
+    );
+  }
+
+  const availableTopics = await getAvailablePlanTopics(profile);
+  const topics = requestedTopics.filter((topic) =>
+    availableTopics.includes(topic),
+  );
+  if (topics.length !== requestedTopics.length) {
+    return NextResponse.json(
+      {
+        error:
+          "One or more selected topics are not available for this student.",
+      },
+      { status: 400 },
+    );
+  }
+
   const instructions =
     typeof body.instructions === "string" ? body.instructions.trim() : "";
   if (instructions.length > MAX_INSTRUCTIONS) {
@@ -55,6 +91,11 @@ export async function POST(request: Request) {
     );
   }
 
-  const suggestion = await generateAIPlan(profile, dates, instructions);
+  const topicInstruction = `Only include these selected topics in this plan: ${topics.join(", ")}. Do not include any other topics.`;
+  const suggestion = await generateAIPlan(
+    profile,
+    dates,
+    instructions ? `${topicInstruction}\n\n${instructions}` : topicInstruction,
+  );
   return NextResponse.json(suggestion);
 }

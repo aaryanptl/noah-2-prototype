@@ -25,6 +25,7 @@ import { useCallback, useMemo, useRef, useState } from "react";
 import { SyllabusShell, titleCase } from "@/components/syllabus/SyllabusShell";
 import { gradeLabel, initials, scoreColor } from "@/components/teacher/format";
 import { PlanCalendar } from "@/components/teacher/PlanCalendar";
+import { PlanTopicSelector } from "@/components/teacher/PlanTopicSelector";
 import {
   dateRangeLabel,
   formatSessionDate,
@@ -251,14 +252,28 @@ function StudentEvidencePanel({ student }: { student: DemoStudentProfile }) {
 export function PlanBuilderPage({
   students,
   defaultStudentId,
+  topicsByStudentId,
 }: {
   students: DemoStudentProfile[];
   defaultStudentId?: string;
+  topicsByStudentId: Record<string, string[]>;
 }) {
   const router = useRouter();
+  const defaultStudent = students.find(
+    (student) => student.id === defaultStudentId,
+  );
   const [step, setStep] = useState(defaultStudentId ? 1 : 0);
   const [studentId, setStudentId] = useState(defaultStudentId ?? "");
   const [selectedDates, setSelectedDates] = useState<string[]>(nextWeekdays);
+  const [selectedTopics, setSelectedTopics] = useState<string[]>(() =>
+    defaultStudent
+      ? Array.from(
+          new Set(defaultStudent.weakAreas.map((area) => area.topic)),
+        ).filter((topic) =>
+          (topicsByStudentId[defaultStudent.id] ?? []).includes(topic),
+        )
+      : [],
+  );
   const [instructions, setInstructions] = useState("");
   const [title, setTitle] = useState("");
   const [subject, setSubject] = useState<string | null>(null);
@@ -278,9 +293,22 @@ export function PlanBuilderPage({
 
   const selectedStudent = students.find((student) => student.id === studentId);
   const firstName = selectedStudent?.displayName.split(" ")[0] ?? "the student";
+  const availableTopics = topicsByStudentId[studentId] ?? [];
+  const recommendedTopics = selectedStudent
+    ? Array.from(new Set(selectedStudent.weakAreas.map((area) => area.topic)))
+    : [];
 
   const selectStudent = (id: string) => {
+    const student = students.find((entry) => entry.id === id);
+    const topics = topicsByStudentId[id] ?? [];
     setStudentId(id);
+    setSelectedTopics(
+      student
+        ? Array.from(
+            new Set(student.weakAreas.map((area) => area.topic)),
+          ).filter((topic) => topics.includes(topic))
+        : [],
+    );
     setItems([]);
     setStrategy(null);
     setError(null);
@@ -302,6 +330,7 @@ export function PlanBuilderPage({
         body: JSON.stringify({
           studentId,
           dates: selectedDates,
+          topics: selectedTopics,
           instructions,
         }),
       });
@@ -549,6 +578,29 @@ export function PlanBuilderPage({
               </div>
             </div>
 
+            <PlanTopicSelector
+              topics={availableTopics}
+              selectedTopics={selectedTopics}
+              recommendedTopics={recommendedTopics}
+              studentName={firstName}
+              onToggle={(topic) => {
+                setSelectedTopics((current) =>
+                  current.includes(topic)
+                    ? current.filter((item) => item !== topic)
+                    : [...current, topic],
+                );
+                setError(null);
+              }}
+              onSelectAll={() => {
+                setSelectedTopics(availableTopics);
+                setError(null);
+              }}
+              onClear={() => {
+                setSelectedTopics([]);
+                setError(null);
+              }}
+            />
+
             <div className="rounded-2xl border border-[#e5e1d9] bg-[#fffefa] p-6 shadow-sm">
               <div className="mb-1 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-[#25877c]">
                 <MessageSquareText className="size-4" /> Your instructions
@@ -618,7 +670,9 @@ export function PlanBuilderPage({
                 </Button>
                 <Button
                   type="button"
-                  disabled={selectedDates.length === 0}
+                  disabled={
+                    selectedDates.length === 0 || selectedTopics.length === 0
+                  }
                   onClick={generatePlan}
                   className="rounded-xl bg-[#1f5855] px-5 text-white hover:bg-[#194745]"
                 >

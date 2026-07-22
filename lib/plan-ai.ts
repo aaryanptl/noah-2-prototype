@@ -196,6 +196,22 @@ function curriculumFromProfile(profile: DemoStudentProfile): CurriculumTopic[] {
   return Array.from(byTopic.values());
 }
 
+export async function getAvailablePlanTopics(
+  profile: DemoStudentProfile,
+): Promise<string[]> {
+  let curriculum: CurriculumTopic[] = [];
+  try {
+    curriculum = await getCurriculumForGrade(
+      profile.classLevel,
+      profile.subject,
+    );
+  } catch (error) {
+    console.error("[PLAN AI] Curriculum lookup failed:", error);
+  }
+  if (curriculum.length === 0) curriculum = curriculumFromProfile(profile);
+  return Array.from(new Set(curriculum.map((topic) => topic.name))).sort();
+}
+
 function parseDay(dateString: string): number {
   return Math.floor(new Date(`${dateString}T00:00:00Z`).getTime() / 86_400_000);
 }
