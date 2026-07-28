@@ -20,6 +20,9 @@ importers:
       '@neondatabase/serverless':
         specifier: ^1.0.2
         version: 1.1.0
+      '@next/swc-wasm-nodejs':
+        specifier: ^16.2.11
+        version: 16.2.12
       '@openai/agents':
         specifier: ^0.8.2
         version: 0.8.5(ws@8.20.0)(zod@4.3.6)
@@ -821,6 +824,9 @@ packages:
     cpu: [x64]
     os: [linux]
     libc: [musl]
+
+  '@next/swc-wasm-nodejs@16.2.12':
+    resolution: {integrity: sha512-rNJf+wneZ68vBz9fch4/kR94Z9+FZtQ93eJnYL8RBbHkrnDZ0HY8hHgOP8YYeTDkWzWqriB2ZGobLriw+6M+DQ==}
 
   '@next/swc-win32-arm64-msvc@16.2.4':
     resolution: {integrity: sha512-3NdJV5OXMSOeJYijX+bjaLge3mJBlh4ybydbT4GFoB/2hAojWHtMhl3CYlYoMrjPuodp0nzFVi4Tj2+WaMg+Ow==}
@@ -3621,6 +3627,8 @@ snapshots:
 
   '@next/swc-linux-x64-musl@16.2.4':
     optional: true
+
+  '@next/swc-wasm-nodejs@16.2.12': {}
 
   '@next/swc-win32-arm64-msvc@16.2.4':
     optional: true
