@@ -286,20 +286,49 @@ interface CurriculumRow {
 }
 
 /**
+ * Every spelling of a grade that might match `topics.grade`.
+ *
+ * `topics.grade` is TEXT in the form "grade 6" / "grade kg", and `class_level`
+ * is NULL for every row — but callers hold a student's class level as a bare
+ * "6" or "kg". Matching only on the raw value silently returned zero topics,
+ * which sent the plan builder down its no-curriculum fallback path on every
+ * request. Normalise here so both spellings work.
+ */
+export function gradeMatchVariants(grade: string): string[] {
+  const raw = grade.trim();
+  const bare = raw.toLowerCase().replace(/^grade\s+/, "");
+  return Array.from(new Set([raw, bare, `grade ${bare}`]));
+}
+
+/**
+ * Every spelling of a subject that might match `subjects.name`.
+ *
+ * The syllabus stores "math"; callers say "Maths" or "Mathematics". An exact
+ * lower() comparison missed on all of them, which combined with the grade
+ * mismatch above meant the curriculum query never returned a row.
+ */
+export function subjectMatchVariants(subject: string): string[] {
+  const raw = subject.trim().toLowerCase();
+  const mathAliases = ["math", "maths", "mathematics"];
+  const variants = mathAliases.includes(raw) ? [...mathAliases] : [raw];
+  return Array.from(new Set([subject.trim(), ...variants]));
+}
+
+/**
  * Flat curriculum slice for one grade (optionally one subject), used as the
- * source of truth when the AI drafts a learning plan. Grade is matched against
- * both `topics.grade` (stored as an int 0–8) and `topics.class_level` so the
- * caller can pass a student's class level directly.
+ * source of truth when the AI drafts a learning plan. Accepts either "6" or
+ * "grade 6"; see `gradeMatchVariants`.
  */
 export async function getCurriculumForGrade(
   grade: string,
   subject?: string,
 ): Promise<CurriculumTopic[]> {
-  const params: string[] = [grade];
+  const params: (string | string[])[] = [gradeMatchVariants(grade)];
   let subjectFilter = "";
   if (subject) {
-    params.push(subject);
-    subjectFilter = "AND lower(s.name) = lower($2)";
+    params.push(subjectMatchVariants(subject));
+    subjectFilter =
+      "AND lower(s.name) = ANY(SELECT lower(x) FROM unnest($2::text[]) AS x)";
   }
 
   const result = await pool.query<CurriculumRow>(
@@ -316,8 +345,8 @@ export async function getCurriculumForGrade(
      LEFT JOIN learning_objectives lo ON lo.topic_id = t.id
      LEFT JOIN subtopics st ON st.id = lo.subtopic_id
      LEFT JOIN questions q ON q.learning_objective_id = lo.id
-     WHERE (t.grade::text = $1 OR t.class_level = $1)
-       AND t.status::text <> 'archived'
+     WHERE (t.grade::text = ANY($1) OR t.class_level = ANY($1))
+       AND t.status = 'active'
        ${subjectFilter}
      GROUP BY t.id, t.name, s.name, t.grade, lo.code, lo.display_name,
               lo.description, st.name, lo.id

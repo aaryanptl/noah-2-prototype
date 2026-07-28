@@ -1,6 +1,8 @@
 import { BookOpen, Check } from "lucide-react";
 
 export function PlanTopicSelector({
+  step,
+  required,
   topics,
   selectedTopics,
   recommendedTopics,
@@ -9,6 +11,9 @@ export function PlanTopicSelector({
   onSelectAll,
   onClear,
 }: {
+  /** When set, renders a numbered badge matching the builder's 1-2-3 flow. */
+  step?: number;
+  required?: boolean;
   topics: string[];
   selectedTopics: string[];
   recommendedTopics: string[];
@@ -24,10 +29,28 @@ export function PlanTopicSelector({
     <div className="rounded-2xl border border-[#e5e1d9] bg-[#fffefa] p-6 shadow-sm">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <div className="mb-1 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-[#25877c]">
-            <BookOpen className="size-4" /> Topics for this plan
+          <div className="mb-1 flex flex-wrap items-center gap-2.5">
+            {step != null && (
+              <span className="grid size-6 shrink-0 place-items-center rounded-full bg-[#1f5855] text-xs font-bold text-white">
+                {step}
+              </span>
+            )}
+            <span className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-[#25877c]">
+              <BookOpen className="size-4" /> Topics for this plan
+            </span>
+            {step != null && (
+              <span
+                className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] ${
+                  required
+                    ? "bg-[#fdecec] text-[#bd503e]"
+                    : "bg-[#f0ede7] text-muted-foreground"
+                }`}
+              >
+                {required ? "Required" : "Optional"}
+              </span>
+            )}
           </div>
-          <p className="text-sm text-muted-foreground">
+          <p className="mt-2 text-sm text-muted-foreground">
             Choose what the plan should cover for {studentName}. Recommended
             topics come from the diagnostic evidence above.
           </p>

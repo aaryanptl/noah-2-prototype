@@ -4,6 +4,7 @@ import {
   isPlanFocus,
   listLearningPlans,
   type PlanItemInput,
+  type PlanTopicInput,
 } from "@/lib/learning-plans";
 
 export const runtime = "nodejs";
@@ -110,6 +111,43 @@ export async function POST(request: Request) {
     });
   }
 
+  // The topic allocation the sessions were derived from. Optional so an older
+  // client can still save, but a plan without it can't be updated after a class.
+  const parsedTopics: PlanTopicInput[] = [];
+  if (Array.isArray(body.topics)) {
+    for (const raw of body.topics) {
+      const topic = raw as Record<string, unknown>;
+      const topicName =
+        typeof topic.topicName === "string" ? topic.topicName.trim() : "";
+      const plannedClasses = topic.plannedClasses;
+      if (
+        !topicName ||
+        typeof plannedClasses !== "number" ||
+        plannedClasses < 1
+      ) {
+        return NextResponse.json(
+          { error: "Each topic needs topicName and plannedClasses >= 1" },
+          { status: 400 },
+        );
+      }
+      parsedTopics.push({
+        topicId: typeof topic.topicId === "string" ? topic.topicId : null,
+        topicName,
+        sequence:
+          typeof topic.sequence === "number"
+            ? topic.sequence
+            : parsedTopics.length + 1,
+        plannedClasses,
+        plannedActivities:
+          typeof topic.plannedActivities === "number"
+            ? topic.plannedActivities
+            : 0,
+        priority: typeof topic.priority === "number" ? topic.priority : null,
+        reason: typeof topic.reason === "string" ? topic.reason : null,
+      });
+    }
+  }
+
   // The plan's window is derived from the picked session dates.
   const sortedDates = parsedItems.map((item) => item.sessionDate).sort();
   const startDate = sortedDates[0];
@@ -124,13 +162,19 @@ export async function POST(request: Request) {
       studentId,
       title,
       subject: typeof body.subject === "string" ? body.subject : null,
+      grade: typeof body.grade === "string" ? body.grade : null,
       durationWeeks,
       startDate,
       notes:
         typeof body.notes === "string" && body.notes.trim()
           ? body.notes.trim()
           : null,
+      classesRemaining:
+        typeof body.classesRemaining === "number"
+          ? body.classesRemaining
+          : parsedItems.length,
       items: parsedItems,
+      topics: parsedTopics,
     });
     return NextResponse.json({ planId }, { status: 201 });
   } catch (error) {

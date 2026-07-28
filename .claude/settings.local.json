@@ -7,7 +7,9 @@
       "Bash(npx tsc *)",
       "Bash(awk 'NR>=596 && NR<=605' \"F:/devbyaaryan/buildfastwithai/codeyoung/diagnostic-app/components/diagnostic-demo.tsx\")",
       "Bash(npx biome *)",
-      "Bash(node -e \"const c=require\\('./tsconfig.json'\\);console.log\\(JSON.stringify\\({include:c.include,exclude:c.exclude,paths:c.compilerOptions.paths}\\)\\)\")"
+      "Bash(node -e \"const c=require\\('./tsconfig.json'\\);console.log\\(JSON.stringify\\({include:c.include,exclude:c.exclude,paths:c.compilerOptions.paths}\\)\\)\")",
+      "WebFetch(domain:app.notion.com)",
+      "mcp__ide__getDiagnostics"
     ]
   }
 }

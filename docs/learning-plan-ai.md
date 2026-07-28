@@ -1,5 +1,17 @@
 # How the AI learning plan is generated
 
+> **Superseded — see [`learning-plan-builder.md`](./learning-plan-builder.md).**
+>
+> This describes the earlier design, where one model call chose the topics, the
+> schedule *and* the wording. The plan is now an allocation over topics produced by a
+> deterministic allocator, and the model only writes teaching prose for a schedule it
+> cannot change. `generateAIPlan` is no longer on the path from
+> `POST /api/teacher/plans/suggest`.
+>
+> Kept because sections 2 and 3 (the prompt and the provider/schema plumbing) still
+> describe how the content-writing call is built. Everything about topic selection,
+> session counts and post-processing is out of date.
+
 Reference for the plan builder at `/teacher/plans`. Covers what goes into the model,
 the exact prompt, what comes back, and what happens when the model is unavailable.
 

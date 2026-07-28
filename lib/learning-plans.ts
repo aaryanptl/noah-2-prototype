@@ -75,14 +75,33 @@ export interface PlanItemInput {
   baselineScore?: number | null;
 }
 
+/**
+ * A topic's budget within the plan. This is what the plan actually IS — the
+ * dated items are a schedule derived from it — so a plan saved without these
+ * cannot be updated after a class or by the nightly pass.
+ */
+export interface PlanTopicInput {
+  topicId: string | null;
+  topicName: string;
+  sequence: number;
+  plannedClasses: number;
+  plannedActivities: number;
+  priority?: number | null;
+  reason?: string | null;
+}
+
 export interface CreatePlanInput {
   studentId: string;
   title: string;
   subject?: string | null;
+  grade?: string | null;
   durationWeeks: number;
   startDate: string;
   notes?: string | null;
+  /** Classes left in the student's package; the ceiling the allocator respects. */
+  classesRemaining?: number | null;
   items: PlanItemInput[];
+  topics?: PlanTopicInput[];
 }
 
 export interface SuggestedPlanItem {
@@ -281,21 +300,46 @@ export async function createLearningPlan(
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
+    const totalClasses = input.classesRemaining ?? input.items.length;
     const planResult = await client.query(
       `INSERT INTO learning_plans
-         (student_id, title, subject, duration_weeks, start_date, notes)
-       VALUES ($1, $2, $3, $4, $5, $6)
+         (student_id, title, subject, grade, duration_weeks, start_date, notes,
+          total_classes, classes_remaining, last_update_kind)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'initial')
        RETURNING id::text AS id`,
       [
         input.studentId,
         input.title,
         input.subject ?? null,
+        input.grade ?? null,
         input.durationWeeks,
         input.startDate,
         input.notes ?? null,
+        totalClasses,
+        totalClasses,
       ],
     );
     const planId: string = planResult.rows[0].id;
+
+    for (const topic of input.topics ?? []) {
+      await client.query(
+        `INSERT INTO learning_plan_topics
+           (plan_id, topic_id, topic_name, sequence, planned_classes,
+            planned_activities, priority, source, reason)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, 'ai', $8)
+         ON CONFLICT (plan_id, topic_id) WHERE topic_id IS NOT NULL DO NOTHING`,
+        [
+          planId,
+          topic.topicId,
+          topic.topicName,
+          topic.sequence,
+          topic.plannedClasses,
+          topic.plannedActivities,
+          topic.priority ?? null,
+          topic.reason ?? null,
+        ],
+      );
+    }
 
     for (const item of input.items) {
       await client.query(

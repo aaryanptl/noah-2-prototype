@@ -282,7 +282,17 @@ export function PlanDetail({ plan }: { plan: LearningPlanDetail }) {
                 <span>{gradeLabel(plan.student.classLevel)}</span>
               </div>
             </div>
-            <div className="flex shrink-0 gap-2">
+            <div className="flex shrink-0 flex-wrap gap-2">
+              <Link href={`/teacher/plans/${plan.id}/glimpse`}>
+                <Button type="button" variant="outline" className="rounded-xl">
+                  <ClipboardCheck className="size-4" /> Log a class
+                </Button>
+              </Link>
+              <Link href={`/teacher/plans/${plan.id}/report`}>
+                <Button type="button" variant="outline" className="rounded-xl">
+                  <CalendarRange className="size-4" /> Progress report
+                </Button>
+              </Link>
               {plan.status !== "completed" ? (
                 <Button
                   type="button"

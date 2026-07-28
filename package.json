@@ -8,13 +8,15 @@
     "start": "next start",
     "lint": "biome check",
     "format": "biome format --write",
-    "geometry:pilot": "tsx scripts/geometry-pilot/run.ts"
+    "geometry:pilot": "tsx scripts/geometry-pilot/run.ts",
+    "content:review": "tsx scripts/review-mcq-content.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.4.1",
     "@hugeicons/core-free-icons": "^4.1.1",
     "@hugeicons/react": "^1.1.6",
     "@neondatabase/serverless": "^1.0.2",
+    "@next/swc-wasm-nodejs": "^16.2.11",
     "@openai/agents": "^0.8.2",
     "@tanstack/react-table": "^8.21.3",
     "canvas-confetti": "^1.9.4",

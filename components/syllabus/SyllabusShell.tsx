@@ -6,6 +6,7 @@ import {
   CircleHelp,
   ClipboardList,
   LibraryBig,
+  SlidersHorizontal,
   Users,
 } from "lucide-react";
 import Link from "next/link";
@@ -69,6 +70,14 @@ function Sidebar() {
       icon: ClipboardList,
       href: "/teacher/plans",
       active: pathname.startsWith("/teacher/plans"),
+    },
+    {
+      // Distinct from "Curriculum" above, which browses the syllabus. This is the
+      // classes/activities/priority data the plan allocator budgets from.
+      label: "Plan defaults",
+      icon: SlidersHorizontal,
+      href: "/teacher/curriculum",
+      active: pathname.startsWith("/teacher/curriculum"),
     },
   ];
 
