@@ -339,29 +339,47 @@ function buildTopicItems(allocation: PlanTopicAllocation) {
 function orderAllocations(
   allocations: PlanTopicAllocation[],
   student: DemoStudent,
-  topicMap: Map<number, CurriculumTopic>
+  topicMap: Map<number, CurriculumTopic>,
+  topicOrder?: number[]
 ) {
-  const bySequence = [...allocations].sort((a, b) => a.sequence - b.sequence)
-  if (!student.parentRequestedTopicId) return bySequence
-
-  const requestedId = student.parentRequestedTopicId
-  const selectedIds = new Set(
-    allocations.map((allocation) => allocation.topicId)
+  const orderIndex = new Map((topicOrder ?? []).map((topicId, index) => [topicId, index]))
+  const byPreference = [...allocations].sort((a, b) => {
+    const aOrder = orderIndex.get(a.topicId)
+    const bOrder = orderIndex.get(b.topicId)
+    if (aOrder !== undefined || bOrder !== undefined) {
+      return (aOrder ?? Number.MAX_SAFE_INTEGER) - (bOrder ?? Number.MAX_SAFE_INTEGER)
+    }
+    return a.sequence - b.sequence
+  })
+  const allocationById = new Map(
+    allocations.map((allocation) => [allocation.topicId, allocation])
   )
-  const prerequisiteIds = getPrerequisiteChain(requestedId, topicMap).filter(
-    (id) => selectedIds.has(id)
-  )
-  const frontIds = new Set([...prerequisiteIds, requestedId])
+  const ordered: PlanTopicAllocation[] = []
+  const visited = new Set<number>()
 
-  return [
-    ...prerequisiteIds
-      .map((id) => allocations.find((allocation) => allocation.topicId === id))
-      .filter((allocation): allocation is PlanTopicAllocation =>
-        Boolean(allocation)
-      ),
-    ...allocations.filter((allocation) => allocation.topicId === requestedId),
-    ...bySequence.filter((allocation) => !frontIds.has(allocation.topicId)),
-  ]
+  const addWithPrerequisites = (topicId: number) => {
+    if (visited.has(topicId)) return
+    const topic = topicMap.get(topicId)
+    for (const prerequisiteId of topic?.prerequisiteIds ?? []) {
+      if (allocationById.has(prerequisiteId)) addWithPrerequisites(prerequisiteId)
+    }
+    const allocation = allocationById.get(topicId)
+    if (allocation) {
+      visited.add(topicId)
+      ordered.push(allocation)
+    }
+  }
+
+  if (student.parentRequestedTopicId) {
+    const requestedId = student.parentRequestedTopicId
+    for (const prerequisiteId of getPrerequisiteChain(requestedId, topicMap)) {
+      addWithPrerequisites(prerequisiteId)
+    }
+    addWithPrerequisites(requestedId)
+  }
+
+  for (const allocation of byPreference) addWithPrerequisites(allocation.topicId)
+  return ordered
 }
 
 function buildClassSequence(
@@ -589,56 +607,24 @@ export function getAiAssistedTopicSuggestion(
       continue
     }
 
-    if (
-      topic.priority === "high" &&
-      exactPlacement &&
-      exactPlacement.score >= 75
-    ) {
-      const allocation = baseAllocations.get(topic.id)
-      mustIncludeIds.add(topic.id)
-      recommendations.set(topic.id, {
-        topicId: topic.id,
-        decision: "include",
-        evidence: "placement",
-        reason: `High priority is never skipped. Placement score ${exactPlacement.score}% compresses ${topic.idealClasses} → ${allocation?.classes ?? topic.idealClasses} classes and ${topic.idealActivities} → ${allocation?.activities ?? topic.idealActivities} activities.`,
-      })
-      continue
-    }
-
     if (exactPlacement && exactPlacement.score >= 75) {
-      skippableTopicIds.add(topic.id)
-      recommendations.set(topic.id, {
-        topicId: topic.id,
-        decision: "skip",
-        evidence: "placement",
-        reason: `Placement score ${exactPlacement.score}% indicates secure readiness, so this topic is recommended for skip.`,
-      })
-      continue
-    }
-
-    if (
-      topic.priority === "high" &&
-      secureMasterEvidence.length >= 2 &&
-      secureMasterRatio >= 0.75
-    ) {
       const allocation = baseAllocations.get(topic.id)
-      mustIncludeIds.add(topic.id)
       recommendations.set(topic.id, {
         topicId: topic.id,
         decision: "include",
-        evidence: "mastery",
-        reason: `High priority is never skipped. Secure mastery compresses ${topic.idealClasses} → ${allocation?.classes ?? topic.idealClasses} classes and ${topic.idealActivities} → ${allocation?.activities ?? topic.idealActivities} activities.`,
+        evidence: "placement",
+        reason: `Placement score ${exactPlacement.score}% keeps this topic selected and compresses it from ${topic.idealClasses} to ${allocation?.classes ?? topic.idealClasses} classes.`,
       })
       continue
     }
 
     if (secureMasterEvidence.length >= 2 && secureMasterRatio >= 0.75) {
-      skippableTopicIds.add(topic.id)
+      const allocation = baseAllocations.get(topic.id)
       recommendations.set(topic.id, {
         topicId: topic.id,
-        decision: "skip",
+        decision: "include",
         evidence: "mastery",
-        reason: `${secureMasterEvidence.length} Master-level objectives are secure, so this topic is recommended for skip.`,
+        reason: `Secure Master-level evidence keeps this topic selected and compresses it from ${topic.idealClasses} to ${allocation?.classes ?? topic.idealClasses} classes.`,
       })
       continue
     }
@@ -699,14 +685,16 @@ export function getAiAssistedTopicSuggestion(
     const fits =
       candidateTeaching + candidateStructural.total <= student.classesRemaining
 
-    recommendations.set(topic.id, {
-      topicId: topic.id,
-      decision: fits ? "include" : "defer",
-      evidence: fits ? "priority" : "capacity",
-      reason: fits
-        ? `${formatPriority(topic.priority)} priority fits after higher-priority needs.`
-        : `${formatPriority(topic.priority)} priority is deferred because it does not fit after higher-priority needs.`,
-    })
+    if (!fits || !recommendations.has(topic.id)) {
+      recommendations.set(topic.id, {
+        topicId: topic.id,
+        decision: fits ? "include" : "defer",
+        evidence: fits ? "priority" : "capacity",
+        reason: fits
+          ? `${formatPriority(topic.priority)} priority fits after higher-priority needs.`
+          : `${formatPriority(topic.priority)} priority is deferred because it does not fit after higher-priority needs.`,
+      })
+    }
     if (fits) selectedIds.add(topic.id)
   }
 
@@ -748,6 +736,7 @@ export function buildLearningPlan({
   topics,
   student,
   selectedTopicIds,
+  topicOrder,
   manualAdjustments = {},
   version = 1,
   changesFromPrevious = [],
@@ -755,32 +744,50 @@ export function buildLearningPlan({
   topics: CurriculumTopic[]
   student: DemoStudent
   selectedTopicIds: number[]
+  /** Mentor-selected topic order. Any unordered topics fall back to curriculum sequence. */
+  topicOrder?: number[]
   manualAdjustments?: ManualAdjustments
   version?: number
   changesFromPrevious?: string[]
 }): GeneratedPlan {
   const topicMap = getTopicMap(topics)
   const completedIds = getCompletedTopicIds(student)
+  const selectedSet = new Set(selectedTopicIds)
+  const prerequisiteIds = new Set<number>()
+  const visitedPrerequisites = new Set<number>()
+  const collectPrerequisites = (topicId: number) => {
+    if (visitedPrerequisites.has(topicId)) return
+    visitedPrerequisites.add(topicId)
+    const topic = topicMap.get(topicId)
+    for (const prerequisiteId of topic?.prerequisiteIds ?? []) {
+      if (!completedIds.has(prerequisiteId)) {
+        prerequisiteIds.add(prerequisiteId)
+        collectPrerequisites(prerequisiteId)
+      }
+    }
+  }
+  for (const topicId of selectedSet) collectPrerequisites(topicId)
+  const effectiveSelectedSet = new Set([...selectedSet, ...prerequisiteIds])
   const requestedPrerequisites = student.parentRequestedTopicId
     ? getPrerequisiteChain(student.parentRequestedTopicId, topicMap)
     : []
   const compressedPrerequisiteIds = new Set(
-    requestedPrerequisites.filter((id) => selectedTopicIds.includes(id))
+    requestedPrerequisites.filter((id) => effectiveSelectedSet.has(id))
   )
-  const selectedSet = new Set(selectedTopicIds)
-  for (const topic of topics) {
-    if (topic.priority === "high" && !completedIds.has(topic.id)) {
-      selectedSet.add(topic.id)
-    }
-  }
-
   const allocations = topics
-    .filter((topic) => selectedSet.has(topic.id) && !completedIds.has(topic.id))
+    .filter(
+      (topic) => effectiveSelectedSet.has(topic.id) && !completedIds.has(topic.id)
+    )
     .map((topic) =>
       adjustTopic(topic, student, manualAdjustments, compressedPrerequisiteIds)
     )
 
-  const orderedAllocations = orderAllocations(allocations, student, topicMap)
+  const orderedAllocations = orderAllocations(
+    allocations,
+    student,
+    topicMap,
+    topicOrder
+  )
   const structural = estimateStructuralCounts(
     orderedAllocations.length,
     student.classesRemaining
@@ -797,34 +804,32 @@ export function buildLearningPlan({
       id: "over-capacity",
       title: `Plan exceeds capacity by ${difference} ${difference === 1 ? "class" : "classes"}`,
       message:
-        "High-priority topics were not removed automatically. The teacher can edit the allocations or keep this visible warning.",
+        "The mentor can edit the scope or allocations, or keep this visible warning.",
       severity: "warning",
     })
   }
 
   const selectedHighIds = new Set(
     topics
-      .filter(
-        (topic) => topic.priority === "high" && !completedIds.has(topic.id)
-      )
+      .filter((topic) => topic.priority === "high" && !completedIds.has(topic.id))
       .map((topic) => topic.id)
   )
   const missingHighTopics = topics.filter(
-    (topic) => selectedHighIds.has(topic.id) && !selectedSet.has(topic.id)
+    (topic) => selectedHighIds.has(topic.id) && !effectiveSelectedSet.has(topic.id)
   )
   if (missingHighTopics.length > 0) {
     warnings.push({
       id: "high-priority-removed",
       title: `${missingHighTopics.length} High-priority ${missingHighTopics.length === 1 ? "topic is" : "topics are"} not selected`,
       message:
-        "This is a teacher decision. The system will not treat the topic as automatically dropped.",
+        "This is a mentor decision. The system will not treat the topic as automatically dropped.",
       severity: "attention",
     })
   }
 
   const droppedTopics: DroppedTopic[] = topics
     .filter(
-      (topic) => !selectedSet.has(topic.id) && !completedIds.has(topic.id)
+      (topic) => !effectiveSelectedSet.has(topic.id) && !completedIds.has(topic.id)
     )
     .sort(
       (a, b) =>
@@ -857,10 +862,18 @@ export function buildLearningPlan({
     }
   }
 
+  const autoAddedPrerequisites = [...prerequisiteIds]
+    .filter((topicId) => !selectedSet.has(topicId))
+    .map((topicId) => topicMap.get(topicId)?.name)
+    .filter((topicName): topicName is string => Boolean(topicName))
   const explanations = [
-    "Topics are selected High priority first, then Medium, then Low according to remaining classes.",
-    "Prerequisites are kept before dependent topics unless the parent-request flow moves them forward as compressed refreshers.",
+    "Topics are sequenced by curriculum order, with every selected prerequisite placed before the topic that depends on it.",
   ]
+  if (autoAddedPrerequisites.length > 0) {
+    explanations.push(
+      `Added prerequisite coverage before dependent topics: ${autoAddedPrerequisites.join(", ")}.`
+    )
+  }
   if (student.placementStatus === "completed") {
     explanations.push(
       "Placement scores below 40% keep the full allocation; scores of 75% or more shorten the topic and increase easy consolidation."

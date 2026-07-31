@@ -1,0 +1,82 @@
+{
+  "capacity": {
+    "available": 79,
+    "teaching": 66,
+    "structural": 13,
+    "total": 79,
+    "difference": 0
+  },
+  "byKind": {
+    "teaching": 66,
+    "checkpoint": 5,
+    "rdp": 5,
+    "ptm": 3
+  },
+  "structural": [
+    {
+      "n": 18,
+      "k": "checkpoint",
+      "t": "Foundation checkpoint"
+    },
+    {
+      "n": 19,
+      "k": "rdp",
+      "t": "Revision, doubts & practice"
+    },
+    {
+      "n": 33,
+      "k": "checkpoint",
+      "t": "Progress checkpoint"
+    },
+    {
+      "n": 34,
+      "k": "rdp",
+      "t": "Revision, doubts & practice"
+    },
+    {
+      "n": 35,
+      "k": "ptm",
+      "t": "Parent–teacher meeting"
+    },
+    {
+      "n": 54,
+      "k": "checkpoint",
+      "t": "Mid-plan checkpoint"
+    },
+    {
+      "n": 55,
+      "k": "rdp",
+      "t": "Revision, doubts & practice"
+    },
+    {
+      "n": 56,
+      "k": "ptm",
+      "t": "Parent–teacher meeting"
+    },
+    {
+      "n": 66,
+      "k": "checkpoint",
+      "t": "Application checkpoint"
+    },
+    {
+      "n": 67,
+      "k": "rdp",
+      "t": "Revision, doubts & practice"
+    },
+    {
+      "n": 77,
+      "k": "checkpoint",
+      "t": "Final checkpoint"
+    },
+    {
+      "n": 78,
+      "k": "rdp",
+      "t": "Revision, doubts & practice"
+    },
+    {
+      "n": 79,
+      "k": "ptm",
+      "t": "Parent–teacher meeting"
+    }
+  ]
+}

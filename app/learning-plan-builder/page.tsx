@@ -39,6 +39,7 @@ import {
   FileText,
   Gauge,
   GraduationCap,
+  GripVertical,
   Layers3,
   Lightbulb,
   ListChecks,
@@ -147,12 +148,6 @@ function placementLabel(score: number) {
   return "On track"
 }
 
-function prioritySort(priority: Priority) {
-  if (priority === "high") return 0
-  if (priority === "medium") return 1
-  return 2
-}
-
 function findNextTeachingItem(items: PlanItem[], completedCount: number) {
   return items.find(
     (item) => item.classNumber > completedCount && item.kind === "teaching"
@@ -206,11 +201,28 @@ function getPrerequisiteChainLocal(
   return [...new Set(chain)]
 }
 
-function sortTopicsForDisplay(topics: CurriculumTopic[], student: DemoStudent) {
-  if (!student.parentRequestedTopicId) {
-    return [...topics].sort(
-      (a, b) => prioritySort(a.priority) - prioritySort(b.priority) || a.sequence - b.sequence
+function getDefaultTopicOrder(topics: CurriculumTopic[]) {
+  return [...topics]
+    .sort((a, b) => a.sequence - b.sequence)
+    .map((topic) => topic.id)
+}
+
+function sortTopicsForDisplay(
+  topics: CurriculumTopic[],
+  student: DemoStudent,
+  topicOrder: number[]
+) {
+  const orderIndex = new Map(topicOrder.map((topicId, index) => [topicId, index]))
+  const inMentorOrder = (items: CurriculumTopic[]) =>
+    [...items].sort(
+      (a, b) =>
+        (orderIndex.get(a.id) ?? Number.MAX_SAFE_INTEGER) -
+          (orderIndex.get(b.id) ?? Number.MAX_SAFE_INTEGER) ||
+        a.sequence - b.sequence
     )
+
+  if (!student.parentRequestedTopicId) {
+    return inMentorOrder(topics)
   }
 
   const requestedId = student.parentRequestedTopicId
@@ -222,17 +234,64 @@ function sortTopicsForDisplay(topics: CurriculumTopic[], student: DemoStudent) {
     .map((id) => topicMap.get(id))
     .filter((t): t is CurriculumTopic => Boolean(t))
   const requestedTopic = topicMap.get(requestedId)
-  const remainingTopics = topics
-    .filter((t) => !frontIds.has(t.id))
-    .sort(
-      (a, b) => prioritySort(a.priority) - prioritySort(b.priority) || a.sequence - b.sequence
-    )
+  const remainingTopics = inMentorOrder(
+    topics.filter((t) => !frontIds.has(t.id))
+  )
 
   return [
     ...prereqTopics,
     ...(requestedTopic ? [requestedTopic] : []),
     ...remainingTopics,
   ]
+}
+
+function describePlanChanges(
+  previousPlan: GeneratedPlan,
+  nextPlan: GeneratedPlan
+) {
+  const changes: string[] = []
+  const previousByTopicId = new Map(
+    previousPlan.allocations.map((allocation) => [allocation.topicId, allocation])
+  )
+  const nextByTopicId = new Map(
+    nextPlan.allocations.map((allocation) => [allocation.topicId, allocation])
+  )
+
+  for (const allocation of nextPlan.allocations) {
+    const previous = previousByTopicId.get(allocation.topicId)
+    if (!previous) {
+      changes.push(`${allocation.topicName} was added to the scheduled plan.`)
+      continue
+    }
+    if (previous.classes !== allocation.classes) {
+      changes.push(
+        `${allocation.topicName}: ${previous.classes} → ${allocation.classes} classes.`
+      )
+    }
+    if (previous.activities !== allocation.activities) {
+      changes.push(
+        `${allocation.topicName}: ${previous.activities} → ${allocation.activities} activities.`
+      )
+    }
+  }
+
+  for (const allocation of previousPlan.allocations) {
+    if (!nextByTopicId.has(allocation.topicId)) {
+      changes.push(`${allocation.topicName} was removed from the scheduled plan.`)
+    }
+  }
+
+  if (previousPlan.capacity.total !== nextPlan.capacity.total) {
+    changes.push(
+      `Total planned capacity: ${previousPlan.capacity.total} → ${nextPlan.capacity.total} classes.`
+    )
+  }
+
+  return changes
+}
+
+function mergePlanChanges(...groups: string[][]) {
+  return [...new Set(groups.flat().filter(Boolean))]
 }
 
 function ClassLessonGuide({
@@ -345,6 +404,10 @@ export default function LearningPlanBuilderPage() {
   const [selectedTopicIds, setSelectedTopicIds] = useState<number[]>(() =>
     getSuggestedTopicIds(curriculumTopics, demoStudents[0])
   )
+  const [topicOrder, setTopicOrder] = useState<number[]>(() =>
+    getDefaultTopicOrder(curriculumTopics)
+  )
+  const [draggedTopicId, setDraggedTopicId] = useState<number | null>(null)
   const [scopeMode, setScopeMode] = useState<"manual" | "evidence">("manual")
   const [manualAdjustments, setManualAdjustments] = useState<ManualAdjustments>(
     {}
@@ -413,7 +476,7 @@ export default function LearningPlanBuilderPage() {
     () => getSuggestedTopicIds(curriculumTopics, student),
     [student]
   )
-  const requiredHighTopicIds = useMemo(
+  const highTopicIds = useMemo(
     () =>
       curriculumTopics
         .filter(
@@ -462,10 +525,11 @@ export default function LearningPlanBuilderPage() {
         topics: curriculumTopics,
         student,
         selectedTopicIds,
+        topicOrder,
         manualAdjustments,
         version: plan?.version ?? 1,
       }),
-    [manualAdjustments, plan?.version, selectedTopicIds, student]
+    [manualAdjustments, plan?.version, selectedTopicIds, student, topicOrder]
   )
   const reviewAllocationById = useMemo(
     () =>
@@ -477,6 +541,34 @@ export default function LearningPlanBuilderPage() {
       ),
     [reviewPlan]
   )
+  const placementClassAdjustments = useMemo(
+    () =>
+      reviewPlan.allocations.flatMap((allocation) => {
+        const score = student.placementResults.find(
+          (result) => result.topicId === allocation.topicId
+        )?.score
+        const savedClasses = allocation.idealClasses - allocation.classes
+
+        if (score === undefined || score < 75 || savedClasses <= 0) {
+          return []
+        }
+
+        return [
+          {
+            topicName: allocation.topicName,
+            score,
+            idealClasses: allocation.idealClasses,
+            classes: allocation.classes,
+            savedClasses,
+          },
+        ]
+      }),
+    [reviewPlan.allocations, student.placementResults]
+  )
+  const placementClassesSaved = placementClassAdjustments.reduce(
+    (total, adjustment) => total + adjustment.savedClasses,
+    0
+  )
 
   const activeDetailTopic =
     detailTopicId === null ? null : topicById.get(detailTopicId)
@@ -486,6 +578,13 @@ export default function LearningPlanBuilderPage() {
       : plan?.allocations.find(
           (allocation) => allocation.topicId === editingTopicId
         )
+  const editWouldExceedCapacity = Boolean(
+    plan &&
+      activeEditAllocation &&
+      editDraft &&
+      plan.capacity.total - activeEditAllocation.classes + editDraft.classes >
+        student.classesRemaining
+  )
   const nextTeachingItem = plan
     ? findNextTeachingItem(plan.items, completedCount)
     : undefined
@@ -493,6 +592,7 @@ export default function LearningPlanBuilderPage() {
   const chooseStudent = (nextStudent: DemoStudent) => {
     setStudent(nextStudent)
     setSelectedTopicIds(getSuggestedTopicIds(curriculumTopics, nextStudent))
+    setTopicOrder(getDefaultTopicOrder(curriculumTopics))
     setScopeMode("manual")
     setManualAdjustments({})
     setPlan(null)
@@ -506,7 +606,6 @@ export default function LearningPlanBuilderPage() {
   }
 
   const toggleTopic = (topicId: number) => {
-    if (topicById.get(topicId)?.priority === "high") return
     setSelectedTopicIds((current) =>
       current.includes(topicId)
         ? current.filter((id) => id !== topicId)
@@ -543,6 +642,7 @@ export default function LearningPlanBuilderPage() {
           setManualAdjustments(newAdjustments)
         }
         setSelectedTopicIds(aiSuggestion.selectedTopicIds)
+        setTopicOrder(getDefaultTopicOrder(curriculumTopics))
       })
       .catch((err) => console.error("AI Plan error:", err))
       .finally(() => setAiLoading(false))
@@ -556,10 +656,20 @@ export default function LearningPlanBuilderPage() {
   }
 
   const unselectTopic = (topicId: number) => {
-    if (topicById.get(topicId)?.priority === "high") return
     setSelectedTopicIds((current) =>
       current.filter((selectedId) => selectedId !== topicId)
     )
+  }
+
+  const moveTopic = (targetTopicId: number) => {
+    if (draggedTopicId === null || draggedTopicId === targetTopicId) return
+    setTopicOrder((current) => {
+      const nextOrder = current.filter((topicId) => topicId !== draggedTopicId)
+      const targetIndex = nextOrder.indexOf(targetTopicId)
+      nextOrder.splice(targetIndex < 0 ? nextOrder.length : targetIndex, 0, draggedTopicId)
+      return nextOrder
+    })
+    setDraggedTopicId(null)
   }
 
   /**
@@ -581,10 +691,13 @@ export default function LearningPlanBuilderPage() {
     }
 
     setContentGenerating(true)
+    const controller = new AbortController()
+    const timeoutId = window.setTimeout(() => controller.abort(), 12_000)
     try {
       const response = await fetch("/api/learning-plan/generate-content", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        signal: controller.signal,
         body: JSON.stringify({
           student,
           items: withLocalActivities.items,
@@ -610,10 +723,17 @@ export default function LearningPlanBuilderPage() {
         ],
       }
     } catch (error) {
-      console.error("Plan content enrichment failed:", error)
+      if ((error as Error).name === "AbortError") {
+        console.warn(
+          "Teaching-guide generation timed out; continuing with local guide content."
+        )
+      } else {
+        console.error("Plan content enrichment failed:", error)
+      }
       setContentSource("fallback")
       return withLocalActivities
     } finally {
+      window.clearTimeout(timeoutId)
       setContentGenerating(false)
     }
   }
@@ -623,6 +743,7 @@ export default function LearningPlanBuilderPage() {
       topics: curriculumTopics,
       student,
       selectedTopicIds,
+      topicOrder,
       manualAdjustments,
       version: 1,
       changesFromPrevious:
@@ -633,6 +754,10 @@ export default function LearningPlanBuilderPage() {
             ]
           : [],
     })
+    if (basePlan.capacity.difference > 0) {
+      setSetupStep(4)
+      return
+    }
     // Attach activity rows immediately so the count matches the list
     // while AI prose is still generating.
     const withActivities: GeneratedPlan = {
@@ -697,14 +822,22 @@ export default function LearningPlanBuilderPage() {
     ]
 
     setManualAdjustments(nextAdjustments)
-    const nextPlan = buildLearningPlan({
+    const nextBasePlan = buildLearningPlan({
       topics: curriculumTopics,
       student,
       selectedTopicIds,
+      topicOrder,
       manualAdjustments: nextAdjustments,
       version: plan.version + 1,
-      changesFromPrevious: changes,
     })
+    if (nextBasePlan.capacity.difference > 0) return
+    const nextPlan: GeneratedPlan = {
+      ...nextBasePlan,
+      changesFromPrevious: mergePlanChanges(
+        changes,
+        describePlanChanges(plan, nextBasePlan)
+      ),
+    }
     setPlan(nextPlan)
     void enrichPlan(nextPlan).then(setPlan)
     setEditingTopicId(null)
@@ -751,14 +884,22 @@ export default function LearningPlanBuilderPage() {
         classes: nextClasses,
       },
     }
-    const nextPlan = buildLearningPlan({
+    const nextBasePlan = buildLearningPlan({
       topics: curriculumTopics,
       student,
       selectedTopicIds,
+      topicOrder,
       manualAdjustments: nextAdjustments,
       version: plan.version + 1,
-      changesFromPrevious: changes,
     })
+    if (nextBasePlan.capacity.difference > 0) return
+    const nextPlan: GeneratedPlan = {
+      ...nextBasePlan,
+      changesFromPrevious: mergePlanChanges(
+        changes,
+        describePlanChanges(plan, nextBasePlan)
+      ),
+    }
 
     setPendingUpdate({
       plan: nextPlan,
@@ -1004,20 +1145,25 @@ export default function LearningPlanBuilderPage() {
                     </section>
 
                     <aside className="lpb-rule-preview">
-                      <Lightbulb size={20} />
-                      <span>Rule preview</span>
-                      <h3>What will change?</h3>
+                      <div className="lpb-rule-preview-topline">
+                        <span className="lpb-rule-preview-icon">
+                          <Lightbulb size={20} />
+                        </span>
+                        <span>Placement rule analysis</span>
+                      </div>
+                      <h3>How scores change the plan</h3>
                       <ul>
                         <li>
-                          Scores below 40% keep the full allocation and receive
-                          more Practice activities.
+                          <strong>Below 40%</strong>
+                          <span>Keep the full class allocation and add more Practice activities.</span>
                         </li>
                         <li>
-                          Scores of 75% or more shorten the topic and add Easy
-                          consolidation.
+                          <strong>75% or more</strong>
+                          <span>Shorten the topic and add Easy consolidation.</span>
                         </li>
                         <li>
-                          Mid-range scores keep the ideal workbook values.
+                          <strong>40%–74%</strong>
+                          <span>Keep the ideal workbook class and activity values.</span>
                         </li>
                       </ul>
                     </aside>
@@ -1130,21 +1276,30 @@ export default function LearningPlanBuilderPage() {
                             setStudent(updatedStudent)
                             const newSuggested = getSuggestedTopicIds(curriculumTopics, updatedStudent)
                             setSelectedTopicIds(newSuggested)
+                            const newTopicOrder = getDefaultTopicOrder(curriculumTopics)
+                            setTopicOrder(newTopicOrder)
                             if (plan !== null) {
                               const currentPlan = plan as GeneratedPlan
-                              setPlan(
-                                buildLearningPlan({
-                                  topics: curriculumTopics,
-                                  student: updatedStudent,
-                                  selectedTopicIds: newSuggested,
-                                  manualAdjustments,
-                                  version: currentPlan.version + 1,
-                                  changesFromPrevious: [
-                                    `Parent requested starting topic changed to: ${topicById.get(newTopicId)?.name ?? "selected topic"}.`,
-                                    "Prerequisite refreshers re-scheduled before the requested topic.",
-                                  ],
+                              const nextBasePlan = buildLearningPlan({
+                                topics: curriculumTopics,
+                                student: updatedStudent,
+                                selectedTopicIds: newSuggested,
+                                topicOrder: newTopicOrder,
+                                manualAdjustments,
+                                version: currentPlan.version + 1,
+                              })
+                              if (nextBasePlan.capacity.difference <= 0) {
+                                setPlan({
+                                  ...nextBasePlan,
+                                  changesFromPrevious: mergePlanChanges(
+                                    [
+                                      `Parent requested starting topic changed to: ${topicById.get(newTopicId)?.name ?? "selected topic"}.`,
+                                      "Prerequisite refreshers were re-scheduled before the requested topic.",
+                                    ],
+                                    describePlanChanges(currentPlan, nextBasePlan)
+                                  ),
                                 })
-                              )
+                              }
                             }
                           }}
                         >
@@ -1188,7 +1343,7 @@ export default function LearningPlanBuilderPage() {
 
             {setupStep === 3 ? (
               <>
-                <header className="lpb-section-head">
+                <header className="lpb-section-head lpb-topic-scope-head">
                   <div>
                     <span className="lpb-section-no">03</span>
                     <h2>Choose the topic scope</h2>
@@ -1227,7 +1382,7 @@ export default function LearningPlanBuilderPage() {
                       <SlidersHorizontal size={20} />
                     </span>
                     <span>
-                      <strong>Plan manually</strong>
+                      <strong>Manual scope</strong>
                       <small>
                         Select or unselect every topic yourself. Workbook
                         recommendations remain visible.
@@ -1247,11 +1402,11 @@ export default function LearningPlanBuilderPage() {
                       <Lightbulb size={20} />
                     </span>
                     <span>
-                      <strong>Plan from evidence</strong>
+                      <strong>Use evidence</strong>
                       <small>
                         Use placement, mastery, completed work and capacity.
-                        Keep every High topic and suggest a teacher-editable
-                        scope.
+                        Start with evidence-based recommendations, then refine
+                        the scope and order yourself.
                       </small>
                     </span>
                     <span className="lpb-mode-action">
@@ -1268,14 +1423,14 @@ export default function LearningPlanBuilderPage() {
                         Evidence-based scope
                       </span>
                       <strong>
-                        {plural(aiSuggestion.skippableTopicIds.length, "topic")}{" "}
-                        can be skipped
+                        All topics that fit are selected
                       </strong>
                     </div>
                     <p>
                       Scope was shaped from the student&apos;s placement,
-                      mastery and progress signals. You can edit optional
-                      topics; High-priority topics stay locked in the plan.
+                      mastery and progress signals. You can include, remove or
+                      reorder every topic before building the plan. Strong
+                      scores shorten a topic; they do not remove it.
                     </p>
                     <div className="lpb-evidence-chips">
                       {aiSuggestion.evidenceSummary.map((summary) => (
@@ -1320,7 +1475,7 @@ export default function LearningPlanBuilderPage() {
                       type="button"
                       onClick={() => {
                         setScopeMode("manual")
-                        setSelectedTopicIds(requiredHighTopicIds)
+                        setSelectedTopicIds(highTopicIds)
                       }}
                     >
                       Clear optional
@@ -1337,8 +1492,14 @@ export default function LearningPlanBuilderPage() {
                   </div>
                 </div>
 
+                <p className="lpb-topic-order-hint">
+                  <GripVertical size={15} />
+                  Drag topics into the teaching sequence. For placement results,
+                  topics scoring below 40% start first.
+                </p>
+
                 <div className="lpb-topic-list">
-                  {sortTopicsForDisplay(curriculumTopics, student).map((topic) => {
+                  {sortTopicsForDisplay(curriculumTopics, student, topicOrder).map((topic) => {
                       const completed = student.completedTopics.some(
                         (item) => item.topicId === topic.id
                       )
@@ -1361,10 +1522,25 @@ export default function LearningPlanBuilderPage() {
                           type="button"
                           key={topic.id}
                           disabled={completed}
-                          aria-disabled={completed || topic.priority === "high"}
-                          className={`lpb-topic-option${selected ? " selected" : ""}${completed ? " completed" : ""}${topic.priority === "high" ? " locked" : ""}`}
+                          draggable={!completed}
+                          aria-disabled={completed}
+                          className={`lpb-topic-option${selected ? " selected" : ""}${completed ? " completed" : ""}${draggedTopicId === topic.id ? " dragging" : ""}`}
+                          onDragStart={(event) => {
+                            event.dataTransfer.effectAllowed = "move"
+                            event.dataTransfer.setData("text/plain", String(topic.id))
+                            setDraggedTopicId(topic.id)
+                          }}
+                          onDragEnd={() => setDraggedTopicId(null)}
+                          onDragOver={(event) => event.preventDefault()}
+                          onDrop={(event) => {
+                            event.preventDefault()
+                            moveTopic(topic.id)
+                          }}
                           onClick={() => toggleTopic(topic.id)}
                         >
+                          <span className="lpb-topic-drag" title={`Drag ${topic.name} to reorder`}>
+                            <GripVertical size={17} />
+                          </span>
                           <span className="lpb-topic-check">
                             {completed || selected ? <Check size={14} /> : null}
                           </span>
@@ -1414,13 +1590,10 @@ export default function LearningPlanBuilderPage() {
                             {completed ? (
                               "Completed"
                             ) : topic.priority === "high" ? (
-                              <>
-                                <LockKeyhole size={12} />
-                                {evidenceCompressed ? "Compressed" : "Required"}
-                              </>
+                              evidenceCompressed ? "Compressed" : selected ? "Selected by mentor" : "Not selected"
                             ) : scopeMode === "evidence" &&
-                              aiRecommendation?.decision === "skip" ? (
-                              "Skip recommended"
+                              aiRecommendation?.decision === "defer" ? (
+                              "Deferred for capacity"
                             ) : scopeMode === "evidence" && selected ? (
                               "Evidence suggested"
                             ) : suggested ? (
@@ -1494,6 +1667,28 @@ export default function LearningPlanBuilderPage() {
                         <small>planned</small>
                       </span>
                     </div>
+                    {placementClassesSaved > 0 ? (
+                      <div className="lpb-placement-capacity-note">
+                        <div className="lpb-placement-capacity-head">
+                          <span>
+                            <TrendingUp size={17} />
+                            Important capacity adjustment
+                          </span>
+                          <b>−{placementClassesSaved} classes</b>
+                        </div>
+                        <strong>
+                          Strong placement reduced teaching from {reviewPlan.capacity.teaching + placementClassesSaved} to {reviewPlan.capacity.teaching} classes.
+                        </strong>
+                        <p>
+                          {placementClassAdjustments
+                            .map(
+                              (adjustment) =>
+                                `${adjustment.topicName} (${adjustment.score}%): ${adjustment.idealClasses} → ${adjustment.classes}`
+                            )
+                            .join(" · ")}
+                        </p>
+                      </div>
+                    ) : null}
                     <div className="lpb-capacity-bar">
                       <span
                         style={{
@@ -1536,8 +1731,8 @@ export default function LearningPlanBuilderPage() {
                           </strong>
                           <span>
                             {scopeMode === "evidence"
-                              ? "High-priority topics are never removed automatically. Only Medium or Low topics with strong skip evidence are dropped; the teacher can adjust optional topics or keep this warning."
-                              : "Unselect topics or adjust allocations. The warning remains visible if the teacher keeps the larger plan."}
+                              ? "Evidence provides a starting recommendation. Remove topics or adjust allocations before generating the plan."
+                              : "Unselect topics or adjust allocations before generating the plan."}
                           </span>
                         </div>
                       </div>
@@ -1551,13 +1746,16 @@ export default function LearningPlanBuilderPage() {
                         <h3>Selected plan scope</h3>
                         <p>
                           {plural(reviewPlan.allocations.length, "topic")} in
-                          curriculum order
+                          mentor-selected order
                         </p>
                       </div>
                     </div>
                     <div className="lpb-review-topic-list">
                       {reviewPlan.allocations.map((allocation, index) => {
                         const aiRecommendation = aiRecommendationById.get(
+                          allocation.topicId
+                        )
+                        const isRequiredPrerequisite = !selectedSet.has(
                           allocation.topicId
                         )
                         return (
@@ -1586,17 +1784,14 @@ export default function LearningPlanBuilderPage() {
                               >
                                 {PRIORITY_COPY[allocation.priority].label}
                               </span>
-                              {allocation.priority === "high" ? (
+                              {isRequiredPrerequisite ? (
                                 <span className="lpb-required-topic">
-                                  <LockKeyhole size={12} />
-                                  Required
+                                  Required prerequisite
                                 </span>
                               ) : (
                                 <button
                                   type="button"
-                                  onClick={() =>
-                                    unselectTopic(allocation.topicId)
-                                  }
+                                  onClick={() => unselectTopic(allocation.topicId)}
                                   aria-label={`Unselect ${allocation.topicName}`}
                                 >
                                   <X size={14} />
@@ -1625,11 +1820,15 @@ export default function LearningPlanBuilderPage() {
                     className="lpb-button lpb-button-primary"
                     onClick={() => void buildPlan()}
                     disabled={
-                      selectedTopicIds.length === 0 || contentGenerating
+                      selectedTopicIds.length === 0 ||
+                      contentGenerating ||
+                      reviewPlan.capacity.difference > 0
                     }
                   >
                     <CalendarDays size={16} />
-                    {contentGenerating
+                    {reviewPlan.capacity.difference > 0
+                      ? "Resolve capacity to build"
+                      : contentGenerating
                       ? "Generating AI teaching guides…"
                       : "Build learning plan"}
                   </button>
@@ -1703,6 +1902,35 @@ export default function LearningPlanBuilderPage() {
             </div>
           )}
 
+          {plan.explanations.length > 0 ? (
+            <section className="lpb-plan-ordering" aria-label="Plan order explanation">
+              <ListChecks size={17} />
+              <div>
+                <strong>Why this topic order</strong>
+                {plan.explanations.map((explanation) => (
+                  <p key={explanation}>{explanation}</p>
+                ))}
+              </div>
+            </section>
+          ) : null}
+
+          {plan.changesFromPrevious.length > 0 ? (
+            <section className="lpb-plan-changes" aria-label="Changes from previous plan">
+              <div className="lpb-plan-changes-head">
+                <Clock3 size={16} />
+                <div>
+                  <span className="lpb-kicker">Plan version {plan.version}</span>
+                  <h2>What changed</h2>
+                </div>
+              </div>
+              <ul>
+                {plan.changesFromPrevious.map((change) => (
+                  <li key={change}>{change}</li>
+                ))}
+              </ul>
+            </section>
+          ) : null}
+
           <div className="lpb-plan-grid lpb-plan-grid-minimal">
             <div className="lpb-plan-main">
               <section className="lpb-plan-board lpb-plan-board-minimal">
@@ -1767,13 +1995,18 @@ export default function LearningPlanBuilderPage() {
                               {displayStatus === "completed" ? (
                                 <Check size={15} />
                               ) : (
-                                String(item.classNumber).padStart(2, "0")
+                                <>Class {String(item.classNumber).padStart(2, "0")}</>
                               )}
                             </span>
                             <span className="lpb-class-title">
                               <strong>{planItemPrimaryLabel(item)}</strong>
                               <small>{planItemSecondaryLabel(item)}</small>
                             </span>
+                            {item.kind === "teaching" ? (
+                              <span className="lpb-class-activity-badge">
+                                {item.easyActivities + item.practiceActivities} activities
+                              </span>
+                            ) : null}
                             {displayStatus === "next" ? (
                               <span className="lpb-status-badge next">Next</span>
                             ) : displayStatus === "completed" ? (
@@ -1932,15 +2165,19 @@ export default function LearningPlanBuilderPage() {
                   <span className="lpb-detail-label">
                     Not scheduled · {plan.droppedTopics.length}
                   </span>
-                  <div className="lpb-dropped-chips">
+                  <div className="lpb-dropped-list">
                     {plan.droppedTopics.map((topic) => (
-                      <span
+                      <article
                         key={topic.topicId}
-                        className={`lpb-dropped-chip ${topic.priority}`}
-                        title={topic.reason}
                       >
-                        {topic.topicName}
-                      </span>
+                        <div>
+                          <strong>{topic.topicName}</strong>
+                          <span className={`lpb-priority-pill ${topic.priority}`}>
+                            {PRIORITY_COPY[topic.priority].label}
+                          </span>
+                        </div>
+                        <p>{topic.reason}</p>
+                      </article>
                     ))}
                   </div>
                 </section>
@@ -2126,9 +2363,12 @@ export default function LearningPlanBuilderPage() {
                 type="button"
                 className="lpb-button lpb-button-primary"
                 onClick={saveTopicEdit}
+                disabled={editWouldExceedCapacity}
               >
                 <Save size={15} />
-                Save new version
+                {editWouldExceedCapacity
+                  ? "Reduce classes to save"
+                  : "Save new version"}
               </button>
             </footer>
           </aside>
