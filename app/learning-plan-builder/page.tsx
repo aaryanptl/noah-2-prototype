@@ -1638,100 +1638,108 @@ export default function LearningPlanBuilderPage() {
                           </button>
                           {expanded ? (
                             <div className="lpb-class-detail">
-                              <div>
-                                <span className="lpb-detail-label">
-                                  Learning objectives
-                                </span>
-                                {item.learningObjectives.length > 0 ? (
-                                  <ul>
-                                    {item.learningObjectives.map(
-                                      (objective) => (
-                                        <li key={objective.id}>
-                                          {objective.text}
-                                        </li>
-                                      )
-                                    )}
-                                  </ul>
-                                ) : (
-                                  <p>
-                                    This is a structural class and does not
-                                    consume a topic’s teaching allocation.
-                                  </p>
-                                )}
-                              </div>
-                              <div>
-                                <span className="lpb-detail-label">
-                                  Plan reason
-                                </span>
-                                <p>{item.reason}</p>
-                              </div>
-
-                              {item.learningObjectives.length > 0 ? (
-                                <div className="lpb-assigned-questions-box">
-                                  <span className="lpb-detail-label">
-                                    <ListChecks size={15} />
-                                    Assigned Class Questions ({item.easyActivities + item.practiceActivities} activities)
-                                  </span>
-                                  <div className="lpb-question-cards">
-                                    {item.learningObjectives.map((obj) => {
-                                      const guideline = questionGuidelines.find(
-                                        (g) => g.learningObjectiveId === obj.id || g.topicId === item.topicId
-                                      )
-                                      return (
-                                        <div key={obj.id} className="lpb-question-card">
-                                          <span className="lpb-question-objective">
-                                            {obj.subtopic ? `${obj.subtopic} · ` : ""}{obj.text}
-                                          </span>
-                                          {guideline ? (
-                                            <div className="lpb-question-pairs">
-                                              {guideline.starter ? (
-                                                <div className="lpb-question-item">
-                                                  <span className="lpb-q-badge starter">Starter Q</span>
-                                                  <p>{guideline.starter}</p>
-                                                </div>
-                                              ) : null}
-                                              {guideline.master ? (
-                                                <div className="lpb-question-item">
-                                                  <span className="lpb-q-badge master">Master Q</span>
-                                                  <p>{guideline.master}</p>
-                                                </div>
-                                              ) : null}
-                                            </div>
-                                          ) : (
-                                            <div className="lpb-question-pairs">
-                                              <div className="lpb-question-item">
-                                                <span className="lpb-q-badge starter">Practice Q</span>
-                                                <p>Guided problem-solving exercises for {obj.text}.</p>
-                                              </div>
-                                            </div>
-                                          )}
-                                        </div>
-                                      )
-                                    })}
+                              <div className="lpb-lesson-plan-card">
+                                <div className="lpb-lesson-header">
+                                  <BookOpen size={18} />
+                                  <div>
+                                    <h4>Class Lesson Plan & Teaching Guide</h4>
+                                    <p>Goal: Master {item.title} through structured instruction, guided practice, and application.</p>
                                   </div>
                                 </div>
-                              ) : null}
 
-                              {item.topicId ? (
-                                <div className="lpb-detail-actions">
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      setDetailTopicId(item.topicId ?? null)
-                                    }
-                                  >
-                                    <Eye size={14} />
-                                    Detailed progression
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => startEdit(item.topicId ?? 0)}
-                                  >
-                                    <Edit3 size={14} />
-                                    Edit topic allocation
-                                  </button>
+                                <div className="lpb-lesson-grid">
+                                  <div className="lpb-lesson-col">
+                                    <span className="lpb-detail-label">
+                                      <Target size={14} />
+                                      What to Teach & Learning Objectives
+                                    </span>
+                                    {item.learningObjectives.length > 0 ? (
+                                      <ul className="lpb-lesson-bullets">
+                                        {item.learningObjectives.map((objective) => (
+                                          <li key={objective.id}>
+                                            <strong>{objective.subtopic ? `${objective.subtopic}: ` : ""}</strong>
+                                            {objective.text}
+                                          </li>
+                                        ))}
+                                      </ul>
+                                    ) : (
+                                      <p className="lpb-muted-text">Standard teaching session.</p>
+                                    )}
+
+                                    <span className="lpb-detail-label" style={{ marginTop: "14px" }}>
+                                      <Lightbulb size={14} />
+                                      Key Teaching Points for Mentor
+                                    </span>
+                                    <ul className="lpb-lesson-bullets points">
+                                      <li>Introduce core vocabulary and demonstrate 2 worked examples.</li>
+                                      <li>Guide student through single-step starter questions with instant feedback.</li>
+                                      <li>Challenge student with multi-step master application questions before closing.</li>
+                                    </ul>
+                                  </div>
+
+                                  <div className="lpb-lesson-col">
+                                    <span className="lpb-detail-label">
+                                      <CheckCircle2 size={14} />
+                                      Success Criteria
+                                    </span>
+                                    <p className="lpb-success-box">
+                                      Student solves Starter questions with &ge;80% accuracy and attempts Master-level word problems confidently.
+                                    </p>
+
+                                    <span className="lpb-detail-label" style={{ marginTop: "14px" }}>
+                                      <FileText size={14} />
+                                      Placement & Planning Rationale
+                                    </span>
+                                    <p className="lpb-rationale-text">{item.reason}</p>
+                                  </div>
                                 </div>
-                              ) : null}
+
+                                {item.learningObjectives.length > 0 ? (
+                                  <div className="lpb-assigned-questions-box">
+                                    <span className="lpb-detail-label">
+                                      <ListChecks size={15} />
+                                      Assigned Questions & Practice Activities ({item.easyActivities + item.practiceActivities} total activities)
+                                    </span>
+                                    <div className="lpb-question-cards">
+                                      {item.learningObjectives.map((obj) => {
+                                        const guideline = questionGuidelines.find(
+                                          (g) => g.learningObjectiveId === obj.id || g.topicId === item.topicId
+                                        )
+                                        return (
+                                          <div key={obj.id} className="lpb-question-card">
+                                            <span className="lpb-question-objective">
+                                              {obj.subtopic ? `${obj.subtopic} · ` : ""}{obj.text}
+                                            </span>
+                                            {guideline ? (
+                                              <div className="lpb-question-pairs">
+                                                {guideline.starter ? (
+                                                  <div className="lpb-question-item">
+                                                    <span className="lpb-q-badge starter">Starter Q</span>
+                                                    <p>{guideline.starter}</p>
+                                                  </div>
+                                                ) : null}
+                                                {guideline.master ? (
+                                                  <div className="lpb-question-item">
+                                                    <span className="lpb-q-badge master">Master Q</span>
+                                                    <p>{guideline.master}</p>
+                                                  </div>
+                                                ) : null}
+                                              </div>
+                                            ) : (
+                                              <div className="lpb-question-pairs">
+                                                <div className="lpb-question-item">
+                                                  <span className="lpb-q-badge starter">Practice Q</span>
+                                                  <p>Guided problem-solving exercises for {obj.text}.</p>
+                                                </div>
+                                              </div>
+                                            )}
+                                          </div>
+                                        )
+                                      })}
+                                    </div>
+                                  </div>
+                                ) : null}
+                              </div>
                             </div>
                           ) : null}
                         </article>
