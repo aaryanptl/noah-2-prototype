@@ -386,6 +386,18 @@ export default function LearningPlanBuilderPage() {
         if (data.strategy) {
           setAiParentExplanation(data.strategy)
         }
+        if (data.classAdjustments && typeof data.classAdjustments === "object") {
+          const newAdjustments: ManualAdjustments = { ...manualAdjustments }
+          for (const [topicIdStr, adj] of Object.entries(data.classAdjustments)) {
+            const topicId = Number(topicIdStr)
+            const castAdj = adj as { classes: number; activities: number }
+            newAdjustments[topicId] = {
+              classes: castAdj.classes,
+              activities: castAdj.activities,
+            }
+          }
+          setManualAdjustments(newAdjustments)
+        }
         setSelectedTopicIds(aiSuggestion.selectedTopicIds)
       })
       .catch((err) => console.error("AI Plan error:", err))

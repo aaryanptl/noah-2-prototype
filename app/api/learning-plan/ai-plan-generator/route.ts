@@ -16,15 +16,50 @@ export async function POST(request: Request) {
       )
     }
 
+    const availableClasses = student.classesRemaining || 40
+    const highPriorityTopics = topics.filter((t: any) => t.priority === "high")
+    const totalIdealHighClasses = highPriorityTopics.reduce(
+      (sum: number, t: any) => sum + (t.idealClasses || 5),
+      0
+    )
+
+    const isCapacityExceeded = totalIdealHighClasses > availableClasses
+
     const apiKey = process.env.OPENAI_API_KEY
     if (!apiKey) {
+      // Local fallback calculation if no API key
+      const classAdjustments: Record<number, { classes: number; activities: number; reason: string }> = {}
+      let currentTotal = totalIdealHighClasses
+
+      if (isCapacityExceeded) {
+        for (const topic of highPriorityTopics) {
+          if (currentTotal <= availableClasses) break
+          const placementResult = (student.placementResults || []).find((r: any) => r.topicId === topic.id)
+          const score = placementResult?.score ?? student.defaultPlacementScore ?? 75
+
+          if (score >= 60 && topic.idealClasses > 3) {
+            const newClasses = Math.max(3, topic.idealClasses - 2)
+            const newActivities = Math.floor(newClasses * 3.5)
+            classAdjustments[topic.id] = {
+              classes: newClasses,
+              activities: newActivities,
+              reason: `AI reduced allocation from ${topic.idealClasses} to ${newClasses} classes based on ${score}% placement score to fit ${availableClasses}-class package capacity.`,
+            }
+            currentTotal -= topic.idealClasses - newClasses
+          }
+        }
+      }
+
       return NextResponse.json({
-        strategy: "Standard curriculum allocation based on available package capacity.",
+        strategy: isCapacityExceeded
+          ? `Package capacity constraint: Total ideal classes (${totalIdealHighClasses}) exceeded available package capacity (${availableClasses}). AI analyzed placement scores and compressed High-priority topics with strong performance to fit your ${availableClasses}-class package.`
+          : `Standard curriculum allocation: Total required classes (${totalIdealHighClasses}) fit within available ${availableClasses}-class package capacity.`,
         evidenceSummary: [
-          `Package capacity: ${student.classesRemaining || 40} classes`,
-          `${student.completedTopics?.length || 0} completed topics excluded`,
+          `Package capacity: ${availableClasses} classes`,
+          `${Object.keys(classAdjustments).length} High-priority topics compressed by AI`,
         ],
         recommendations: [],
+        classAdjustments,
         provider: "fallback-local",
       })
     }
@@ -32,19 +67,17 @@ export async function POST(request: Request) {
     const openai = new OpenAI({ apiKey })
     const prompt = `
 You are an expert AI Maths Curriculum Strategist for Grade 5 Mathematics.
-Analyze this student profile and live Grade 5 DB curriculum:
+Analyze student "${student.name}" and live Grade 5 DB curriculum:
 
-Student Name: ${student.name}
-Grade: Grade 5
-Classes Remaining: ${student.classesRemaining}
-Placement Status: ${student.placementStatus}
-Placement Scores: ${JSON.stringify(student.placementResults || [])}
-Mastery Evidence: ${JSON.stringify(student.objectiveEvidence || [])}
-Parent Requested Topic ID: ${student.parentRequestedTopicId || "None"}
+Student Profile:
+- Package Available Classes: ${availableClasses}
+- Placement Status: ${student.placementStatus}
+- Placement Test Scores: ${JSON.stringify(student.placementResults || [])}
+- Mastery Observations: ${JSON.stringify(student.objectiveEvidence || [])}
 
-Live DB Curriculum Topics:
+Live High-Priority Topics (${highPriorityTopics.length} topics, Total Ideal Classes: ${totalIdealHighClasses}):
 ${JSON.stringify(
-  topics.map((t: any) => ({
+  highPriorityTopics.map((t: any) => ({
     id: t.id,
     name: t.name,
     priority: t.priority,
@@ -53,20 +86,24 @@ ${JSON.stringify(
   }))
 )}
 
-Instructions:
-1. Provide a direct 1-2 sentence AI learning strategy summary explaining topic sequence and capacity allocation for ${student.name}. DO NOT use greetings or conversational filler.
-2. For each topic, indicate if it should be included, skipped (due to prior mastery), or deferred (due to capacity).
+INSTRUCTIONS:
+1. Compare total ideal classes (${totalIdealHighClasses}) against package capacity (${availableClasses} classes).
+2. If capacity is exceeded or tight, analyze placement test scores and select High-priority topics with strong student performance (score >= 70%) to compress by 1-2 classes.
+3. Calculate proportional activities (max 3.5 per class).
+4. Output a 1-2 sentence direct AI strategy summary explaining to the user how AI managed classes and activities to fit the package capacity limit.
+
 Return ONLY a valid JSON object in this exact format:
 {
-  "strategy": "AI strategy prose here...",
-  "evidenceSummary": ["Summary point 1", "Summary point 2", "Summary point 3"],
-  "recommendations": [
-    {
-      "topicId": 313,
-      "decision": "include",
-      "reason": "High priority topic required for Grade 5."
+  "strategy": "AI strategy explanation for the user...",
+  "evidenceSummary": ["Point 1", "Point 2"],
+  "recommendations": [],
+  "classAdjustments": {
+    "313": {
+      "classes": 3,
+      "activities": 10,
+      "reason": "Compressed by AI from 5 to 3 classes based on 85% placement score to fit package limit."
     }
-  ]
+  }
 }
 `
 
@@ -76,11 +113,11 @@ Return ONLY a valid JSON object in this exact format:
         {
           role: "system",
           content:
-            "You are a concise AI curriculum engine. Output direct, factual strategy JSON without greetings or pleasantries.",
+            "You are a precise AI curriculum engine. Output direct, factual JSON strategy without pleasantries.",
         },
         { role: "user", content: prompt },
       ],
-      temperature: 0.2,
+      temperature: 0.1,
       response_format: { type: "json_object" },
     })
 
@@ -91,9 +128,9 @@ Return ONLY a valid JSON object in this exact format:
       strategy: parsedData.strategy || "AI learning plan strategy generated.",
       evidenceSummary: parsedData.evidenceSummary || [
         `${student.placementResults?.length || 0} placement topic scores evaluated`,
-        `${student.objectiveEvidence?.length || 0} mastery observations analyzed`,
       ],
       recommendations: parsedData.recommendations || [],
+      classAdjustments: parsedData.classAdjustments || {},
       provider: "openai-gpt-4o-mini",
     })
   } catch (error) {
