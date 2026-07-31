@@ -2965,8 +2965,6 @@
   color: #13895a;
 }
 
-.lpb-drawer > footer,
-.lpb-detail-modal > footer,
 .lpb-outcome-modal > footer {
   margin-top: auto;
   padding-top: 18px;
@@ -2975,6 +2973,31 @@
   justify-content: flex-end;
   gap: 9px;
   border-top: 1px solid var(--line);
+}
+
+.lpb-detail-modal > footer {
+  margin-top: auto;
+  padding-top: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-top: 1px solid var(--line);
+}
+
+.lpb-modal-lock-note {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ink-muted);
+  font-size: 0.74rem;
+  line-height: 1;
+}
+
+.lpb-modal-lock-note svg {
+  flex-shrink: 0;
+  color: var(--ink-muted);
+  margin-top: -1px;
 }
 
 .lpb-detail-modal {
@@ -3138,9 +3161,11 @@
 }
 
 .lpb-question-arrow {
-  display: grid;
-  place-items: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   color: var(--ink-muted);
+  align-self: center;
 }
 
 .lpb-no-guideline {

@@ -2266,9 +2266,9 @@ export default function LearningPlanBuilderPage() {
             </div>
 
             <footer>
-              <span>
+              <span className="lpb-modal-lock-note">
                 <LockKeyhole size={14} />
-                Questions are workbook samples—no live generation.
+                <span>Questions are workbook samples—no live generation.</span>
               </span>
               <button
                 type="button"
