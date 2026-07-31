@@ -161,6 +161,60 @@ async function syncTopics(
   }
 }
 
+/**
+ * The relational tables store a flattened projection (week/day/focus/activity),
+ * which cannot rebuild the builder's view. This keeps the exact plan document
+ * alongside it so a saved plan can be reopened by id.
+ */
+async function saveSnapshot(
+  client: { query: typeof pool.query },
+  planId: string,
+  student: DemoStudent,
+  plan: GeneratedPlan,
+  completedCount: number,
+) {
+  await client.query(
+    `INSERT INTO learning_plan_snapshots (plan_id, student, plan, completed_count)
+     VALUES ($1, $2::jsonb, $3::jsonb, $4)
+     ON CONFLICT (plan_id) DO UPDATE SET
+       student = EXCLUDED.student,
+       plan = EXCLUDED.plan,
+       completed_count = EXCLUDED.completed_count,
+       updated_at = now()`,
+    [planId, JSON.stringify(student), JSON.stringify(plan), completedCount],
+  );
+}
+
+export interface PrototypePlanSnapshot {
+  planId: string;
+  student: DemoStudent;
+  plan: GeneratedPlan;
+  completedCount: number;
+  updatedAt: string;
+}
+
+export async function getPrototypePlanSnapshot(
+  planId: string,
+): Promise<PrototypePlanSnapshot | null> {
+  const result = await pool.query(
+    `SELECT plan_id::text AS "planId", student, plan,
+            completed_count AS "completedCount",
+            updated_at AS "updatedAt"
+     FROM learning_plan_snapshots
+     WHERE plan_id = $1`,
+    [planId],
+  );
+  const row = result.rows[0];
+  if (!row) return null;
+  return {
+    planId: row.planId,
+    student: row.student as DemoStudent,
+    plan: row.plan as GeneratedPlan,
+    completedCount: Number(row.completedCount ?? 0),
+    updatedAt: new Date(row.updatedAt).toISOString(),
+  };
+}
+
 export async function savePrototypePlan(student: DemoStudent, plan: GeneratedPlan) {
   const client = await pool.connect();
   try {
@@ -215,6 +269,7 @@ export async function savePrototypePlan(student: DemoStudent, plan: GeneratedPla
         JSON.stringify({ version: plan.version, explanations: plan.explanations }),
       ],
     );
+    await saveSnapshot(client, planId, student, plan, 0);
     await client.query("COMMIT");
     return { planId };
   } catch (error) {
@@ -289,6 +344,7 @@ export async function updatePrototypePlan(
         ],
       );
     }
+    await saveSnapshot(client, planId, student, update.plan, update.completedCount);
     await client.query("COMMIT");
     return { planId };
   } catch (error) {

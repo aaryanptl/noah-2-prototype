@@ -127,10 +127,12 @@ function adjustTopic(
       )
     } else if (placementScore >= 75) {
       const reduction = Math.ceil(topic.idealClasses * 0.3)
-      classes = Math.max(1, topic.idealClasses - reduction)
+      classes = Math.max(topic.minimumClasses, topic.idealClasses - reduction)
       easyPercent = clamp(topic.easyPercent + 15, 40, 80)
       reasons.push(
-        `Placement score ${placementScore}% is 75% or higher, so the topic is shortened and shifted toward easier consolidation.`
+        classes === topic.minimumClasses
+          ? `Placement score ${placementScore}% is 75% or higher, so the topic is shortened to its ${topic.minimumClasses}-class minimum and shifted toward easier consolidation.`
+          : `Placement score ${placementScore}% is 75% or higher, so the topic is shortened and shifted toward easier consolidation.`
       )
     } else {
       reasons.push(
@@ -180,10 +182,10 @@ function adjustTopic(
     secureMasterRatio >= 0.75
   ) {
     const reduction = Math.ceil(topic.idealClasses * 0.3)
-    classes = Math.max(1, topic.idealClasses - reduction)
+    classes = Math.max(topic.minimumClasses, topic.idealClasses - reduction)
     easyPercent = clamp(topic.easyPercent + 15, 40, 80)
     reasons.push(
-      "Secure Master-level evidence shortens this topic without removing it from the plan."
+      "Secure Master-level evidence shortens this topic without removing it from the plan, and never below its class minimum."
     )
   }
 
@@ -200,18 +202,29 @@ function adjustTopic(
     }
   }
 
+  // Rule H1 floor for this allocation. For an in-progress topic the floor
+  // covers the whole topic, so classes already taught count toward it.
+  let allocationFloor = topic.minimumClasses
+
   if (student.currentTopicId === topic.id && student.currentTopicClassesUsed) {
     classes = Math.max(1, topic.idealClasses - student.currentTopicClassesUsed)
+    allocationFloor = Math.max(
+      1,
+      topic.minimumClasses - student.currentTopicClassesUsed
+    )
     reasons.push(
       `${student.currentTopicClassesUsed} ${student.currentTopicClassesUsed === 1 ? "class has" : "classes have"} already been taught in this active topic, so the remaining allocation is calculated from the ideal plan.`
     )
   }
 
+  // Rule H2: refreshers are half the ideal classes, rounded up, minimum 1.
+  // Rule B2 exempts them from any further capacity compression.
   const isCompressedRefresher = compressedPrerequisiteIds.has(topic.id)
   if (isCompressedRefresher) {
     classes = Math.max(1, Math.ceil(topic.idealClasses / 2))
+    allocationFloor = classes
     reasons.push(
-      "This prerequisite is scheduled as a compressed refresher before the parent-requested topic."
+      "This prerequisite is scheduled as a compressed refresher before the parent-requested topic (half the ideal classes, rounded up)."
     )
   }
 
@@ -233,6 +246,12 @@ function adjustTopic(
     reasons.push(
       "A teacher override has been applied and locked into this version."
     )
+    if (manual.classes !== undefined && classes < allocationFloor) {
+      // Rule H1: only a teacher may take a topic below its minimum.
+      reasons.push(
+        `This override is below the ${allocationFloor}-class minimum for the topic; automatic rules never go this low.`
+      )
+    }
   }
 
   // Rule G1: Weekly activity workload cap for Grade 5 (max 7 questions/week, ~3.5 per class)
@@ -255,6 +274,9 @@ function adjustTopic(
     priority: topic.priority,
     classes,
     idealClasses: topic.idealClasses,
+    minimumClasses: allocationFloor,
+    compressedByCapacity: 0,
+    atMinimum: classes <= allocationFloor,
     activities,
     easyActivities,
     practiceActivities,
@@ -264,6 +286,200 @@ function adjustTopic(
     reasons,
     isCompressedRefresher,
     manuallyEdited: Boolean(manual),
+  }
+}
+
+/**
+ * Rule B2 (first half): when the plan does not fit, compress topics toward
+ * their Minimum Classes before anything is dropped. Lowest priority first,
+ * latest sequence first. Compressed prerequisite refreshers and topics the
+ * teacher has edited by hand are never touched.
+ *
+ * Returns new allocation objects; the input array is not mutated.
+ */
+function compressAllocationsToFit(
+  allocations: PlanTopicAllocation[],
+  overBy: number
+): { allocations: PlanTopicAllocation[]; compressed: number } {
+  if (overBy <= 0) return { allocations, compressed: 0 }
+
+  const working = allocations.map((allocation) => ({ ...allocation }))
+  const order = [...working]
+    .filter(
+      (allocation) =>
+        !allocation.isCompressedRefresher &&
+        !allocation.manuallyEdited &&
+        allocation.classes > allocation.minimumClasses
+    )
+    .sort(
+      (a, b) =>
+        PRIORITY_RANK[b.priority] - PRIORITY_RANK[a.priority] ||
+        b.sequence - a.sequence
+    )
+
+  let remaining = overBy
+  let compressed = 0
+
+  // One class at a time, cycling the queue so the load is spread rather than
+  // flattening the first topic straight to its floor.
+  let progressed = true
+  while (remaining > 0 && progressed) {
+    progressed = false
+    for (const allocation of order) {
+      if (remaining <= 0) break
+      if (allocation.classes <= allocation.minimumClasses) continue
+      allocation.classes -= 1
+      allocation.compressedByCapacity = (allocation.compressedByCapacity ?? 0) + 1
+      remaining -= 1
+      compressed += 1
+      progressed = true
+    }
+  }
+
+  for (const allocation of order) {
+    const removed = allocation.compressedByCapacity ?? 0
+    if (removed === 0) continue
+    allocation.atMinimum = allocation.classes <= allocation.minimumClasses
+    allocation.activities = Math.max(
+      1,
+      Math.round(
+        allocation.activities * (allocation.classes / (allocation.classes + removed))
+      )
+    )
+    allocation.easyActivities = Math.round(
+      allocation.activities * (allocation.easyPercent / 100)
+    )
+    allocation.practiceActivities =
+      allocation.activities - allocation.easyActivities
+    allocation.reasons = [
+      ...allocation.reasons,
+      allocation.atMinimum
+        ? `Compressed to its ${allocation.minimumClasses}-class minimum to fit the remaining package capacity.`
+        : `Compressed by ${removed} ${removed === 1 ? "class" : "classes"} toward its ${allocation.minimumClasses}-class minimum to fit the remaining package capacity.`,
+    ]
+  }
+
+  return { allocations: working, compressed }
+}
+
+/**
+ * Rule F3: when classes are tight, structural classes scale down before
+ * High-priority teaching classes are reduced further. A checkpoint always
+ * takes its RDP class with it, and a plan keeps at least two checkpoints
+ * (one when there is a single topic) and one PTM.
+ */
+function shrinkStructuralToFit(
+  structural: ReturnType<typeof estimateStructuralCounts>,
+  topicCount: number,
+  overBy: number
+) {
+  if (overBy <= 0 || topicCount === 0) return structural
+
+  let { checkpoints, rdps, ptms } = structural
+  let remaining = overBy
+  const minCheckpoints = topicCount > 1 ? 2 : 1
+
+  while (remaining > 0 && ptms > 1) {
+    ptms -= 1
+    remaining -= 1
+  }
+  while (remaining > 0 && checkpoints > minCheckpoints) {
+    checkpoints -= 1
+    rdps -= 1
+    remaining -= 2
+  }
+
+  return { checkpoints, rdps, ptms, total: checkpoints + rdps + ptms }
+}
+
+/** Teaching + structural classes for a candidate set of allocations. */
+function planTotals(
+  allocations: PlanTopicAllocation[],
+  classesRemaining: number
+) {
+  const teaching = sum(allocations.map((allocation) => allocation.classes))
+  const full = estimateStructuralCounts(allocations.length, classesRemaining)
+  const structural = shrinkStructuralToFit(
+    full,
+    allocations.length,
+    teaching + full.total - classesRemaining
+  )
+  return { teaching, structural, total: teaching + structural.total }
+}
+
+function totalPlanClasses(
+  allocations: PlanTopicAllocation[],
+  classesRemaining: number
+) {
+  return planTotals(allocations, classesRemaining).total
+}
+
+/**
+ * Rule B2 in full: compress toward the minimums first, then drop Low topics,
+ * then Medium (latest sequence first). High topics are never dropped here —
+ * the caller raises a warning instead.
+ */
+function fitAllocationsToCapacity(
+  allocations: PlanTopicAllocation[],
+  classesRemaining: number,
+  protectedTopicIds: Set<number>,
+  topicMap: Map<number, CurriculumTopic>
+) {
+  const droppedIds = new Set<number>()
+  const dropped: PlanTopicAllocation[] = []
+
+  /** Re-derive the plan from the uncompressed allocations for the current scope. */
+  const fitCurrentScope = () => {
+    const kept = allocations.filter(
+      (allocation) => !droppedIds.has(allocation.topicId)
+    )
+    const overBy = totalPlanClasses(kept, classesRemaining) - classesRemaining
+    return compressAllocationsToFit(kept, overBy)
+  }
+
+  let attempt = fitCurrentScope()
+
+  while (
+    totalPlanClasses(attempt.allocations, classesRemaining) > classesRemaining
+  ) {
+    // A topic another kept topic depends on cannot be dropped: the plan
+    // builder would only add it back as a prerequisite.
+    const requiredByKept = new Set<number>()
+    for (const allocation of attempt.allocations) {
+      for (const prerequisiteId of getPrerequisiteChain(
+        allocation.topicId,
+        topicMap
+      )) {
+        requiredByKept.add(prerequisiteId)
+      }
+    }
+
+    const candidate = [...attempt.allocations]
+      .filter(
+        (allocation) =>
+          allocation.priority !== "high" &&
+          !allocation.isCompressedRefresher &&
+          !protectedTopicIds.has(allocation.topicId) &&
+          !requiredByKept.has(allocation.topicId)
+      )
+      .sort(
+        (a, b) =>
+          PRIORITY_RANK[b.priority] - PRIORITY_RANK[a.priority] ||
+          b.sequence - a.sequence
+      )[0]
+    if (!candidate) break
+
+    droppedIds.add(candidate.topicId)
+    dropped.push(candidate)
+    // Dropping frees classes, so compression restarts from the ideal
+    // allocations and only removes what is still needed.
+    attempt = fitCurrentScope()
+  }
+
+  return {
+    allocations: attempt.allocations,
+    dropped,
+    compressed: attempt.compressed,
   }
 }
 
@@ -530,36 +746,26 @@ export function getSuggestedTopicIds(
     }
   }
 
-  const baseAllocations = availableTopics.map((topic) =>
-    adjustTopic(topic, student, {}, new Set())
+  // Rule A1: start from every topic in the curriculum, then let Rules B2/H1
+  // compress toward the minimums and drop Low before Medium if it still
+  // does not fit.
+  const requestedRefresherIds = student.parentRequestedTopicId
+    ? new Set(
+        getPrerequisiteChain(student.parentRequestedTopicId, topicMap).filter(
+          (id) => !completedIds.has(id)
+        )
+      )
+    : new Set<number>()
+  const candidateAllocations = availableTopics.map((topic) =>
+    adjustTopic(topic, student, {}, requestedRefresherIds)
   )
-  const selectedTeaching = sum(
-    baseAllocations
-      .filter((allocation) => selectedIds.has(allocation.topicId))
-      .map((allocation) => allocation.classes)
+  const fitted = fitAllocationsToCapacity(
+    candidateAllocations,
+    student.classesRemaining,
+    selectedIds,
+    topicMap
   )
-  const structural = estimateStructuralCounts(
-    selectedIds.size,
-    student.classesRemaining
-  )
-  let remaining = student.classesRemaining - selectedTeaching - structural.total
-
-  const lowerPriorityTopics = availableTopics
-    .filter((topic) => topic.priority !== "high" && !selectedIds.has(topic.id))
-    .sort(
-      (a, b) =>
-        PRIORITY_RANK[a.priority] - PRIORITY_RANK[b.priority] ||
-        a.sequence - b.sequence
-    )
-
-  for (const topic of lowerPriorityTopics) {
-    const allocation = baseAllocations.find((item) => item.topicId === topic.id)
-    if (!allocation) continue
-    if (allocation.classes <= remaining) {
-      selectedIds.add(topic.id)
-      remaining -= allocation.classes
-    }
-  }
+  for (const allocation of fitted.allocations) selectedIds.add(allocation.topicId)
 
   return [...selectedIds]
 }
@@ -574,10 +780,17 @@ export function getAiAssistedTopicSuggestion(
   const recommendations = new Map<number, AiTopicRecommendation>()
   const skippableTopicIds = new Set<number>()
   const mustIncludeIds = new Set<number>()
+  const refresherIds = student.parentRequestedTopicId
+    ? new Set(
+        getPrerequisiteChain(student.parentRequestedTopicId, topicMap).filter(
+          (id) => !completedIds.has(id)
+        )
+      )
+    : new Set<number>()
   const baseAllocations = new Map(
     availableTopics.map((topic) => [
       topic.id,
-      adjustTopic(topic, student, {}, new Set()),
+      adjustTopic(topic, student, {}, refresherIds),
     ])
   )
 
@@ -688,21 +901,31 @@ export function getAiAssistedTopicSuggestion(
         a.sequence - b.sequence
     )
 
-  for (const topic of lowerPriorityTopics) {
-    const candidateIds = new Set(selectedIds)
-    candidateIds.add(topic.id)
-    const candidateTeaching = sum(
-      [...candidateIds].map(
-        (topicId) => baseAllocations.get(topicId)?.classes ?? 0
-      )
+  // Rule B2: try every remaining topic in one pass, compressing the whole
+  // scope toward the class minimums before deferring anything.
+  const candidateAllocations = [
+    ...[...selectedIds],
+    ...lowerPriorityTopics.map((topic) => topic.id),
+  ]
+    .map((topicId) => baseAllocations.get(topicId))
+    .filter((allocation): allocation is PlanTopicAllocation =>
+      Boolean(allocation)
     )
-    const candidateStructural = estimateStructuralCounts(
-      candidateIds.size,
-      student.classesRemaining
-    )
-    const fits =
-      candidateTeaching + candidateStructural.total <= student.classesRemaining
+  const fitted = fitAllocationsToCapacity(
+    candidateAllocations,
+    student.classesRemaining,
+    selectedIds,
+    topicMap
+  )
+  const keptIds = new Set(
+    fitted.allocations.map((allocation) => allocation.topicId)
+  )
+  const compressedById = new Map(
+    fitted.allocations.map((allocation) => [allocation.topicId, allocation])
+  )
 
+  for (const topic of lowerPriorityTopics) {
+    const fits = keptIds.has(topic.id)
     if (!fits || !recommendations.has(topic.id)) {
       recommendations.set(topic.id, {
         topicId: topic.id,
@@ -710,10 +933,22 @@ export function getAiAssistedTopicSuggestion(
         evidence: fits ? "priority" : "capacity",
         reason: fits
           ? `${formatPriority(topic.priority)} priority fits after higher-priority needs.`
-          : `${formatPriority(topic.priority)} priority is deferred because it does not fit after higher-priority needs.`,
+          : `${formatPriority(topic.priority)} priority is deferred: even after compressing the selected topics toward their class minimums, there is not enough capacity.`,
       })
     }
     if (fits) selectedIds.add(topic.id)
+  }
+
+  for (const topicId of selectedIds) {
+    const allocation = compressedById.get(topicId)
+    const removed = allocation?.compressedByCapacity ?? 0
+    if (!allocation || removed === 0) continue
+    recommendations.set(topicId, {
+      topicId,
+      decision: "include",
+      evidence: "capacity",
+      reason: `${recommendations.get(topicId)?.reason ?? ""} Compressed from ${allocation.idealClasses} to ${allocation.classes} classes (minimum ${allocation.minimumClasses}) to fit the package.`.trim(),
+    })
   }
 
   for (const topicId of skippableTopicIds) {
@@ -728,6 +963,9 @@ export function getAiAssistedTopicSuggestion(
       ? `${student.objectiveEvidence.length} mastery observations reviewed`
       : "No objective-level mastery evidence available",
     `${student.completedTopics.length} completed topics excluded`,
+    fitted.compressed > 0
+      ? `${fitted.compressed} classes compressed toward topic minimums to fit ${student.classesRemaining} available classes`
+      : `Scope fits within ${student.classesRemaining} available classes without compression`,
   ]
 
   return {
@@ -802,21 +1040,27 @@ export function buildLearningPlan({
       adjustTopic(topic, student, manualAdjustments, compressedPrerequisiteIds)
     )
 
-  const orderedAllocations = orderAllocations(
+  const selectedAllocations = orderAllocations(
     allocations,
     student,
     topicMap,
     topicOrder
   )
-  const structural = estimateStructuralCounts(
-    orderedAllocations.length,
+  // Rule B2: the mentor owns the topic scope here, so the plan compresses
+  // toward the minimums but never drops a selected topic on its own.
+  const overBy =
+    planTotals(selectedAllocations, student.classesRemaining).total -
+    student.classesRemaining
+  const compression = compressAllocationsToFit(selectedAllocations, overBy)
+  const orderedAllocations = compression.allocations
+  const { teaching, structural, total } = planTotals(
+    orderedAllocations,
     student.classesRemaining
   )
-  const teaching = sum(
-    orderedAllocations.map((allocation) => allocation.classes)
-  )
-  const total = teaching + structural.total
   const difference = total - student.classesRemaining
+  const spare = Math.max(0, student.classesRemaining - total)
+  // Rule B3: 10 or more spare classes are reserved rather than padded out.
+  const surplusClasses = spare >= 10 ? spare : 0
   const warnings: PlanWarning[] = []
 
   if (difference > 0) {
@@ -824,8 +1068,25 @@ export function buildLearningPlan({
       id: "over-capacity",
       title: `Plan exceeds capacity by ${difference} ${difference === 1 ? "class" : "classes"}`,
       message:
-        "The mentor can edit the scope or allocations, or keep this visible warning.",
+        "Every eligible topic is already at its class minimum. The mentor can narrow the scope, override an allocation, or keep this visible warning.",
       severity: "warning",
+    })
+  }
+
+  const compressedAllocations = orderedAllocations.filter(
+    (allocation) => (allocation.compressedByCapacity ?? 0) > 0
+  )
+  if (compressedAllocations.length > 0) {
+    warnings.push({
+      id: "compressed-to-fit",
+      title: `${compressedAllocations.length} ${compressedAllocations.length === 1 ? "topic was" : "topics were"} compressed to fit capacity`,
+      message: `${compressedAllocations
+        .map(
+          (allocation) =>
+            `${allocation.topicName} ${allocation.idealClasses} → ${allocation.classes}`
+        )
+        .join(" · ")}. No topic goes below its class minimum.`,
+      severity: "attention",
     })
   }
 
@@ -862,9 +1123,9 @@ export function buildLearningPlan({
       priority: topic.priority,
       reason:
         topic.priority === "low"
-          ? "Low priority and did not fit after higher-priority topics."
+          ? "Low priority: dropped first once the remaining topics were already compressed toward their class minimums."
           : topic.priority === "medium"
-            ? "Medium priority and did not fit after High-priority topics."
+            ? "Medium priority: dropped after Low topics, once compression toward the class minimums still did not free enough capacity."
             : "Removed by the teacher; High-priority topics are never dropped silently.",
     }))
 
@@ -904,11 +1165,20 @@ export function buildLearningPlan({
       "The parent-requested topic is moved forward after its unmet prerequisite refreshers."
     )
   }
-  if (student.classesRemaining >= total * 2) {
+  if (compression.compressed > 0) {
     explanations.push(
-      `Surplus remaining capacity (${student.classesRemaining} classes) exceeds 2x plan requirements (${total} classes). Excess capacity is reserved as 'Revision / School Help'.`
+      `Capacity was ${overBy} ${overBy === 1 ? "class" : "classes"} short, so ${compression.compressed} teaching ${compression.compressed === 1 ? "class was" : "classes were"} compressed out of the lowest-priority topics first. No topic drops below its minimum, and prerequisite refreshers are never compressed.`
     )
   }
+  if (surplusClasses > 0) {
+    explanations.push(
+      `${surplusClasses} spare classes remain after the plan (${total} of ${student.classesRemaining}). Only the required classes are planned; the surplus is reserved as 'Revision / School Help'.`
+    )
+  }
+  const classesPerWeek = student.classesPerWeek ?? 2
+  explanations.push(
+    `The student attends ${classesPerWeek} ${classesPerWeek === 1 ? "class" : "classes"} per week, so each plan window covers the next ${classesPerWeek * 2} classes.`
+  )
 
   const hasManualEdits = Object.keys(manualAdjustments).length > 0
 
@@ -928,6 +1198,8 @@ export function buildLearningPlan({
       structural: structural.total,
       total,
       difference,
+      compressedClasses: compression.compressed,
+      surplusClasses,
     },
     explanations,
     changesFromPrevious,

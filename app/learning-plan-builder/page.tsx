@@ -55,6 +55,7 @@ import {
   X,
 } from "lucide-react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { useEffect, useMemo, useState } from "react"
 import {
   curriculumTopics,
@@ -83,7 +84,8 @@ const SCENARIO_COPY: Record<
   B: {
     eyebrow: "No placement",
     title: "New student without a test",
-    description: "Uses the academic team’s ideal allocations exactly.",
+    description:
+      "Half-year package: topics compress toward their class minimums before any are dropped.",
   },
   C: {
     eyebrow: "Plan update",
@@ -136,6 +138,28 @@ interface PendingPlanUpdate {
 }
 
 type PersistenceState = "idle" | "saving" | "saved" | "error"
+
+/** Progress of the build-plan run; null once the finished plan is on screen. */
+type BuildStage = null | "structure" | "saving" | "content"
+
+const BUILD_STAGES: { id: Exclude<BuildStage, null>; label: string; detail: string }[] =
+  [
+    {
+      id: "structure",
+      label: "Applying the planning rules",
+      detail: "Fitting topics, classes and activities into the package capacity.",
+    },
+    {
+      id: "saving",
+      label: "Saving the plan version",
+      detail: "Recording this version so every later change is traceable.",
+    },
+    {
+      id: "content",
+      label: "Writing the teaching guides",
+      detail: "Generating goals, teaching points and success criteria per class.",
+    },
+  ]
 
 function plural(value: number, singular: string, multiple = `${singular}s`) {
   return `${value} ${value === 1 ? singular : multiple}`
@@ -190,8 +214,16 @@ function mentorLevelCopy(level: MentorObjectiveLevel) {
 
 function findNextTeachingItem(items: PlanItem[], completedCount: number) {
   return items.find(
-    (item) => item.classNumber > completedCount && item.kind === "teaching"
+    (item) =>
+      item.classNumber > completedCount &&
+      item.kind === "teaching" &&
+      item.status !== "skipped"
   )
+}
+
+/** Skipped classes keep their slot but are not part of the live schedule. */
+function isLiveClass(item: PlanItem) {
+  return item.status !== "skipped"
 }
 
 /** Primary line for a plan row: curriculum topic name, not LO subtopic/family. */
@@ -334,6 +366,202 @@ function mergePlanChanges(...groups: string[][]) {
   return [...new Set(groups.flat().filter(Boolean))]
 }
 
+/**
+ * What a class *is*, ignoring where it sits in the schedule. Two classes with
+ * the same identity teach the same thing, so a written guide stays valid.
+ */
+function classIdentity(item: PlanItem) {
+  return [
+    item.kind,
+    item.topicId ?? "-",
+    item.title,
+    item.learningObjectives.map((objective) => objective.id).join("|"),
+  ].join("::")
+}
+
+/** Identity plus the activity split — a guide is only reusable if this matches. */
+function classContentKey(item: PlanItem) {
+  return `${classIdentity(item)}::${item.easyActivities}:${item.practiceActivities}`
+}
+
+/**
+ * The engine rebuilds a plan from scratch and renumbers from 1, which would
+ * rewrite history and shift every later class. This keeps the schedule stable:
+ * classes already taught are frozen, a class the rebuild no longer needs keeps
+ * its slot as "skipped", and only genuinely new classes are inserted.
+ */
+function reconcilePlanVersion(
+  previous: GeneratedPlan,
+  next: GeneratedPlan,
+  completedCount: number
+): GeneratedPlan {
+  // Slots are matched on "the Nth class of this topic", not on the objectives
+  // taught. Compressing a topic redistributes its objectives across fewer
+  // classes, so matching on content would mark every class of that topic as
+  // both skipped and re-added.
+  const slotKeys = (items: PlanItem[]) => {
+    const counts = new Map<string, number>()
+    return items.map((item) => {
+      const base = `${item.kind}::${item.topicId ?? item.title}`
+      const ordinal = (counts.get(base) ?? 0) + 1
+      counts.set(base, ordinal)
+      return { item, key: `${base}::${ordinal}` }
+    })
+  }
+
+  const previousSlots = slotKeys(previous.items)
+  const nextSlots = slotKeys(next.items)
+  const nextByKey = new Map(nextSlots.map((slot) => [slot.key, slot.item]))
+  const claimedKeys = new Set<string>()
+
+  // Taught classes are history: keep them exactly as they were.
+  const frozen: PlanItem[] = []
+  const future: PlanItem[] = []
+  const placedKeyByIndex: string[] = []
+  for (const { item, key } of previousSlots) {
+    if (item.classNumber <= completedCount) {
+      claimedKeys.add(key)
+      frozen.push({ ...item, status: "completed" })
+      continue
+    }
+    const match = nextByKey.get(key)
+    if (match) {
+      claimedKeys.add(key)
+      future.push(match)
+    } else {
+      future.push({ ...item, status: "skipped" })
+    }
+    placedKeyByIndex.push(key)
+  }
+
+  // Classes the rebuild added go next to the class they follow in the new plan.
+  for (let index = 0; index < nextSlots.length; index += 1) {
+    const { item, key } = nextSlots[index]
+    if (claimedKeys.has(key)) continue
+    let insertAt = 0
+    for (let cursor = index - 1; cursor >= 0; cursor -= 1) {
+      const placedIndex = placedKeyByIndex.indexOf(nextSlots[cursor].key)
+      if (placedIndex >= 0) {
+        insertAt = placedIndex + 1
+        break
+      }
+    }
+    future.splice(insertAt, 0, item)
+    placedKeyByIndex.splice(insertAt, 0, key)
+    claimedKeys.add(key)
+  }
+
+  const ordered = [...frozen, ...future]
+  const nextUpId = ordered.find(
+    (item, index) => index >= completedCount && item.status !== "skipped"
+  )?.id
+
+  // A skipped class and its replacement can carry the same engine id; ids must
+  // stay unique or the content merge collapses two rows into one.
+  const usedIds = new Set<string>()
+  return {
+    ...next,
+    items: ordered.map((item, index) => {
+      let id = item.id
+      while (usedIds.has(id)) id = `${id}~`
+      usedIds.add(id)
+      return {
+        ...item,
+        id,
+        classNumber: index + 1,
+        status:
+          item.status === "skipped"
+            ? ("skipped" as const)
+            : index < completedCount
+              ? ("completed" as const)
+              : item.id === nextUpId
+                ? ("next" as const)
+                : ("planned" as const),
+      }
+    }),
+  }
+}
+
+interface ClassDiffEntry {
+  type: "added" | "moved" | "updated" | "skipped"
+  fromClassNumber?: number
+  activitiesChanged?: boolean
+}
+
+interface PlanClassDiff {
+  byItemId: Record<string, ClassDiffEntry>
+  removed: { classNumber: number; label: string }[]
+  addedCount: number
+  movedCount: number
+  updatedCount: number
+  skippedCount: number
+}
+
+/** Class-level diff between two plan versions: added, removed, renumbered. */
+function diffPlanClasses(
+  previous: GeneratedPlan,
+  next: GeneratedPlan
+): PlanClassDiff {
+  // Buckets, not a plain map: a plan can hold several identical structural
+  // classes (three RDP blocks, say), and each must match only once.
+  const previousBuckets = new Map<string, PlanItem[]>()
+  for (const item of previous.items) {
+    const key = classIdentity(item)
+    const bucket = previousBuckets.get(key)
+    if (bucket) bucket.push(item)
+    else previousBuckets.set(key, [item])
+  }
+
+  const byItemId: Record<string, ClassDiffEntry> = {}
+  let addedCount = 0
+  let movedCount = 0
+  let updatedCount = 0
+  let skippedCount = 0
+
+  for (const item of next.items) {
+    const match = previousBuckets.get(classIdentity(item))?.shift()
+    if (!match) {
+      byItemId[item.id] = { type: "added" }
+      addedCount += 1
+      continue
+    }
+
+    if (item.status === "skipped") {
+      if (match.status !== "skipped") {
+        byItemId[item.id] = { type: "skipped" }
+        skippedCount += 1
+      }
+      continue
+    }
+
+    const activitiesChanged =
+      match.easyActivities !== item.easyActivities ||
+      match.practiceActivities !== item.practiceActivities
+
+    if (match.classNumber !== item.classNumber) {
+      byItemId[item.id] = {
+        type: "moved",
+        fromClassNumber: match.classNumber,
+        activitiesChanged,
+      }
+      movedCount += 1
+    } else if (activitiesChanged) {
+      byItemId[item.id] = { type: "updated", activitiesChanged: true }
+      updatedCount += 1
+    }
+  }
+
+  const removed = [...previousBuckets.values()]
+    .flat()
+    .map((item) => ({
+      classNumber: item.classNumber,
+      label: planItemPrimaryLabel(item),
+    }))
+    .sort((a, b) => a.classNumber - b.classNumber)
+
+  return { byItemId, removed, addedCount, movedCount, updatedCount, skippedCount }
+}
+
 function ClassLessonGuide({
   item,
   student,
@@ -463,7 +691,16 @@ function ClassLessonGuide({
   )
 }
 
-export default function LearningPlanBuilderPage() {
+/**
+ * `savedPlanId` opens an existing plan from the database (the
+ * /learning-plan-builder/[planId] route); without it the page starts at setup.
+ */
+export default function LearningPlanBuilderPage({
+  savedPlanId,
+}: {
+  savedPlanId?: string
+} = {}) {
+  const router = useRouter()
   const [student, setStudent] = useState<DemoStudent>(DEFAULT_EVIDENCE_STUDENT)
   const [studentSelected, setStudentSelected] = useState(false)
   const [setupStep, setSetupStep] = useState(1)
@@ -500,9 +737,66 @@ export default function LearningPlanBuilderPage() {
   const [contentSource, setContentSource] = useState<"ai" | "fallback" | null>(
     null
   )
+  const [buildStage, setBuildStage] = useState<BuildStage>(null)
+  const [classDiff, setClassDiff] = useState<PlanClassDiff | null>(null)
+  const [loadingSavedPlan, setLoadingSavedPlan] = useState(Boolean(savedPlanId))
+  const [savedPlanError, setSavedPlanError] = useState<string | null>(null)
   const [databasePlanId, setDatabasePlanId] = useState<string | null>(null)
   const [persistenceState, setPersistenceState] =
     useState<PersistenceState>("idle")
+
+  // Reopen a saved plan by id. The stored snapshot holds the exact plan
+  // document, so the board renders without regenerating anything.
+  useEffect(() => {
+    if (!savedPlanId) return
+    let cancelled = false
+
+    setLoadingSavedPlan(true)
+    fetch(`/api/learning-plan/prototype?planId=${encodeURIComponent(savedPlanId)}`)
+      .then(async (response) => {
+        if (!response.ok) {
+          throw new Error(
+            response.status === 404
+              ? "That plan is not saved in the database."
+              : "Could not load the saved plan."
+          )
+        }
+        return (await response.json()) as {
+          student: DemoStudent
+          plan: GeneratedPlan
+          completedCount: number
+        }
+      })
+      .then((snapshot) => {
+        if (cancelled) return
+        setStudent(snapshot.student)
+        setStudentSelected(true)
+        setSelectedTopicIds(
+          snapshot.plan.allocations.map((allocation) => allocation.topicId)
+        )
+        setTopicOrder(
+          snapshot.plan.allocations.map((allocation) => allocation.topicId)
+        )
+        setCompletedCount(snapshot.completedCount)
+        setDatabasePlanId(snapshot.plan ? savedPlanId : null)
+        setPersistenceState("saved")
+        setPlan(snapshot.plan)
+        setPlanTab("classes")
+        setSavedPlanError(null)
+      })
+      .catch((error: Error) => {
+        if (cancelled) return
+        console.error("Saved plan load failed:", error)
+        setSavedPlanError(error.message)
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingSavedPlan(false)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [savedPlanId])
 
   const runAiAnalysisOnChooseScope = () => {
     setSetupStep(3)
@@ -619,7 +913,11 @@ export default function LearningPlanBuilderPage() {
         const score = student.placementResults.find(
           (result) => result.topicId === allocation.topicId
         )?.score
-        const savedClasses = allocation.idealClasses - allocation.classes
+        // Capacity compression is reported separately, so it is excluded here.
+        const savedClasses =
+          allocation.idealClasses -
+          allocation.classes -
+          (allocation.compressedByCapacity ?? 0)
 
         if (score === undefined || score < 75 || savedClasses <= 0) {
           return []
@@ -630,7 +928,7 @@ export default function LearningPlanBuilderPage() {
             topicName: allocation.topicName,
             score,
             idealClasses: allocation.idealClasses,
-            classes: allocation.classes,
+            classes: allocation.classes + (allocation.compressedByCapacity ?? 0),
             savedClasses,
           },
         ]
@@ -674,6 +972,37 @@ export default function LearningPlanBuilderPage() {
   const nextTeachingItem = plan
     ? findNextTeachingItem(plan.items, completedCount)
     : undefined
+  /** First class still to run — skipped slots are passed over. */
+  const nextUpItem = plan?.items.find(
+    (item) => item.classNumber > completedCount && isLiveClass(item)
+  )
+  const liveClassCount = plan
+    ? plan.items.filter(isLiveClass).length
+    : 0
+  const skippedClassCount = plan
+    ? plan.items.length - liveClassCount
+    : 0
+  /** Headline numbers for the generated-plan page. */
+  const planStats = useMemo(() => {
+    if (!plan) return null
+    const liveItems = plan.items.filter(isLiveClass)
+    const teachingItems = liveItems.filter((item) => item.kind === "teaching")
+    return {
+      // Counted from the rendered schedule so the numbers always agree with it.
+      totalClasses: liveItems.length,
+      availableClasses: plan.capacity.available,
+      teachingClasses: teachingItems.length,
+      structuralClasses: liveItems.length - teachingItems.length,
+      topics: plan.allocations.length,
+      activities: teachingItems.reduce(
+        (total, item) => total + item.easyActivities + item.practiceActivities,
+        0
+      ),
+      completed: completedCount,
+      upcoming: Math.max(0, liveItems.length - completedCount),
+      skipped: plan.items.length - liveItems.length,
+    }
+  }, [completedCount, plan])
   const structuralItems = plan
     ? plan.items.filter((item) => item.kind !== "teaching")
     : []
@@ -741,9 +1070,42 @@ export default function LearningPlanBuilderPage() {
       const data = (await response.json()) as { planId: string }
       setDatabasePlanId(data.planId)
       setPersistenceState("saved")
+      return data.planId
     } catch (error) {
       console.error("Plan save failed:", error)
       setPersistenceState("error")
+      return null
+    }
+  }
+
+  /**
+   * Store the plan document itself (teaching guides included) so the saved
+   * plan reopens exactly as built. The initial save happens before the guides
+   * exist, so this runs again once enrichment finishes.
+   */
+  const savePlanSnapshot = async (
+    planId: string,
+    nextPlan: GeneratedPlan,
+    nextCompletedCount: number
+  ) => {
+    try {
+      await fetch("/api/learning-plan/prototype", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "update",
+          planId,
+          student,
+          plan: nextPlan,
+          update: {
+            kind: "auto",
+            changes: [],
+            completedCount: nextCompletedCount,
+          },
+        }),
+      })
+    } catch (error) {
+      console.error("Plan snapshot save failed:", error)
     }
   }
 
@@ -827,8 +1189,10 @@ export default function LearningPlanBuilderPage() {
           for (const [topicIdStr, adj] of Object.entries(data.classAdjustments)) {
             const topicId = Number(topicIdStr)
             const castAdj = adj as { classes: number; activities: number }
+            // Rule H1: an AI adjustment may not go below the topic minimum.
+            const minimumClasses = topicById.get(topicId)?.minimumClasses ?? 1
             newAdjustments[topicId] = {
-              classes: castAdj.classes,
+              classes: Math.max(minimumClasses, castAdj.classes),
               activities: castAdj.activities,
             }
           }
@@ -872,31 +1236,54 @@ export default function LearningPlanBuilderPage() {
    * Build structure deterministically, then generate mentor prose the same way
    * /teacher/plans does (llmStructured when a key is present; fallback templates otherwise).
    * Always attach expanded activity rows so "N total activities" lists N items.
+   *
+   * A rebuilt plan arrives with no teaching guides, so guides are carried over
+   * from `previousPlan` for every class that teaches the same thing; only new
+   * or changed classes are sent to the model.
    */
-  const enrichPlan = async (basePlan: GeneratedPlan): Promise<GeneratedPlan> => {
+  const enrichPlan = async (
+    basePlan: GeneratedPlan,
+    previousPlan?: GeneratedPlan | null
+  ): Promise<GeneratedPlan> => {
+    const reusableContent = new Map<string, ClassTeachingContent>()
+    for (const item of previousPlan?.items ?? []) {
+      if (item.kind === "teaching" && item.teachingContent) {
+        reusableContent.set(classContentKey(item), item.teachingContent)
+      }
+    }
+
     const withLocalActivities: GeneratedPlan = {
       ...basePlan,
-      items: basePlan.items.map((item) =>
-        item.kind === "teaching"
-          ? {
-              ...item,
-              activities: buildClassActivities(item, questionGuidelines),
-            }
-          : item
-      ),
+      items: basePlan.items.map((item) => {
+        if (item.kind !== "teaching") return item
+        const carried =
+          item.teachingContent ?? reusableContent.get(classContentKey(item))
+        return {
+          ...item,
+          activities: buildClassActivities(item, questionGuidelines),
+          teachingContent: carried,
+          reason: carried?.rationale ?? item.reason,
+        }
+      }),
+    }
+
+    const pendingItems = withLocalActivities.items.filter(
+      (item) => item.kind === "teaching" && !item.teachingContent
+    )
+
+    // Nothing new to write — an outcome that only renumbered classes lands here.
+    if (pendingItems.length === 0) {
+      return withLocalActivities
     }
 
     setContentGenerating(true)
-    const controller = new AbortController()
-    const timeoutId = window.setTimeout(() => controller.abort(), 12_000)
     try {
       const response = await fetch("/api/learning-plan/generate-content", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        signal: controller.signal,
         body: JSON.stringify({
           student,
-          items: withLocalActivities.items,
+          items: pendingItems,
           guidelines: questionGuidelines,
         }),
       })
@@ -908,28 +1295,24 @@ export default function LearningPlanBuilderPage() {
         source: "ai" | "fallback"
       }
       setContentSource(data.source)
+      const generatedById = new Map(data.items.map((item) => [item.id, item]))
       return {
         ...withLocalActivities,
-        items: data.items,
+        items: withLocalActivities.items.map(
+          (item) => generatedById.get(item.id) ?? item
+        ),
         explanations: [
           data.source === "ai"
-            ? "Teaching guide prose was generated by AI for each class (structure stayed rule-based)."
+            ? `Teaching guide prose was generated by AI for ${plural(pendingItems.length, "class", "classes")} (structure stayed rule-based).`
             : "Teaching guide prose used local fallback templates (AI provider unavailable).",
           ...withLocalActivities.explanations,
         ],
       }
     } catch (error) {
-      if ((error as Error).name === "AbortError") {
-        console.warn(
-          "Teaching-guide generation timed out; continuing with local guide content."
-        )
-      } else {
-        console.error("Plan content enrichment failed:", error)
-      }
+      console.error("Plan content enrichment failed:", error)
       setContentSource("fallback")
       return withLocalActivities
     } finally {
-      window.clearTimeout(timeoutId)
       setContentGenerating(false)
     }
   }
@@ -955,8 +1338,7 @@ export default function LearningPlanBuilderPage() {
       setSetupStep(4)
       return
     }
-    // Attach activity rows immediately so the count matches the list
-    // while AI prose is still generating.
+    // Attach activity rows up front so the count matches the list.
     const withActivities: GeneratedPlan = {
       ...basePlan,
       items: basePlan.items.map((item) =>
@@ -968,19 +1350,36 @@ export default function LearningPlanBuilderPage() {
           : item
       ),
     }
-    setPlan(withActivities)
+
+    // Hold the plan back until the teaching guides are ready, so the
+    // final page renders complete instead of filling in behind the user.
     setCompletedCount(0)
     setPlanTab("classes")
+    setClassDiff(null)
+    setBuildStage("structure")
     window.scrollTo({ top: 0, behavior: "smooth" })
-    await savePlanToDatabase(withActivities)
-    const enriched = await enrichPlan(withActivities)
-    setPlan(enriched)
+    try {
+      setBuildStage("saving")
+      const planId = await savePlanToDatabase(withActivities)
+      setBuildStage("content")
+      const enriched = await enrichPlan(withActivities)
+      setPlan(enriched)
+      if (planId) {
+        // Persist the enriched plan, then move to its own URL so the plan can
+        // be reopened and shared by id.
+        await savePlanSnapshot(planId, enriched, 0)
+        router.replace(`/learning-plan-builder/${planId}`)
+      }
+    } finally {
+      setBuildStage(null)
+    }
   }
 
   const returnToSetup = () => {
     setPlan(null)
     setSetupStep(4)
     setCompletedCount(0)
+    setClassDiff(null)
     setDatabasePlanId(null)
     window.scrollTo({ top: 0, behavior: "smooth" })
   }
@@ -1033,14 +1432,20 @@ export default function LearningPlanBuilderPage() {
     })
     if (nextBasePlan.capacity.difference > 0) return
     const nextPlan: GeneratedPlan = {
-      ...nextBasePlan,
+      ...reconcilePlanVersion(plan, nextBasePlan, completedCount),
       changesFromPrevious: mergePlanChanges(
         changes,
         describePlanChanges(plan, nextBasePlan)
       ),
     }
     setPlan(nextPlan)
-    void enrichPlan(nextPlan).then(setPlan)
+    setClassDiff(diffPlanClasses(plan, nextPlan))
+    void enrichPlan(nextPlan, plan).then((enriched) => {
+      setPlan(enriched)
+      if (databasePlanId) {
+        void savePlanSnapshot(databasePlanId, enriched, completedCount)
+      }
+    })
     void savePlanUpdate({
       nextPlan,
       kind: "manual",
@@ -1064,9 +1469,15 @@ export default function LearningPlanBuilderPage() {
     let nextClasses = allocation.classes
 
     if (outcome === "faster") {
-      nextClasses = Math.max(1, allocation.classes - 1)
+      // Rule H1: an auto-update never takes a topic below its class minimum.
+      nextClasses = Math.max(
+        allocation.minimumClasses,
+        allocation.classes - 1
+      )
       changes.push(
-        `${allocation.topicName} is progressing faster: ${allocation.classes} → ${nextClasses} classes.`
+        nextClasses === allocation.classes
+          ? `${allocation.topicName} is already at its ${allocation.minimumClasses}-class minimum, so the allocation is unchanged.`
+          : `${allocation.topicName} is progressing faster: ${allocation.classes} → ${nextClasses} classes.`
       )
     } else if (outcome === "needs-time") {
       const idealPlusTwo = allocation.idealClasses + 2
@@ -1101,8 +1512,9 @@ export default function LearningPlanBuilderPage() {
       lastModificationType: "class",
     })
     if (nextBasePlan.capacity.difference > 0) return
+    // The class being graded is taught once approved, so it freezes too.
     const nextPlan: GeneratedPlan = {
-      ...nextBasePlan,
+      ...reconcilePlanVersion(plan, nextBasePlan, completedCount + 1),
       changesFromPrevious: mergePlanChanges(
         changes,
         describePlanChanges(plan, nextBasePlan)
@@ -1118,8 +1530,17 @@ export default function LearningPlanBuilderPage() {
 
   const approveClassOutcome = () => {
     if (!pendingUpdate) return
+    const previousPlan = plan
     setPlan(pendingUpdate.plan)
-    void enrichPlan(pendingUpdate.plan).then(setPlan)
+    if (previousPlan) {
+      setClassDiff(diffPlanClasses(previousPlan, pendingUpdate.plan))
+    }
+    void enrichPlan(pendingUpdate.plan, previousPlan).then((enriched) => {
+      setPlan(enriched)
+      if (databasePlanId) {
+        void savePlanSnapshot(databasePlanId, enriched, completedCount + 1)
+      }
+    })
     setManualAdjustments(pendingUpdate.adjustments)
     setManualOverrideActive(false)
     setCompletedCount((current) => current + 1)
@@ -1174,7 +1595,77 @@ export default function LearningPlanBuilderPage() {
         </div>
       </header>
 
-      {plan === null ? (
+      {savedPlanId && (loadingSavedPlan || savedPlanError) ? (
+        <main className="lpb-setup-shell lpb-building-shell">
+          <section className="lpb-building-card">
+            {savedPlanError ? (
+              <>
+                <span className="lpb-kicker">Plan unavailable</span>
+                <h1>Could not open this plan</h1>
+                <p>{savedPlanError}</p>
+                <p className="lpb-saved-plan-id">{savedPlanId}</p>
+                <Link
+                  href="/learning-plan-builder"
+                  className="lpb-button lpb-button-primary"
+                >
+                  Build a new plan
+                </Link>
+              </>
+            ) : (
+              <>
+                <span className="lpb-building-orb" aria-hidden="true">
+                  <Sparkles size={22} />
+                </span>
+                <span className="lpb-kicker">Saved plan</span>
+                <h1>Loading the plan…</h1>
+                <p>Fetching the saved plan from the database.</p>
+              </>
+            )}
+          </section>
+        </main>
+      ) : buildStage !== null ? (
+        <main className="lpb-setup-shell lpb-building-shell">
+          <section className="lpb-building-card">
+            <span className="lpb-building-orb" aria-hidden="true">
+              <Sparkles size={22} />
+            </span>
+            <span className="lpb-kicker">Building the plan</span>
+            <h1>Generating {student.name}&apos;s learning plan…</h1>
+            <p>
+              The structure comes from the planning rules; the teaching guides
+              are written per class. This can take a minute on a full-year
+              package.
+            </p>
+            <ol className="lpb-building-steps">
+              {BUILD_STAGES.map((stage) => {
+                const currentIndex = BUILD_STAGES.findIndex(
+                  (candidate) => candidate.id === buildStage
+                )
+                const stageIndex = BUILD_STAGES.findIndex(
+                  (candidate) => candidate.id === stage.id
+                )
+                const state =
+                  stageIndex < currentIndex
+                    ? "done"
+                    : stageIndex === currentIndex
+                      ? "active"
+                      : "waiting"
+                return (
+                  <li key={stage.id} className={state}>
+                    <span className="lpb-building-step-mark">
+                      {state === "done" ? <Check size={13} /> : null}
+                    </span>
+                    <div>
+                      <strong>{stage.label}</strong>
+                      <small>{stage.detail}</small>
+                    </div>
+                  </li>
+                )
+              })}
+            </ol>
+          </section>
+        </main>
+      ) : plan === null ? (
         <main className="lpb-setup-shell">
           <section className="lpb-setup-heading">
             <div>
@@ -1276,8 +1767,18 @@ export default function LearningPlanBuilderPage() {
                     <strong>United States</strong>
                   </div>
                   <div>
+                    <span>Package</span>
+                    <strong>{student.packageLabel ?? "—"}</strong>
+                  </div>
+                  <div>
                     <span>Classes remaining</span>
                     <strong>{student.classesRemaining}</strong>
+                  </div>
+                  <div>
+                    <span>Class frequency</span>
+                    <strong>
+                      {student.classesPerWeek ?? 2}/week
+                    </strong>
                   </div>
                   <div>
                     <span>Placement</span>
@@ -1290,17 +1791,9 @@ export default function LearningPlanBuilderPage() {
                     </strong>
                   </div>
                 </div>
-                ) : (
-                  <div className="lpb-profile-strip lpb-profile-empty">
-                    <strong>Select a student profile to review their evidence and build a plan.</strong>
-                  </div>
-                )}
+                ) : null}
 
                 <footer className="lpb-setup-footer">
-                  <span>
-                    <FileText size={15} />
-                    All information on this page is prototype dummy data.
-                  </span>
                   <button
                     type="button"
                     className="lpb-button lpb-button-primary"
@@ -1411,13 +1904,19 @@ export default function LearningPlanBuilderPage() {
                       <p>
                         Every selected topic starts with its ideal class,
                         activity and Easy-to-Practice allocation from the
-                        workbook.
+                        workbook. If the package is smaller than the full year,
+                        topics compress toward their class minimums before any
+                        topic is dropped.
                       </p>
                     </div>
                     <div className="lpb-default-summary">
                       <span>13 curriculum topics</span>
                       <span>66 teaching + 13 structural = 79 classes</span>
-                      <span>242 activities</span>
+                      <span>43 classes at the minimums</span>
+                      <span>
+                        {student.packageLabel ??
+                          `${student.classesRemaining} classes available`}
+                      </span>
                     </div>
                   </div>
                 ) : null}
@@ -1782,12 +2281,15 @@ export default function LearningPlanBuilderPage() {
                       const previewAllocation = reviewAllocationById.get(
                         topic.id
                       )
+                      // Placement/mastery compression, or the Rule B2 capacity
+                      // pass, can shorten a topic in either scope mode.
                       const evidenceCompressed =
-                        scopeMode === "evidence" &&
                         selected &&
                         previewAllocation !== undefined &&
                         (previewAllocation.classes < topic.idealClasses ||
                           previewAllocation.activities < topic.idealActivities)
+                      const capacityCompressed =
+                        (previewAllocation?.compressedByCapacity ?? 0) > 0
                       return (
                         <button
                           type="button"
@@ -1835,19 +2337,19 @@ export default function LearningPlanBuilderPage() {
                           </span>
                           <span className="lpb-topic-metrics">
                             <b>
-                              {scopeMode === "evidence" && previewAllocation
+                              {selected && previewAllocation
                                 ? previewAllocation.classes
                                 : topic.idealClasses}
                             </b>
                             <small>
                               {evidenceCompressed
-                                ? `of ${topic.idealClasses} classes`
-                                : "classes"}
+                                ? `of ${topic.idealClasses} · min ${topic.minimumClasses}`
+                                : `classes · min ${topic.minimumClasses}`}
                             </small>
                           </span>
                           <span className="lpb-topic-metrics">
                             <b>
-                              {scopeMode === "evidence" && previewAllocation
+                              {selected && previewAllocation
                                 ? previewAllocation.activities
                                 : topic.idealActivities}
                             </b>
@@ -1860,6 +2362,10 @@ export default function LearningPlanBuilderPage() {
                           <span className="lpb-topic-state">
                             {completed ? (
                               "Completed"
+                            ) : capacityCompressed ? (
+                              previewAllocation?.atMinimum
+                                ? "At class minimum"
+                                : "Compressed to fit"
                             ) : topic.priority === "high" ? (
                               evidenceCompressed ? "Compressed" : selected ? "Selected by mentor" : "Not selected"
                             ) : scopeMode === "evidence" &&
@@ -1938,6 +2444,56 @@ export default function LearningPlanBuilderPage() {
                         <small>planned</small>
                       </span>
                     </div>
+                    {reviewPlan.capacity.compressedClasses > 0 ? (
+                      <div className="lpb-placement-capacity-note">
+                        <div className="lpb-placement-capacity-head">
+                          <span>
+                            <TrendingUp size={17} />
+                            Compressed to fit the package
+                          </span>
+                          <b>−{reviewPlan.capacity.compressedClasses} classes</b>
+                        </div>
+                        <strong>
+                          Topics were shortened toward their class minimums,
+                          lowest priority first. No topic goes below its
+                          minimum.
+                        </strong>
+                        <p>
+                          {reviewPlan.allocations
+                            .filter(
+                              (allocation) =>
+                                (allocation.compressedByCapacity ?? 0) > 0
+                            )
+                            .map(
+                              (allocation) =>
+                                `${allocation.topicName}: ${allocation.idealClasses} → ${allocation.classes} (min ${allocation.minimumClasses})`
+                            )
+                            .join(" · ")}
+                        </p>
+                      </div>
+                    ) : null}
+                    {reviewPlan.capacity.surplusClasses > 0 ? (
+                      <div className="lpb-placement-capacity-note">
+                        <div className="lpb-placement-capacity-head">
+                          <span>
+                            <TrendingUp size={17} />
+                            Spare capacity reserved
+                          </span>
+                          <b>
+                            +{reviewPlan.capacity.surplusClasses} classes
+                          </b>
+                        </div>
+                        <strong>
+                          Only the required classes are planned.
+                        </strong>
+                        <p>
+                          The remaining{" "}
+                          {reviewPlan.capacity.surplusClasses} classes are held
+                          as &lsquo;Revision / School Help&rsquo; rather than
+                          padded into topics.
+                        </p>
+                      </div>
+                    ) : null}
                     {placementClassesSaved > 0 ? (
                       <div className="lpb-placement-capacity-note">
                         <div className="lpb-placement-capacity-head">
@@ -2144,6 +2700,41 @@ export default function LearningPlanBuilderPage() {
             </div>
           </section>
 
+          {planStats ? (
+            <section className="lpb-plan-stats" aria-label="Plan summary">
+              <div>
+                <span>Total classes</span>
+                <b>{planStats.totalClasses}</b>
+                <small>
+                  {planStats.teachingClasses} teaching ·{" "}
+                  {planStats.structuralClasses} structural
+                </small>
+              </div>
+              <div>
+                <span>Topics</span>
+                <b>{planStats.topics}</b>
+                <small>in the scheduled plan</small>
+              </div>
+              <div>
+                <span>Activities</span>
+                <b>{planStats.activities}</b>
+                <small>starter + master</small>
+              </div>
+              <div>
+                <span>Completed</span>
+                <b>{planStats.completed}</b>
+                <small>classes taught</small>
+              </div>
+              <div>
+                <span>Upcoming</span>
+                <b>{planStats.upcoming}</b>
+                <small>
+                  of {planStats.availableClasses} in the package
+                </small>
+              </div>
+            </section>
+          ) : null}
+
           {(contentGenerating ||
             persistenceState !== "idle" ||
             plan.warnings.length > 0 ||
@@ -2161,6 +2752,16 @@ export default function LearningPlanBuilderPage() {
                   <CheckCircle2 size={13} />
                   Saved to plan history
                 </span>
+              ) : null}
+              {databasePlanId ? (
+                <Link
+                  href={`/learning-plan-builder/${databasePlanId}`}
+                  className="lpb-status-chip link"
+                  title="Open this saved plan by id"
+                >
+                  <FileText size={13} />
+                  Plan id: {databasePlanId.slice(0, 8)}…
+                </Link>
               ) : null}
               {persistenceState === "error" ? (
                 <span className="lpb-status-chip warning">
@@ -2199,18 +2800,6 @@ export default function LearningPlanBuilderPage() {
             </div>
           )}
 
-          {plan.explanations.length > 0 ? (
-            <section className="lpb-plan-ordering" aria-label="Plan order explanation">
-              <ListChecks size={17} />
-              <div>
-                <strong>Why this topic order</strong>
-                {plan.explanations.map((explanation) => (
-                  <p key={explanation}>{explanation}</p>
-                ))}
-              </div>
-            </section>
-          ) : null}
-
           {plan.changesFromPrevious.length > 0 ? (
             <section className="lpb-plan-changes" aria-label="Changes from previous plan">
               <div className="lpb-plan-changes-head">
@@ -2220,6 +2809,62 @@ export default function LearningPlanBuilderPage() {
                   <h2>What changed</h2>
                 </div>
               </div>
+              {classDiff &&
+              (classDiff.addedCount > 0 ||
+                classDiff.removed.length > 0 ||
+                classDiff.movedCount > 0 ||
+                classDiff.updatedCount > 0) ? (
+                <div className="lpb-class-diff">
+                  <div className="lpb-class-diff-chips">
+                    {classDiff.addedCount > 0 ? (
+                      <span className="added">
+                        +{plural(classDiff.addedCount, "class", "classes")} added
+                      </span>
+                    ) : null}
+                    {classDiff.skippedCount > 0 ? (
+                      <span className="skipped">
+                        {plural(classDiff.skippedCount, "class", "classes")}{" "}
+                        skipped
+                      </span>
+                    ) : null}
+                    {classDiff.removed.length > 0 ? (
+                      <span className="removed">
+                        −{plural(classDiff.removed.length, "class", "classes")}{" "}
+                        removed
+                      </span>
+                    ) : null}
+                    {classDiff.movedCount > 0 ? (
+                      <span className="moved">
+                        {plural(classDiff.movedCount, "class", "classes")}{" "}
+                        renumbered
+                      </span>
+                    ) : null}
+                    {classDiff.updatedCount > 0 ? (
+                      <span className="updated">
+                        {plural(classDiff.updatedCount, "class", "classes")}{" "}
+                        updated
+                      </span>
+                    ) : null}
+                  </div>
+                  {classDiff.skippedCount > 0 ? (
+                    <p className="lpb-class-diff-removed">
+                      Skipped classes keep their slot, so no class after them
+                      was renumbered.
+                    </p>
+                  ) : null}
+                  {classDiff.removed.length > 0 ? (
+                    <p className="lpb-class-diff-removed">
+                      Removed:{" "}
+                      {classDiff.removed
+                        .map(
+                          (entry) =>
+                            `Class ${String(entry.classNumber).padStart(2, "0")} ${entry.label}`
+                        )
+                        .join(" · ")}
+                    </p>
+                  ) : null}
+                </div>
+              ) : null}
               <ul>
                 {plan.changesFromPrevious.map((change) => (
                   <li key={change}>{change}</li>
@@ -2235,7 +2880,10 @@ export default function LearningPlanBuilderPage() {
                   <div>
                     <h2>Sequence</h2>
                     <p className="lpb-board-meta">
-                      {plan.items.length} classes
+                      {liveClassCount} classes
+                      {skippedClassCount > 0
+                        ? ` · ${skippedClassCount} skipped`
+                        : ""}
                       {nextTeachingItem
                         ? ` · next: ${planItemPrimaryLabel(nextTeachingItem)}`
                         : ""}
@@ -2285,15 +2933,18 @@ export default function LearningPlanBuilderPage() {
                     {plan.items.map((item) => {
                       const expanded = expandedItemId === item.id
                       const displayStatus =
-                        item.classNumber <= completedCount
-                          ? "completed"
-                          : item.classNumber === completedCount + 1
-                            ? "next"
-                            : "planned"
+                        item.status === "skipped"
+                          ? "skipped"
+                          : item.classNumber <= completedCount
+                            ? "completed"
+                            : item.id === nextUpItem?.id
+                              ? "next"
+                              : "planned"
+                      const diff = classDiff?.byItemId[item.id]
                       return (
                         <article
                           key={item.id}
-                          className={`lpb-class-row ${item.kind} ${displayStatus}`}
+                          className={`lpb-class-row ${item.kind} ${displayStatus}${diff ? ` diff-${diff.type}` : ""}`}
                         >
                           <button
                             type="button"
@@ -2313,18 +2964,46 @@ export default function LearningPlanBuilderPage() {
                               <strong>{planItemPrimaryLabel(item)}</strong>
                               <small>{planItemSecondaryLabel(item)}</small>
                             </span>
-                            {item.kind === "teaching" ? (
-                              <span className="lpb-class-activity-badge">
-                                {item.easyActivities + item.practiceActivities} activities
-                              </span>
-                            ) : null}
-                            {displayStatus === "next" ? (
-                              <span className="lpb-status-badge next">Next</span>
-                            ) : displayStatus === "completed" ? (
-                              <span className="lpb-status-badge completed">
-                                Done
-                              </span>
-                            ) : null}
+                            <span className="lpb-class-badges">
+                              {item.kind === "teaching" ? (
+                                <span className="lpb-class-activity-badge">
+                                  {item.easyActivities + item.practiceActivities} activities
+                                </span>
+                              ) : (
+                                <span
+                                  className={`lpb-class-kind-badge ${item.kind}`}
+                                >
+                                  {item.kind === "checkpoint" ? (
+                                    <ClipboardCheck size={12} />
+                                  ) : item.kind === "rdp" ? (
+                                    <RotateCcw size={12} />
+                                  ) : (
+                                    <UsersRound size={12} />
+                                  )}
+                                  {KIND_COPY[item.kind].short}
+                                </span>
+                              )}
+                              {item.status === "skipped" ? (
+                                <span className="lpb-diff-badge skipped">
+                                  Skipped
+                                </span>
+                              ) : diff ? (
+                                <span className={`lpb-diff-badge ${diff.type}`}>
+                                  {diff.type === "added"
+                                    ? "New"
+                                    : diff.type === "moved"
+                                      ? `Was Class ${String(diff.fromClassNumber).padStart(2, "0")}`
+                                      : "Updated"}
+                                </span>
+                              ) : null}
+                              {displayStatus === "next" ? (
+                                <span className="lpb-status-badge next">Next</span>
+                              ) : displayStatus === "completed" ? (
+                                <span className="lpb-status-badge completed">
+                                  Done
+                                </span>
+                              ) : null}
+                            </span>
                             {expanded ? (
                               <ChevronDown size={17} />
                             ) : (
@@ -2643,7 +3322,8 @@ export default function LearningPlanBuilderPage() {
                 <span>
                   Classes
                   <small>
-                    Workbook ideal: {activeEditAllocation.idealClasses}
+                    Workbook ideal: {activeEditAllocation.idealClasses} ·
+                    minimum: {activeEditAllocation.minimumClasses}
                   </small>
                 </span>
                 <div className="lpb-step-input">
@@ -2763,6 +3443,14 @@ export default function LearningPlanBuilderPage() {
                   This edit fits within the available capacity.
                 </p>
               )}
+              {editDraft.classes < activeEditAllocation.minimumClasses ? (
+                <p>
+                  <AlertTriangle size={15} />
+                  Below the {activeEditAllocation.minimumClasses}-class minimum
+                  for this topic. Automatic rules never go this low—only a
+                  teacher can.
+                </p>
+              ) : null}
             </div>
 
             <footer>

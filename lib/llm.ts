@@ -1,7 +1,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // Provider switch for structured generation.
 //
-// ISOPENAI=true  → use OpenAI gpt-5.4 (responses.parse + zodTextFormat), the old path.
+// ISOPENAI=true  → use OpenAI gpt-5.6-luna (responses.parse + zodTextFormat), the old path.
 // otherwise      → use Claude Sonnet 4.6 on Bedrock (forced tool use).
 //
 // Both providers are driven from the same prompts; each route passes a Zod schema
@@ -15,7 +15,7 @@ import { bedrockStructured, BEDROCK_MODEL_ID } from "./bedrock";
 
 export const USE_OPENAI = process.env.ISOPENAI === "true";
 
-const OPENAI_MODEL = "gpt-5.4";
+const OPENAI_MODEL = "gpt-5.6-luna";
 
 /** Human-readable label of the active model, for logs. */
 export function activeModelLabel(): string {

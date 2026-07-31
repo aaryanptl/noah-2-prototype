@@ -120,6 +120,7 @@ function formatStudent(student: DemoStudent): string {
 Name: ${student.name}
 Grade: ${student.grade} · Region: ${student.region}
 Classes remaining: ${student.classesRemaining}
+Classes per week: ${student.classesPerWeek ?? 2} (plan window = ${(student.classesPerWeek ?? 2) * 2} classes)
 Placement: ${placement}
 Mastery evidence:
   ${mastery}
@@ -235,37 +236,69 @@ export async function enrichPlanItemsWithTeachingContent(input: {
     return { items: withActivities, source: "fallback" }
   }
 
-  const applyContent = (
-    contentById: Map<string, ClassTeachingContent>,
-    source: "ai" | "fallback"
-  ) =>
+  /** Each class keeps the source of its own content: AI text or a local template. */
+  const applyContent = (contentById: Map<string, ClassTeachingContent>) =>
     withActivities.map((item) => {
       if (item.kind !== "teaching") return item
       const teachingContent =
         contentById.get(item.id) ?? fallbackTeachingContent(item, student)
       return {
         ...item,
-        teachingContent: { ...teachingContent, source },
+        teachingContent,
         reason: teachingContent.rationale ?? item.reason,
       }
     })
 
+  const fallbackFor = (items: PlanItem[]) =>
+    new Map(items.map((item) => [item.id, fallbackTeachingContent(item, student)]))
+
   if (!providerKeyConfigured()) {
-    const contentById = new Map(
-      teachingItems.map((item) => [
-        item.id,
-        fallbackTeachingContent(item, student),
-      ])
-    )
-    return { items: applyContent(contentById, "fallback"), source: "fallback" }
+    return { items: applyContent(fallbackFor(teachingItems)), source: "fallback" }
   }
 
+  // One request per batch instead of one for the whole plan: a full-year plan
+  // is ~40s in a single call, and a transient upstream error there loses every
+  // class. Batches run in parallel, so a failure only degrades its own slice.
+  const batches: PlanItem[][] = []
+  for (let index = 0; index < teachingItems.length; index += CONTENT_BATCH_SIZE) {
+    batches.push(teachingItems.slice(index, index + CONTENT_BATCH_SIZE))
+  }
+
+  const results = await Promise.all(
+    batches.map((batch) => generateBatchContent(student, batch))
+  )
+
+  const contentById = new Map<string, ClassTeachingContent>()
+  let aiCount = 0
+  for (const result of results) {
+    for (const [itemId, content] of result) {
+      contentById.set(itemId, content)
+      if (content.source === "ai") aiCount += 1
+    }
+  }
+
+  return {
+    items: applyContent(contentById),
+    source: aiCount > 0 ? "ai" : "fallback",
+  }
+}
+
+/** Teaching classes per LLM request. Batches are generated in parallel. */
+const CONTENT_BATCH_SIZE = 10
+
+/** Content for one batch; falls back locally for just this batch on failure. */
+async function generateBatchContent(
+  student: DemoStudent,
+  batch: PlanItem[]
+): Promise<Map<string, ClassTeachingContent>> {
   const user = `${formatStudent(student)}
 
-SCHEDULE — ${teachingItems.length} teaching class(es), already fixed. Write content for each.
-${formatSchedule(teachingItems)}
+SCHEDULE — ${batch.length} teaching class(es), already fixed. Write content for each.
+${formatSchedule(batch)}
 
-Write the content now — exactly ${teachingItems.length} entr${teachingItems.length === 1 ? "y" : "ies"}, one per itemId above.`
+Write the content now — exactly ${batch.length} entr${batch.length === 1 ? "y" : "ies"}, one per itemId above.`
+
+  const contentById = new Map<string, ClassTeachingContent>()
 
   try {
     const { data } = await llmStructured<ContentResponse>({
@@ -277,14 +310,12 @@ Write the content now — exactly ${teachingItems.length} entr${teachingItems.le
       toolName: "emit_class_content",
       toolDescription:
         "Return the teaching content, one entry per scheduled teaching class.",
-      maxTokens: 8000,
     })
 
     if (!data?.sessions?.length) {
       throw new Error("Model returned no class content")
     }
 
-    const contentById = new Map<string, ClassTeachingContent>()
     for (const session of data.sessions) {
       contentById.set(session.itemId, {
         goal: session.goal,
@@ -295,19 +326,19 @@ Write the content now — exactly ${teachingItems.length} entr${teachingItems.le
         source: "ai",
       })
     }
-
-    return { items: applyContent(contentById, "ai"), source: "ai" }
   } catch (error) {
     console.error(
-      "[LPB CONTENT] AI content generation failed, using fallback:",
+      `[LPB CONTENT] batch of ${batch.length} failed, using fallback for it:`,
       error
     )
-    const contentById = new Map(
-      teachingItems.map((item) => [
-        item.id,
-        fallbackTeachingContent(item, student),
-      ])
-    )
-    return { items: applyContent(contentById, "fallback"), source: "fallback" }
   }
+
+  // Anything the model skipped or a failed batch falls back per class.
+  for (const item of batch) {
+    if (!contentById.has(item.id)) {
+      contentById.set(item.id, fallbackTeachingContent(item, student))
+    }
+  }
+
+  return contentById
 }

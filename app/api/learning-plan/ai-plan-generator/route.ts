@@ -38,13 +38,15 @@ export async function POST(request: Request) {
           const placementResult = (student.placementResults || []).find((r: any) => r.topicId === topic.id)
           const score = placementResult?.score ?? student.defaultPlacementScore ?? 75
 
-          if (score >= 60 && topic.idealClasses > 3) {
-            const newClasses = Math.max(3, topic.idealClasses - 2)
+          // Rule H1: never compress a topic below its Minimum Classes.
+          const minimumClasses = topic.minimumClasses ?? 3
+          if (score >= 60 && topic.idealClasses > minimumClasses) {
+            const newClasses = Math.max(minimumClasses, topic.idealClasses - 2)
             const newActivities = Math.floor(newClasses * 3.5)
             classAdjustments[topic.id] = {
               classes: newClasses,
               activities: newActivities,
-              reason: `AI reduced allocation from ${topic.idealClasses} to ${newClasses} classes based on ${score}% placement score to fit ${availableClasses}-class package capacity.`,
+              reason: `AI reduced allocation from ${topic.idealClasses} to ${newClasses} classes (minimum ${minimumClasses}) based on ${score}% placement score to fit ${availableClasses}-class package capacity.`,
             }
             currentTotal -= topic.idealClasses - newClasses
           }
@@ -83,6 +85,7 @@ ${JSON.stringify(
     name: t.name,
     priority: t.priority,
     idealClasses: t.idealClasses,
+    minimumClasses: t.minimumClasses,
     idealActivities: t.idealActivities,
   }))
 )}
@@ -90,8 +93,9 @@ ${JSON.stringify(
 INSTRUCTIONS:
 1. Compare total ideal classes (${totalIdealHighClasses}) against package capacity (${availableClasses} classes).
 2. If capacity is exceeded or tight, analyze placement test scores and select High-priority topics with strong student performance (score >= 70%) to compress by 1-2 classes.
-3. Calculate proportional activities (max 3.5 per class).
-4. Output a 1-2 sentence direct AI strategy summary explaining to the user how AI managed classes and activities to fit the package capacity limit.
+3. HARD RULE (H1): never allocate a topic fewer classes than its minimumClasses value. Compression stops at that floor.
+4. Calculate proportional activities (max 3.5 per class).
+5. Output a 1-2 sentence direct AI strategy summary explaining to the user how AI managed classes and activities to fit the package capacity limit.
 
 Return ONLY a valid JSON object in this exact format:
 {
@@ -109,7 +113,7 @@ Return ONLY a valid JSON object in this exact format:
 `
 
     const response = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: "gpt-5.6-luna",
       messages: [
         {
           role: "system",
@@ -132,7 +136,7 @@ Return ONLY a valid JSON object in this exact format:
       ],
       recommendations: parsedData.recommendations || [],
       classAdjustments: parsedData.classAdjustments || {},
-      provider: "openai-gpt-4o-mini",
+      provider: "openai-gpt-5.6-luna",
     })
   } catch (error) {
     console.error("AI Plan Generator API error:", error)

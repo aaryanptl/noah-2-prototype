@@ -4,12 +4,13 @@ The Learning Plan Builder creates and continuously updates a class-by-class Grad
 
 ### Inputs
 
-- Student profile and remaining classes
+- Student profile, package and remaining classes
+- Classes per week (default 2) — sizes the two-week plan window
 - Placement-test results
 - Topic and learning-objective mastery
 - Completed and current topics
 - Parent-requested starting topic
-- Curriculum priorities, prerequisites, ideal classes and activities
+- Curriculum priorities, prerequisites, ideal **and minimum** classes, activities
 
 ### Teacher workflow
 
@@ -32,6 +33,21 @@ The Learning Plan Builder creates and continuously updates a class-by-class Grad
 - Checkpoints, revision classes, practice classes and PTMs count toward capacity.
 - Over-capacity plans remain editable but show a persistent warning.
 
+**Fitting a plan into the package (Rules B2, F3, H1)**
+
+When the selected scope does not fit the remaining classes, the builder works in this order:
+
+1. **Compress toward Minimum Classes** — lowest priority first, latest sequence first. Every topic carries a minimum (the fewest classes in which it can still be taught soundly); no automatic rule may go below it. Prerequisite refreshers are never compressed.
+2. **Scale structural classes down** — PTMs first, then checkpoint + RDP pairs, keeping at least two checkpoints and one PTM.
+3. **Drop topics** — Low first, then Medium (latest sequence first). A topic another selected topic depends on is never dropped.
+4. **Warn** — if High-priority topics still do not fit, the plan shows a warning for manual decision instead of dropping anything silently.
+
+A teacher override is the only way a topic can go below its minimum, and the plan flags it when that happens.
+
+**Spare capacity (Rule B3)**
+
+With 10 or more classes spare, only the required classes are planned and the surplus is reserved as “Revision / School Help”.
+
 ### Generated output
 
 - Ordered class-by-class teaching sequence
@@ -50,7 +66,7 @@ After a class, the teacher records whether the student:
 - Stayed on track
 - Needed more time
 
-The builder previews the updated allocation and creates a new plan version only after teacher approval.
+The builder previews the updated allocation and creates a new plan version only after teacher approval. A “faster” outcome never takes a topic below its minimum classes.
 
 ### AI in the prototype
 

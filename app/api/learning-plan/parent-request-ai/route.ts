@@ -47,7 +47,7 @@ CRITICAL RULES:
 `
 
     const response = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: "gpt-5.6-luna",
       messages: [
         {
           role: "system",
@@ -67,7 +67,7 @@ CRITICAL RULES:
       hasPrerequisites: prerequisites && prerequisites.length > 0,
       prerequisiteNames: prerequisites || [],
       aiExplanation,
-      provider: "openai-gpt-4o-mini",
+      provider: "openai-gpt-5.6-luna",
     })
   } catch (error) {
     console.error("Parent Request AI API error:", error)

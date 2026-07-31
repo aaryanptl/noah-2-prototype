@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import {
+  getPrototypePlanSnapshot,
   savePrototypePlan,
   updatePrototypePlan,
   type PrototypePlanUpdate,
@@ -7,6 +8,29 @@ import {
 import type { DemoStudent, GeneratedPlan } from "@/lib/learning-plan/types";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+/** Reopen a saved plan by id: GET /api/learning-plan/prototype?planId=… */
+export async function GET(request: Request) {
+  const planId = new URL(request.url).searchParams.get("planId");
+  if (!planId) {
+    return NextResponse.json({ error: "planId is required" }, { status: 400 });
+  }
+
+  try {
+    const snapshot = await getPrototypePlanSnapshot(planId);
+    if (!snapshot) {
+      return NextResponse.json({ error: "Plan not found" }, { status: 404 });
+    }
+    return NextResponse.json(snapshot);
+  } catch (error) {
+    console.error("Learning-plan prototype fetch failed:", error);
+    return NextResponse.json(
+      { error: "Could not load the learning plan" },
+      { status: 500 },
+    );
+  }
+}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;

@@ -1,7 +1,11 @@
 export type Priority = "high" | "medium" | "low"
 export type EvidenceTone = "strong" | "steady" | "support"
 export type PlanItemKind = "teaching" | "checkpoint" | "rdp" | "ptm"
-export type PlanItemStatus = "completed" | "next" | "planned"
+/**
+ * "skipped" is a class the plan no longer needs (a topic was compressed) but
+ * that keeps its slot, so classes after it are not renumbered.
+ */
+export type PlanItemStatus = "completed" | "next" | "planned" | "skipped"
 export type ClassOutcome = "faster" | "on-track" | "needs-time"
 
 export interface LearningObjective {
@@ -18,6 +22,12 @@ export interface CurriculumTopic {
   priority: Priority
   prerequisiteIds: number[]
   idealClasses: number
+  /**
+   * Rule H1 compression floor: the fewest classes in which the topic can still
+   * be taught soundly. No automatic rule (placement reduction, capacity
+   * compression, post-class auto-update) may take a topic below this.
+   */
+  minimumClasses: number
   idealActivities: number
   easyPercent: number
   practicePercent: number
@@ -61,6 +71,8 @@ export interface DemoStudent {
   grade: number
   region: "US"
   classesRemaining: number
+  /** Enrolled package shown on the student card, e.g. "Full year · 79 classes". */
+  packageLabel?: string
   placementStatus: "completed" | "not-taken" | "not-applicable"
   placementResults: PlacementResult[]
   defaultPlacementScore?: number
@@ -72,6 +84,7 @@ export interface DemoStudent {
   previousPlanLabel?: string
   /** Classes already taught in the student's active topic. */
   currentTopicClassesUsed?: number
+  /** Rule I1: sizes the two-week plan window (classes per week × 2). Default 2. */
   classesPerWeek?: number
 }
 
@@ -110,6 +123,12 @@ export interface PlanTopicAllocation {
   priority: Priority
   classes: number
   idealClasses: number
+  /** Rule H1 floor for this topic (0 for compressed prerequisite refreshers). */
+  minimumClasses: number
+  /** Classes removed by the Rule B2 capacity compression pass. */
+  compressedByCapacity?: number
+  /** True when Rule B2 compression has taken this topic down to its floor. */
+  atMinimum?: boolean
   activities: number
   easyActivities: number
   practiceActivities: number
@@ -184,6 +203,10 @@ export interface PlanCapacity {
   structural: number
   total: number
   difference: number
+  /** Teaching classes removed by the Rule B2 compression pass. */
+  compressedClasses: number
+  /** Rule B3: spare classes reserved as "Revision / School Help" (10+ spare). */
+  surplusClasses: number
 }
 
 export type ModificationType = "manual" | "class" | "auto"
