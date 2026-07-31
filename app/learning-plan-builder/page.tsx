@@ -1,12 +1,17 @@
 "use client"
 
 import {
+  buildClassActivities,
+  groupActivitiesByObjective,
+} from "@/lib/learning-plan/activities"
+import {
   buildLearningPlan,
   getAiAssistedTopicSuggestion,
   getSuggestedTopicIds,
 } from "@/lib/learning-plan/engine"
 import type {
   ClassOutcome,
+  ClassTeachingContent,
   CurriculumTopic,
   DemoStudent,
   GeneratedPlan,
@@ -154,6 +159,33 @@ function findNextTeachingItem(items: PlanItem[], completedCount: number) {
   )
 }
 
+/** Primary line for a plan row: curriculum topic name, not LO subtopic/family. */
+function planItemPrimaryLabel(item: PlanItem) {
+  if (item.kind === "teaching") {
+    return item.topicName ?? item.title
+  }
+  return item.title
+}
+
+/** Secondary line: class focus (subtopic), structural type, activities. */
+function planItemSecondaryLabel(item: PlanItem) {
+  if (item.kind !== "teaching") {
+    return item.subtitle || KIND_COPY[item.kind].short
+  }
+
+  const parts: string[] = []
+  const focus = item.title
+  const topic = item.topicName
+  if (focus && focus !== topic) parts.push(focus)
+  if (item.subtitle?.toLowerCase().includes("compressed")) {
+    parts.push("compressed refresher")
+  }
+  parts.push(
+    `${item.easyActivities + item.practiceActivities} act.`
+  )
+  return parts.join(" · ")
+}
+
 function getPrerequisiteChainLocal(
   topicId: number,
   topicMap: Map<number, CurriculumTopic>,
@@ -203,13 +235,117 @@ function sortTopicsForDisplay(topics: CurriculumTopic[], student: DemoStudent) {
   ]
 }
 
+function ClassLessonGuide({
+  item,
+  contentGenerating,
+  contentSource,
+}: {
+  item: PlanItem
+  contentGenerating: boolean
+  contentSource: "ai" | "fallback" | null
+}) {
+  const activities =
+    item.activities ?? buildClassActivities(item, questionGuidelines)
+  const activityGroups = groupActivitiesByObjective(activities)
+  const totalActivities = item.easyActivities + item.practiceActivities
+  const teaching: ClassTeachingContent | undefined = item.teachingContent
+
+  return (
+    <div className="lpb-lesson-plan-card lpb-lesson-minimal">
+      <p className="lpb-lesson-goal">
+        {teaching?.goal ??
+          `Master ${item.title} through instruction, guided practice, and application.`}
+        {contentGenerating ? (
+          <span className="lpb-content-source generating">Generating…</span>
+        ) : teaching?.source === "ai" ? (
+          <span className="lpb-content-source ai">AI</span>
+        ) : null}
+      </p>
+
+      {item.learningObjectives.length > 0 ? (
+        <div className="lpb-lesson-block">
+          <span className="lpb-detail-label">Objectives</span>
+          <ul className="lpb-lesson-bullets">
+            {item.learningObjectives.map((objective) => (
+              <li key={objective.id}>
+                {objective.subtopic ? (
+                  <strong>{objective.subtopic}: </strong>
+                ) : null}
+                {objective.text}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+
+      <div className="lpb-lesson-block">
+        <span className="lpb-detail-label">Teach</span>
+        <ul className="lpb-lesson-bullets points">
+          {(
+            teaching?.teachingPoints ?? [
+              "Introduce vocabulary with 2 worked examples.",
+              "Guide starter questions with feedback.",
+              "Close with a master application question.",
+            ]
+          ).map((point) => (
+            <li key={point}>{point}</li>
+          ))}
+        </ul>
+      </div>
+
+      <div className="lpb-lesson-block">
+        <span className="lpb-detail-label">Success</span>
+        <p className="lpb-rationale-text">
+          {teaching?.successCriteria ??
+            "≥80% on starter questions; attempts a master word problem with reasoning."}
+        </p>
+      </div>
+
+      <div className="lpb-lesson-block">
+        <span className="lpb-detail-label">
+          Activities · {totalActivities} ({item.easyActivities} starter ·{" "}
+          {item.practiceActivities} master)
+        </span>
+        {activityGroups.length > 0 ? (
+          <div className="lpb-question-pairs lpb-question-pairs-flat">
+            {activityGroups.flatMap((group) =>
+              group.items.map((activity) => (
+                <div key={activity.id} className="lpb-question-item">
+                  <span className={`lpb-q-badge ${activity.level}`}>
+                    {activity.label}
+                  </span>
+                  <p>
+                    {activity.prompt}
+                    {activity.round > 1 ? (
+                      <em className="lpb-activity-round">
+                        {" "}
+                        · Round {activity.round}
+                      </em>
+                    ) : null}
+                  </p>
+                </div>
+              ))
+            )}
+          </div>
+        ) : (
+          <p className="lpb-muted-text">No activities on this class.</p>
+        )}
+      </div>
+
+      {(teaching?.rationale ?? item.reason) ? (
+        <p className="lpb-lesson-why">{teaching?.rationale ?? item.reason}</p>
+      ) : null}
+    </div>
+  )
+}
+
 export default function LearningPlanBuilderPage() {
   const [student, setStudent] = useState<DemoStudent>(demoStudents[0])
   const [setupStep, setSetupStep] = useState(1)
   const [selectedTopicIds, setSelectedTopicIds] = useState<number[]>(() =>
     getSuggestedTopicIds(curriculumTopics, demoStudents[0])
   )
-  const [scopeMode, setScopeMode] = useState<"manual" | "ai">("manual")
+  const [scopeMode, setScopeMode] = useState<"manual" | "evidence">("manual")
   const [manualAdjustments, setManualAdjustments] = useState<ManualAdjustments>(
     {}
   )
@@ -228,6 +364,10 @@ export default function LearningPlanBuilderPage() {
   )
   const [aiParentExplanation, setAiParentExplanation] = useState<string | null>(null)
   const [aiLoading, setAiLoading] = useState(false)
+  const [contentGenerating, setContentGenerating] = useState(false)
+  const [contentSource, setContentSource] = useState<"ai" | "fallback" | null>(
+    null
+  )
 
   const runAiAnalysisOnChooseScope = () => {
     setSetupStep(3)
@@ -374,8 +514,8 @@ export default function LearningPlanBuilderPage() {
     )
   }
 
-  const applyAiPlan = () => {
-    setScopeMode("ai")
+  const applyEvidencePlan = () => {
+    setScopeMode("evidence")
     setAiLoading(true)
     fetch("/api/learning-plan/ai-plan-generator", {
       method: "POST",
@@ -412,7 +552,7 @@ export default function LearningPlanBuilderPage() {
     setSelectedTopicIds((current) =>
       current.filter((topicId) => !aiSkippableSet.has(topicId))
     )
-    setScopeMode("ai")
+    setScopeMode("evidence")
   }
 
   const unselectTopic = (topicId: number) => {
@@ -422,26 +562,96 @@ export default function LearningPlanBuilderPage() {
     )
   }
 
-  const buildPlan = () => {
-    setPlan(
-      buildLearningPlan({
-        topics: curriculumTopics,
-        student,
-        selectedTopicIds,
-        manualAdjustments,
-        version: 1,
-        changesFromPrevious:
-          student.scenario === "C"
-            ? [
-                "Removed completed Number Sense and Multi-Digit Operations topic blocks.",
-                "Refitted the remaining topics into the new 24-class window.",
-              ]
-            : [],
+  /**
+   * Build structure deterministically, then generate mentor prose the same way
+   * /teacher/plans does (llmStructured when a key is present; fallback templates otherwise).
+   * Always attach expanded activity rows so "N total activities" lists N items.
+   */
+  const enrichPlan = async (basePlan: GeneratedPlan): Promise<GeneratedPlan> => {
+    const withLocalActivities: GeneratedPlan = {
+      ...basePlan,
+      items: basePlan.items.map((item) =>
+        item.kind === "teaching"
+          ? {
+              ...item,
+              activities: buildClassActivities(item, questionGuidelines),
+            }
+          : item
+      ),
+    }
+
+    setContentGenerating(true)
+    try {
+      const response = await fetch("/api/learning-plan/generate-content", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          student,
+          items: withLocalActivities.items,
+          guidelines: questionGuidelines,
+        }),
       })
-    )
+      if (!response.ok) {
+        throw new Error(`generate-content failed: ${response.status}`)
+      }
+      const data = (await response.json()) as {
+        items: PlanItem[]
+        source: "ai" | "fallback"
+      }
+      setContentSource(data.source)
+      return {
+        ...withLocalActivities,
+        items: data.items,
+        explanations: [
+          data.source === "ai"
+            ? "Teaching guide prose was generated by AI for each class (structure stayed rule-based)."
+            : "Teaching guide prose used local fallback templates (AI provider unavailable).",
+          ...withLocalActivities.explanations,
+        ],
+      }
+    } catch (error) {
+      console.error("Plan content enrichment failed:", error)
+      setContentSource("fallback")
+      return withLocalActivities
+    } finally {
+      setContentGenerating(false)
+    }
+  }
+
+  const buildPlan = async () => {
+    const basePlan = buildLearningPlan({
+      topics: curriculumTopics,
+      student,
+      selectedTopicIds,
+      manualAdjustments,
+      version: 1,
+      changesFromPrevious:
+        student.scenario === "C"
+          ? [
+              "Removed completed Number Sense and Multi-Digit Operations topic blocks.",
+              "Refitted the remaining topics into the new 24-class window.",
+            ]
+          : [],
+    })
+    // Attach activity rows immediately so the count matches the list
+    // while AI prose is still generating.
+    const withActivities: GeneratedPlan = {
+      ...basePlan,
+      items: basePlan.items.map((item) =>
+        item.kind === "teaching"
+          ? {
+              ...item,
+              activities: buildClassActivities(item, questionGuidelines),
+            }
+          : item
+      ),
+    }
+    setPlan(withActivities)
     setCompletedCount(0)
     setPlanTab("classes")
     window.scrollTo({ top: 0, behavior: "smooth" })
+    const enriched = await enrichPlan(withActivities)
+    setPlan(enriched)
   }
 
   const returnToSetup = () => {
@@ -487,16 +697,16 @@ export default function LearningPlanBuilderPage() {
     ]
 
     setManualAdjustments(nextAdjustments)
-    setPlan(
-      buildLearningPlan({
-        topics: curriculumTopics,
-        student,
-        selectedTopicIds,
-        manualAdjustments: nextAdjustments,
-        version: plan.version + 1,
-        changesFromPrevious: changes,
-      })
-    )
+    const nextPlan = buildLearningPlan({
+      topics: curriculumTopics,
+      student,
+      selectedTopicIds,
+      manualAdjustments: nextAdjustments,
+      version: plan.version + 1,
+      changesFromPrevious: changes,
+    })
+    setPlan(nextPlan)
+    void enrichPlan(nextPlan).then(setPlan)
     setEditingTopicId(null)
     setEditDraft(null)
   }
@@ -560,6 +770,7 @@ export default function LearningPlanBuilderPage() {
   const approveClassOutcome = () => {
     if (!pendingUpdate) return
     setPlan(pendingUpdate.plan)
+    void enrichPlan(pendingUpdate.plan).then(setPlan)
     setManualAdjustments(pendingUpdate.adjustments)
     setCompletedCount((current) => current + 1)
     setPendingUpdate(null)
@@ -830,7 +1041,7 @@ export default function LearningPlanBuilderPage() {
                     </div>
                     <div className="lpb-default-summary">
                       <span>13 curriculum topics</span>
-                      <span>66 teaching classes</span>
+                      <span>66 teaching + 13 structural = 79 classes</span>
                       <span>242 activities</span>
                     </div>
                   </div>
@@ -1029,32 +1240,32 @@ export default function LearningPlanBuilderPage() {
 
                   <button
                     type="button"
-                    className={`lpb-planning-mode ai${scopeMode === "ai" ? " active" : ""}`}
-                    onClick={applyAiPlan}
+                    className={`lpb-planning-mode evidence${scopeMode === "evidence" ? " active" : ""}`}
+                    onClick={applyEvidencePlan}
                   >
-                    <span className="lpb-mode-icon ai">
-                      <Sparkles size={20} />
+                    <span className="lpb-mode-icon evidence">
+                      <Lightbulb size={20} />
                     </span>
                     <span>
-                      <strong>Plan with AI</strong>
+                      <strong>Plan from evidence</strong>
                       <small>
-                        Analyze placement, mastery, completed work and capacity,
-                        keep every High topic, and suggest a teacher-editable
+                        Use placement, mastery, completed work and capacity.
+                        Keep every High topic and suggest a teacher-editable
                         scope.
                       </small>
                     </span>
                     <span className="lpb-mode-action">
-                      {scopeMode === "ai" ? "Applied" : "Use suggestion"}
+                      {scopeMode === "evidence" ? "Applied" : "Apply rules"}
                     </span>
                   </button>
                 </div>
 
-                {scopeMode === "ai" ? (
-                  <section className="lpb-ai-scope-summary">
-                    <div className="lpb-ai-summary-head">
+                {scopeMode === "evidence" ? (
+                  <section className="lpb-evidence-scope-summary">
+                    <div className="lpb-evidence-summary-head">
                       <span>
-                        <Sparkles size={16} />
-                        AI-assisted scope
+                        <Lightbulb size={16} />
+                        Evidence-based scope
                       </span>
                       <strong>
                         {plural(aiSuggestion.skippableTopicIds.length, "topic")}{" "}
@@ -1062,11 +1273,11 @@ export default function LearningPlanBuilderPage() {
                       </strong>
                     </div>
                     <p>
-                      The suggestion used the supplied prototype evidence. You
-                      can edit optional topics, while High-priority topics stay
-                      locked in the plan.
+                      Scope was shaped from the student&apos;s placement,
+                      mastery and progress signals. You can edit optional
+                      topics; High-priority topics stay locked in the plan.
                     </p>
-                    <div className="lpb-ai-evidence">
+                    <div className="lpb-evidence-chips">
                       {aiSuggestion.evidenceSummary.map((summary) => (
                         <span key={summary}>
                           <CheckCircle2 size={13} />
@@ -1139,8 +1350,8 @@ export default function LearningPlanBuilderPage() {
                       const previewAllocation = reviewAllocationById.get(
                         topic.id
                       )
-                      const aiReduced =
-                        scopeMode === "ai" &&
+                      const evidenceCompressed =
+                        scopeMode === "evidence" &&
                         selected &&
                         previewAllocation !== undefined &&
                         (previewAllocation.classes < topic.idealClasses ||
@@ -1177,24 +1388,24 @@ export default function LearningPlanBuilderPage() {
                           </span>
                           <span className="lpb-topic-metrics">
                             <b>
-                              {scopeMode === "ai" && previewAllocation
+                              {scopeMode === "evidence" && previewAllocation
                                 ? previewAllocation.classes
                                 : topic.idealClasses}
                             </b>
                             <small>
-                              {aiReduced
+                              {evidenceCompressed
                                 ? `of ${topic.idealClasses} classes`
                                 : "classes"}
                             </small>
                           </span>
                           <span className="lpb-topic-metrics">
                             <b>
-                              {scopeMode === "ai" && previewAllocation
+                              {scopeMode === "evidence" && previewAllocation
                                 ? previewAllocation.activities
                                 : topic.idealActivities}
                             </b>
                             <small>
-                              {aiReduced
+                              {evidenceCompressed
                                 ? `of ${topic.idealActivities} activities`
                                 : "activities"}
                             </small>
@@ -1205,13 +1416,13 @@ export default function LearningPlanBuilderPage() {
                             ) : topic.priority === "high" ? (
                               <>
                                 <LockKeyhole size={12} />
-                                {aiReduced ? "AI reduced" : "Required"}
+                                {evidenceCompressed ? "Compressed" : "Required"}
                               </>
-                            ) : scopeMode === "ai" &&
+                            ) : scopeMode === "evidence" &&
                               aiRecommendation?.decision === "skip" ? (
-                              "AI suggests skip"
-                            ) : scopeMode === "ai" && selected ? (
-                              "AI suggested"
+                              "Skip recommended"
+                            ) : scopeMode === "evidence" && selected ? (
+                              "Evidence suggested"
                             ) : suggested ? (
                               "Recommended"
                             ) : selected ? (
@@ -1324,8 +1535,8 @@ export default function LearningPlanBuilderPage() {
                             Plan is still over available capacity.
                           </strong>
                           <span>
-                            {scopeMode === "ai"
-                              ? "AI never removes High-priority topics. It only removes Medium or Low topics supported by strong skip evidence; the teacher can adjust optional topics or keep this warning."
+                            {scopeMode === "evidence"
+                              ? "High-priority topics are never removed automatically. Only Medium or Low topics with strong skip evidence are dropped; the teacher can adjust optional topics or keep this warning."
                               : "Unselect topics or adjust allocations. The warning remains visible if the teacher keeps the larger plan."}
                           </span>
                         </div>
@@ -1361,7 +1572,7 @@ export default function LearningPlanBuilderPage() {
                                 {allocation.classes} classes ·{" "}
                                 {allocation.activities} activities
                               </small>
-                              {scopeMode === "ai" && aiRecommendation ? (
+                              {scopeMode === "evidence" && aiRecommendation ? (
                                 <em>
                                   {aiRecommendation.decision === "defer"
                                     ? `Teacher kept this topic. ${aiRecommendation.reason}`
@@ -1412,11 +1623,15 @@ export default function LearningPlanBuilderPage() {
                   <button
                     type="button"
                     className="lpb-button lpb-button-primary"
-                    onClick={buildPlan}
-                    disabled={selectedTopicIds.length === 0}
+                    onClick={() => void buildPlan()}
+                    disabled={
+                      selectedTopicIds.length === 0 || contentGenerating
+                    }
                   >
                     <CalendarDays size={16} />
-                    Build learning plan
+                    {contentGenerating
+                      ? "Generating AI teaching guides…"
+                      : "Build learning plan"}
                   </button>
                 </footer>
               </>
@@ -1424,31 +1639,28 @@ export default function LearningPlanBuilderPage() {
           </section>
         </main>
       ) : (
-        <main className="lpb-plan-shell">
-          <section className="lpb-plan-hero">
+        <main className="lpb-plan-shell lpb-plan-minimal">
+          <section className="lpb-plan-hero lpb-plan-hero-minimal">
             <div className="lpb-plan-student">
-              <span className="lpb-avatar lpb-avatar-large">
-                {student.initials}
-              </span>
+              <span className="lpb-avatar">{student.initials}</span>
               <div>
-                <span className="lpb-kicker">
-                  Grade {student.grade} · United States · Version {plan.version}
-                </span>
-                <h1>{student.name}’s learning plan</h1>
+                <h1>{student.name}</h1>
                 <p>
-                  {plan.allocations.length} topics · {plan.capacity.teaching}{" "}
-                  teaching classes · {plan.capacity.structural} structural
-                  classes
+                  Grade {student.grade} · v{plan.version} ·{" "}
+                  {plan.allocations.length} topics · {plan.capacity.teaching}/
+                  {plan.capacity.available} classes
+                  {plan.capacity.difference > 0
+                    ? ` · ${plan.capacity.difference} over`
+                    : ""}
                 </p>
               </div>
             </div>
             <div className="lpb-hero-actions">
               <button
                 type="button"
-                className="lpb-button lpb-button-secondary"
+                className="lpb-button lpb-button-ghost"
                 onClick={returnToSetup}
               >
-                <SlidersHorizontal size={15} />
                 Edit scope
               </button>
               <button
@@ -1457,109 +1669,52 @@ export default function LearningPlanBuilderPage() {
                 onClick={() => setOutcomeOpen(true)}
                 disabled={!nextTeachingItem}
               >
-                <ClipboardCheck size={16} />
-                Record class outcome
+                Record outcome
               </button>
             </div>
           </section>
 
-          {plan.warnings.map((warning) => (
-            <section className="lpb-plan-warning" key={warning.id}>
-              <span>
-                <AlertTriangle size={20} />
-              </span>
-              <div>
-                <strong>{warning.title}</strong>
-                <p>{warning.message}</p>
-              </div>
-              <button type="button" onClick={returnToSetup}>
-                Review scope
-                <ArrowRight size={14} />
-              </button>
-            </section>
-          ))}
-
-          {plan.changesFromPrevious.length > 0 ? (
-            <section className="lpb-change-banner">
-              <span className="lpb-change-icon">
-                <RotateCcw size={18} />
-              </span>
-              <div>
-                <strong>What changed in version {plan.version}</strong>
-                <ul>
-                  {plan.changesFromPrevious.map((change) => (
-                    <li key={change}>{change}</li>
-                  ))}
-                </ul>
-              </div>
-            </section>
-          ) : null}
-
-          <div className="lpb-plan-grid">
-            <div className="lpb-plan-main">
-              {nextTeachingItem ? (
-                <section className="lpb-next-card">
-                  <div className="lpb-next-top">
-                    <span className="lpb-next-kicker">
-                      <span />
-                      Next teaching class
-                    </span>
-                    <span className="lpb-mono">
-                      Class {nextTeachingItem.classNumber} of{" "}
-                      {plan.items.length}
-                    </span>
-                  </div>
-                  <div className="lpb-next-body">
-                    <div>
-                      <span
-                        className={`lpb-priority-pill ${nextTeachingItem.priority}`}
-                      >
-                        {nextTeachingItem.priority
-                          ? PRIORITY_COPY[nextTeachingItem.priority].label
-                          : ""}
-                      </span>
-                      <h2>{nextTeachingItem.title}</h2>
-                      <p>{nextTeachingItem.subtitle}</p>
-                    </div>
-                    <div className="lpb-next-metrics">
-                      <div>
-                        <BookOpen size={17} />
-                        <span>
-                          <b>{nextTeachingItem.learningObjectives.length}</b>
-                          objectives
-                        </span>
-                      </div>
-                      <div>
-                        <CheckCircle2 size={17} />
-                        <span>
-                          <b>{nextTeachingItem.easyActivities}</b>
-                          Easy
-                        </span>
-                      </div>
-                      <div>
-                        <Target size={17} />
-                        <span>
-                          <b>{nextTeachingItem.practiceActivities}</b>
-                          Practice
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="lpb-next-reason">
-                    <Lightbulb size={17} />
-                    <div>
-                      <span>Why this class now</span>
-                      <p>{nextTeachingItem.reason}</p>
-                    </div>
-                  </div>
-                </section>
+          {(contentGenerating ||
+            plan.warnings.length > 0 ||
+            plan.changesFromPrevious.length > 0) && (
+            <div className="lpb-status-strip">
+              {contentGenerating ? (
+                <span className="lpb-status-chip generating">
+                  <Sparkles size={13} />
+                  Writing teaching guides…
+                </span>
               ) : null}
+              {plan.warnings.map((warning) => (
+                <button
+                  key={warning.id}
+                  type="button"
+                  className="lpb-status-chip warning"
+                  onClick={returnToSetup}
+                >
+                  <AlertTriangle size={13} />
+                  {warning.title}
+                </button>
+              ))}
+              {plan.changesFromPrevious.length > 0 ? (
+                <span className="lpb-status-chip muted">
+                  Updated: {plan.changesFromPrevious[0]}
+                </span>
+              ) : null}
+            </div>
+          )}
 
-              <section className="lpb-plan-board">
+          <div className="lpb-plan-grid lpb-plan-grid-minimal">
+            <div className="lpb-plan-main">
+              <section className="lpb-plan-board lpb-plan-board-minimal">
                 <header className="lpb-plan-board-head">
                   <div>
-                    <span className="lpb-kicker">Approved sequence</span>
-                    <h2>Class-by-class plan</h2>
+                    <h2>Sequence</h2>
+                    <p className="lpb-board-meta">
+                      {plan.items.length} classes
+                      {nextTeachingItem
+                        ? ` · next: ${planItemPrimaryLabel(nextTeachingItem)}`
+                        : ""}
+                    </p>
                   </div>
                   <div className="lpb-view-tabs">
                     <button
@@ -1567,7 +1722,6 @@ export default function LearningPlanBuilderPage() {
                       className={planTab === "classes" ? "active" : ""}
                       onClick={() => setPlanTab("classes")}
                     >
-                      <CalendarDays size={15} />
                       Classes
                     </button>
                     <button
@@ -1575,7 +1729,6 @@ export default function LearningPlanBuilderPage() {
                       className={planTab === "topics" ? "active" : ""}
                       onClick={() => setPlanTab("topics")}
                     >
-                      <Layers3 size={15} />
                       Topics
                     </button>
                     <button
@@ -1583,8 +1736,7 @@ export default function LearningPlanBuilderPage() {
                       className={planTab === "next2weeks" ? "active" : ""}
                       onClick={() => setPlanTab("next2weeks")}
                     >
-                      <Clock3 size={15} />
-                      Next 2 Weeks
+                      2 weeks
                     </button>
                   </div>
                 </header>
@@ -1618,34 +1770,17 @@ export default function LearningPlanBuilderPage() {
                                 String(item.classNumber).padStart(2, "0")
                               )}
                             </span>
-                            <span className="lpb-class-kind">
-                              {KIND_COPY[item.kind].short}
-                            </span>
                             <span className="lpb-class-title">
-                              <strong>{item.title}</strong>
-                              <small>{item.subtitle}</small>
+                              <strong>{planItemPrimaryLabel(item)}</strong>
+                              <small>{planItemSecondaryLabel(item)}</small>
                             </span>
-                            {item.priority ? (
-                              <span
-                                className={`lpb-priority-pill ${item.priority}`}
-                              >
-                                {PRIORITY_COPY[item.priority].label}
+                            {displayStatus === "next" ? (
+                              <span className="lpb-status-badge next">Next</span>
+                            ) : displayStatus === "completed" ? (
+                              <span className="lpb-status-badge completed">
+                                Done
                               </span>
                             ) : null}
-                            <span className="lpb-class-activity">
-                              {item.kind === "teaching"
-                                ? `${item.easyActivities + item.practiceActivities} activities`
-                                : "Structural"}
-                            </span>
-                            <span
-                              className={`lpb-status-badge ${displayStatus}`}
-                            >
-                              {displayStatus === "completed"
-                                ? "Completed"
-                                : displayStatus === "next"
-                                  ? "Next"
-                                  : "Planned"}
-                            </span>
                             {expanded ? (
                               <ChevronDown size={17} />
                             ) : (
@@ -1654,108 +1789,23 @@ export default function LearningPlanBuilderPage() {
                           </button>
                           {expanded ? (
                             <div className="lpb-class-detail">
-                              <div className="lpb-lesson-plan-card">
-                                <div className="lpb-lesson-header">
-                                  <BookOpen size={18} />
-                                  <div>
-                                    <h4>Class Lesson Plan & Teaching Guide</h4>
-                                    <p>Goal: Master {item.title} through structured instruction, guided practice, and application.</p>
-                                  </div>
-                                </div>
-
-                                <div className="lpb-lesson-grid">
-                                  <div className="lpb-lesson-col">
-                                    <span className="lpb-detail-label">
-                                      <Target size={14} />
-                                      What to Teach & Learning Objectives
-                                    </span>
-                                    {item.learningObjectives.length > 0 ? (
-                                      <ul className="lpb-lesson-bullets">
-                                        {item.learningObjectives.map((objective) => (
-                                          <li key={objective.id}>
-                                            <strong>{objective.subtopic ? `${objective.subtopic}: ` : ""}</strong>
-                                            {objective.text}
-                                          </li>
-                                        ))}
-                                      </ul>
-                                    ) : (
-                                      <p className="lpb-muted-text">Standard teaching session.</p>
-                                    )}
-
-                                    <span className="lpb-detail-label" style={{ marginTop: "14px" }}>
-                                      <Lightbulb size={14} />
-                                      Key Teaching Points for Mentor
-                                    </span>
-                                    <ul className="lpb-lesson-bullets points">
-                                      <li>Introduce core vocabulary and demonstrate 2 worked examples.</li>
-                                      <li>Guide student through single-step starter questions with instant feedback.</li>
-                                      <li>Challenge student with multi-step master application questions before closing.</li>
-                                    </ul>
-                                  </div>
-
-                                  <div className="lpb-lesson-col">
-                                    <span className="lpb-detail-label">
-                                      <CheckCircle2 size={14} />
-                                      Success Criteria
-                                    </span>
-                                    <p className="lpb-success-box">
-                                      Student solves Starter questions with &ge;80% accuracy and attempts Master-level word problems confidently.
-                                    </p>
-
-                                    <span className="lpb-detail-label" style={{ marginTop: "14px" }}>
-                                      <FileText size={14} />
-                                      Placement & Planning Rationale
-                                    </span>
-                                    <p className="lpb-rationale-text">{item.reason}</p>
-                                  </div>
-                                </div>
-
-                                {item.learningObjectives.length > 0 ? (
-                                  <div className="lpb-assigned-questions-box">
-                                    <span className="lpb-detail-label">
-                                      <ListChecks size={15} />
-                                      Assigned Questions & Practice Activities ({item.easyActivities + item.practiceActivities} total activities)
-                                    </span>
-                                    <div className="lpb-question-cards">
-                                      {item.learningObjectives.map((obj) => {
-                                        const guideline = questionGuidelines.find(
-                                          (g) => g.learningObjectiveId === obj.id || g.topicId === item.topicId
-                                        )
-                                        return (
-                                          <div key={obj.id} className="lpb-question-card">
-                                            <span className="lpb-question-objective">
-                                              {obj.subtopic ? `${obj.subtopic} · ` : ""}{obj.text}
-                                            </span>
-                                            {guideline ? (
-                                              <div className="lpb-question-pairs">
-                                                {guideline.starter ? (
-                                                  <div className="lpb-question-item">
-                                                    <span className="lpb-q-badge starter">Starter Q</span>
-                                                    <p>{guideline.starter}</p>
-                                                  </div>
-                                                ) : null}
-                                                {guideline.master ? (
-                                                  <div className="lpb-question-item">
-                                                    <span className="lpb-q-badge master">Master Q</span>
-                                                    <p>{guideline.master}</p>
-                                                  </div>
-                                                ) : null}
-                                              </div>
-                                            ) : (
-                                              <div className="lpb-question-pairs">
-                                                <div className="lpb-question-item">
-                                                  <span className="lpb-q-badge starter">Practice Q</span>
-                                                  <p>Guided problem-solving exercises for {obj.text}.</p>
-                                                </div>
-                                              </div>
-                                            )}
-                                          </div>
-                                        )
-                                      })}
+                              {item.kind === "teaching" ? (
+                                <ClassLessonGuide
+                                  item={item}
+                                  contentGenerating={contentGenerating}
+                                  contentSource={contentSource}
+                                />
+                              ) : (
+                                <div className="lpb-lesson-plan-card">
+                                  <div className="lpb-lesson-header">
+                                    <BookOpen size={18} />
+                                    <div>
+                                      <h4>{KIND_COPY[item.kind].label}</h4>
+                                      <p>{item.reason}</p>
                                     </div>
                                   </div>
-                                ) : null}
-                              </div>
+                                </div>
+                              )}
                             </div>
                           ) : null}
                         </article>
@@ -1854,8 +1904,8 @@ export default function LearningPlanBuilderPage() {
                               <div key={item.id} className="lpb-next2weeks-card">
                                 <span className="lpb-next2weeks-num">Class {idx + 1}</span>
                                 <div style={{ flex: 1 }}>
-                                  <h4>{item.title}</h4>
-                                  <p>{item.subtitle}</p>
+                                  <h4>{planItemPrimaryLabel(item)}</h4>
+                                  <p>{planItemSecondaryLabel(item)}</p>
                                   {item.learningObjectives.length > 0 ? (
                                     <ul className="lpb-next2weeks-los">
                                       {item.learningObjectives.map((lo) => (
@@ -1876,94 +1926,26 @@ export default function LearningPlanBuilderPage() {
                   </div>
                 )}
               </section>
+
+              {plan.droppedTopics.length > 0 ? (
+                <section className="lpb-dropped-minimal">
+                  <span className="lpb-detail-label">
+                    Not scheduled · {plan.droppedTopics.length}
+                  </span>
+                  <div className="lpb-dropped-chips">
+                    {plan.droppedTopics.map((topic) => (
+                      <span
+                        key={topic.topicId}
+                        className={`lpb-dropped-chip ${topic.priority}`}
+                        title={topic.reason}
+                      >
+                        {topic.topicName}
+                      </span>
+                    ))}
+                  </div>
+                </section>
+              ) : null}
             </div>
-
-            <aside className="lpb-plan-side">
-              <section className="lpb-side-card lpb-side-capacity">
-                <div className="lpb-side-card-head">
-                  <div>
-                    <span className="lpb-kicker">Plan capacity</span>
-                    <h3>
-                      {plan.capacity.total} / {plan.capacity.available}
-                    </h3>
-                  </div>
-                  <Gauge size={22} />
-                </div>
-                <div className="lpb-capacity-bar">
-                  <span
-                    className={plan.capacity.difference > 0 ? "over" : ""}
-                    style={{
-                      width: `${Math.min(
-                        100,
-                        (plan.capacity.total / plan.capacity.available) * 100
-                      )}%`,
-                    }}
-                  />
-                </div>
-                <div className="lpb-side-capacity-grid">
-                  <span>
-                    <b>{plan.capacity.teaching}</b> teaching
-                  </span>
-                  <span>
-                    <b>{plan.capacity.structural}</b> structural
-                  </span>
-                  <span>
-                    <b>{plan.capacity.available}</b> available
-                  </span>
-                  <span className={plan.capacity.difference > 0 ? "over" : ""}>
-                    <b>{Math.abs(plan.capacity.difference)}</b>{" "}
-                    {plan.capacity.difference > 0 ? "over" : "free"}
-                  </span>
-                </div>
-              </section>
-
-              <section className="lpb-side-card">
-                <div className="lpb-side-card-head">
-                  <div>
-                    <span className="lpb-kicker">Not scheduled</span>
-                    <h3>{plan.droppedTopics.length} topics</h3>
-                  </div>
-                  <CircleAlert size={21} />
-                </div>
-                <div className="lpb-dropped-list">
-                  {plan.droppedTopics.length > 0 ? (
-                    plan.droppedTopics.map((topic) => (
-                      <div key={topic.topicId}>
-                        <span
-                          className={`lpb-priority-dot ${topic.priority}`}
-                        />
-                        <div>
-                          <strong>{topic.topicName}</strong>
-                          <p>{topic.reason}</p>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="lpb-side-empty">
-                      Every available curriculum topic is included.
-                    </p>
-                  )}
-                </div>
-              </section>
-
-              <section className="lpb-side-card">
-                <div className="lpb-side-card-head">
-                  <div>
-                    <span className="lpb-kicker">Plan logic</span>
-                    <h3>Why this plan?</h3>
-                  </div>
-                  <Lightbulb size={21} />
-                </div>
-                <ol className="lpb-logic-list">
-                  {plan.explanations.map((explanation, index) => (
-                    <li key={explanation}>
-                      <span>{index + 1}</span>
-                      <p>{explanation}</p>
-                    </li>
-                  ))}
-                </ol>
-              </section>
-            </aside>
           </div>
         </main>
       )}
@@ -2323,7 +2305,7 @@ export default function LearningPlanBuilderPage() {
                 <p>
                   {pendingUpdate
                     ? "Nothing changes until the teacher approves this version."
-                    : nextTeachingItem.title}
+                    : planItemPrimaryLabel(nextTeachingItem)}
                 </p>
               </div>
               <button

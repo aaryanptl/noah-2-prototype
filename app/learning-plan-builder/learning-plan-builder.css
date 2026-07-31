@@ -1159,7 +1159,7 @@
   box-shadow: 0 8px 24px rgba(58, 92, 204, 0.08);
 }
 
-.lpb-planning-mode.ai.active {
+.lpb-planning-mode.evidence.active {
   background: linear-gradient(
     135deg,
     rgba(124, 92, 252, 0.07),
@@ -1194,7 +1194,7 @@
   border-radius: 11px;
 }
 
-.lpb-mode-icon.ai {
+.lpb-mode-icon.evidence {
   color: var(--purple);
   background: rgba(124, 92, 252, 0.1);
 }
@@ -1219,7 +1219,7 @@
   white-space: nowrap;
 }
 
-.lpb-ai-scope-summary {
+.lpb-evidence-scope-summary {
   margin-bottom: 14px;
   padding: 14px 16px;
   background: linear-gradient(
@@ -1231,14 +1231,14 @@
   border-radius: 13px;
 }
 
-.lpb-ai-summary-head {
+.lpb-evidence-summary-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
 }
 
-.lpb-ai-summary-head > span {
+.lpb-evidence-summary-head > span {
   display: inline-flex;
   align-items: center;
   gap: 7px;
@@ -1247,23 +1247,23 @@
   font-weight: 800;
 }
 
-.lpb-ai-summary-head > strong {
+.lpb-evidence-summary-head > strong {
   font-size: 0.72rem;
 }
 
-.lpb-ai-scope-summary > p {
+.lpb-evidence-scope-summary > p {
   margin: 7px 0 10px;
   color: var(--ink-soft);
   font-size: 0.68rem;
 }
 
-.lpb-ai-evidence {
+.lpb-evidence-chips {
   display: flex;
   flex-wrap: wrap;
   gap: 7px;
 }
 
-.lpb-ai-evidence span {
+.lpb-evidence-chips span {
   padding: 5px 8px;
   display: inline-flex;
   align-items: center;
@@ -1798,6 +1798,312 @@
 /* Generated plan */
 .lpb-plan-shell {
   animation: lpb-rise 0.48s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ── Minimal final plan view ─────────────────────────────────── */
+.lpb-plan-minimal {
+  max-width: 880px;
+  margin: 0 auto;
+}
+
+.lpb-plan-hero-minimal {
+  margin-bottom: 14px !important;
+  gap: 16px !important;
+}
+
+.lpb-plan-hero-minimal .lpb-avatar {
+  width: 40px;
+  height: 40px;
+  font-size: 0.78rem;
+}
+
+.lpb-plan-hero-minimal h1 {
+  margin: 0 !important;
+  font-size: 1.35rem !important;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.lpb-plan-hero-minimal p {
+  margin-top: 3px !important;
+  font-size: 0.72rem !important;
+  color: var(--ink-muted) !important;
+}
+
+.lpb-plan-hero-minimal .lpb-button {
+  padding: 7px 12px;
+  font-size: 0.72rem;
+}
+
+.lpb-status-strip {
+  margin-bottom: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.lpb-status-chip {
+  padding: 5px 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: white;
+  color: var(--ink-soft);
+  font-size: 0.68rem;
+  font-weight: 650;
+  line-height: 1.2;
+}
+
+button.lpb-status-chip {
+  cursor: pointer;
+  font: inherit;
+}
+
+.lpb-status-chip.generating {
+  color: #5b45b5;
+  background: rgba(124, 92, 252, 0.08);
+  border-color: rgba(124, 92, 252, 0.16);
+}
+
+.lpb-status-chip.warning {
+  color: #8d4612;
+  background: #fff7e9;
+  border-color: rgba(255, 154, 60, 0.28);
+}
+
+.lpb-status-chip.muted {
+  color: var(--ink-muted);
+  background: var(--surface-muted);
+}
+
+.lpb-plan-grid-minimal {
+  grid-template-columns: 1fr !important;
+  gap: 12px !important;
+}
+
+.lpb-plan-board-minimal {
+  border-radius: 14px !important;
+  box-shadow: none !important;
+  border-color: var(--line) !important;
+}
+
+.lpb-plan-board-minimal .lpb-plan-board-head {
+  padding: 14px 16px 10px;
+  align-items: flex-end;
+}
+
+.lpb-plan-board-minimal .lpb-plan-board-head h2 {
+  margin: 0;
+  font-size: 1rem;
+  letter-spacing: -0.02em;
+}
+
+.lpb-board-meta {
+  margin: 3px 0 0 !important;
+  color: var(--ink-muted);
+  font-size: 0.68rem;
+}
+
+.lpb-plan-board-minimal .lpb-view-tabs {
+  gap: 2px;
+  padding: 3px;
+  background: var(--surface-muted);
+  border-radius: 9px;
+}
+
+.lpb-plan-board-minimal .lpb-view-tabs button {
+  padding: 5px 10px;
+  gap: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  font-size: 0.68rem;
+}
+
+.lpb-plan-board-minimal .lpb-view-tabs button.active {
+  background: white;
+  box-shadow: 0 1px 2px rgba(20, 30, 40, 0.06);
+}
+
+.lpb-plan-board-minimal .lpb-class-summary {
+  grid-template-columns: 34px minmax(0, 1fr) auto auto;
+  padding: 10px 14px;
+  gap: 10px;
+}
+
+.lpb-plan-board-minimal .lpb-class-number {
+  width: 28px;
+  height: 28px;
+  font-size: 0.62rem;
+}
+
+.lpb-plan-board-minimal .lpb-class-title strong {
+  font-size: 0.82rem;
+}
+
+.lpb-plan-board-minimal .lpb-class-title small {
+  font-size: 0.64rem;
+}
+
+.lpb-plan-board-minimal .lpb-status-badge {
+  font-size: 0.58rem;
+  padding: 3px 7px;
+}
+
+.lpb-plan-board-minimal .lpb-class-detail {
+  padding: 0 12px 12px 48px;
+  background: #fbfaf8;
+}
+
+.lpb-lesson-minimal {
+  padding: 12px 14px !important;
+  border-radius: 10px !important;
+  border: 1px solid var(--line) !important;
+  background: white !important;
+  box-shadow: none !important;
+  gap: 12px !important;
+  display: grid;
+}
+
+.lpb-lesson-minimal .lpb-lesson-goal {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  color: var(--ink);
+  font-size: 0.8rem;
+  font-weight: 650;
+  line-height: 1.4;
+}
+
+.lpb-lesson-block {
+  display: grid;
+  gap: 6px;
+}
+
+.lpb-lesson-minimal .lpb-detail-label {
+  margin: 0;
+  font-size: 0.62rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+
+.lpb-lesson-minimal .lpb-lesson-bullets {
+  margin: 0;
+  padding-left: 15px;
+}
+
+.lpb-lesson-minimal .lpb-lesson-bullets li,
+.lpb-lesson-minimal .lpb-rationale-text,
+.lpb-lesson-minimal .lpb-muted-text {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 0.72rem;
+  line-height: 1.45;
+}
+
+.lpb-lesson-minimal .lpb-question-pairs-flat {
+  display: grid;
+  gap: 6px;
+}
+
+.lpb-lesson-minimal .lpb-question-item {
+  padding: 7px 9px;
+  border-radius: 8px;
+  background: #f7f6f3;
+  border: 1px solid var(--line);
+}
+
+.lpb-lesson-minimal .lpb-question-item p {
+  font-size: 0.72rem;
+}
+
+.lpb-lesson-why {
+  margin: 0;
+  padding-top: 8px;
+  border-top: 1px dashed var(--line);
+  color: var(--ink-muted);
+  font-size: 0.68rem;
+  line-height: 1.4;
+}
+
+.lpb-dropped-minimal {
+  margin-top: 4px;
+  padding: 12px 2px 4px;
+}
+
+.lpb-dropped-chips {
+  margin-top: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.lpb-dropped-chip {
+  padding: 4px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: white;
+  color: var(--ink-soft);
+  font-size: 0.66rem;
+  font-weight: 650;
+}
+
+.lpb-dropped-chip.high {
+  border-color: rgba(244, 104, 83, 0.25);
+  color: #a8483b;
+  background: rgba(244, 104, 83, 0.06);
+}
+
+.lpb-dropped-chip.medium {
+  border-color: rgba(255, 154, 60, 0.28);
+  color: #8d4612;
+  background: #fff7e9;
+}
+
+.lpb-dropped-chip.low {
+  color: var(--ink-muted);
+  background: var(--surface-muted);
+}
+
+.lpb-plan-board-minimal .lpb-allocation-grid {
+  padding: 12px;
+  grid-template-columns: 1fr;
+}
+
+.lpb-plan-board-minimal .lpb-allocation-card {
+  min-height: 0;
+  padding: 12px 14px;
+  border-radius: 12px;
+}
+
+.lpb-plan-board-minimal .lpb-next2weeks-header h3 {
+  font-size: 0.95rem;
+}
+
+.lpb-plan-board-minimal .lpb-next2weeks-card {
+  padding: 10px 12px;
+}
+
+@media (max-width: 720px) {
+  .lpb-plan-hero-minimal {
+    flex-direction: column;
+    align-items: flex-start !important;
+  }
+
+  .lpb-plan-board-minimal .lpb-plan-board-head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .lpb-plan-board-minimal .lpb-class-detail {
+    padding-left: 12px;
+  }
 }
 
 .lpb-plan-hero {
@@ -2363,6 +2669,61 @@
   display: flex;
   gap: 7px;
   border-top: 1px dashed var(--line-strong);
+}
+
+.lpb-content-source {
+  display: inline-block;
+  margin-top: 6px;
+  padding: 3px 8px;
+  border-radius: 50px;
+  font-size: 0.6rem;
+  font-weight: 700;
+}
+
+.lpb-content-source.ai {
+  color: #4c4089;
+  background: rgba(124, 92, 252, 0.12);
+}
+
+.lpb-content-source.fallback {
+  color: var(--ink-soft);
+  background: var(--surface-muted);
+}
+
+.lpb-content-source.generating {
+  color: #1f6b8a;
+  background: rgba(56, 163, 209, 0.12);
+}
+
+.lpb-content-generating-banner {
+  border-color: rgba(124, 92, 252, 0.22) !important;
+  background: rgba(124, 92, 252, 0.06) !important;
+}
+
+.lpb-content-generating-banner span {
+  color: #6b4fd8;
+}
+
+.lpb-lesson-activity-meta {
+  margin-top: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.lpb-lesson-activity-meta span {
+  padding: 4px 8px;
+  color: var(--ink-soft);
+  background: var(--surface-muted);
+  border-radius: 50px;
+  font-size: 0.6rem;
+  font-weight: 700;
+}
+
+.lpb-activity-round {
+  color: var(--ink-muted);
+  font-style: normal;
+  font-size: 0.61rem;
 }
 
 .lpb-assigned-questions-box {
@@ -3610,7 +3971,7 @@
     display: none;
   }
 
-  .lpb-ai-summary-head {
+  .lpb-evidence-summary-head {
     align-items: flex-start;
     flex-direction: column;
   }

@@ -109,6 +109,29 @@ export interface PlanTopicAllocation {
   manuallyEdited: boolean
 }
 
+/** One practice/question slot assigned to a class. */
+export interface ClassActivity {
+  id: string
+  level: "starter" | "master"
+  label: string
+  objectiveId: string
+  objectiveSubtopic: string
+  objectiveText: string
+  prompt: string
+  round: number
+}
+
+/** AI (or fallback) teaching prose for a single class. */
+export interface ClassTeachingContent {
+  goal: string
+  teachingPoints: string[]
+  successCriteria: string
+  practice: string
+  /** When set, replaces the structural plan reason in the lesson guide. */
+  rationale?: string
+  source: "ai" | "fallback"
+}
+
 export interface PlanItem {
   id: string
   classNumber: number
@@ -123,6 +146,10 @@ export interface PlanItem {
   easyActivities: number
   practiceActivities: number
   reason: string
+  /** Expanded starter/master activity rows for this class. */
+  activities?: ClassActivity[]
+  /** Mentor-facing teaching guide prose (AI or fallback). */
+  teachingContent?: ClassTeachingContent
 }
 
 export interface DroppedTopic {

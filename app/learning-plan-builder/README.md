@@ -17,9 +17,9 @@ The Learning Plan Builder creates and continuously updates a class-by-class Grad
 2. Review available student evidence.
 3. Choose the topic scope:
    - **Plan manually**
-   - **Plan with AI**
+   - **Plan from evidence** (rules over placement, mastery, capacity)
 4. Review capacity, structural classes and topic allocations.
-5. Build the class-by-class learning plan.
+5. Build the class-by-class learning plan (AI writes mentor teaching guides).
 
 ### Planning rules
 
@@ -27,7 +27,7 @@ The Learning Plan Builder creates and continuously updates a class-by-class Grad
 - Strong performance can reduce a High topic’s classes and activities, but never remove it.
 - Medium topics are added after High topics when capacity remains.
 - Low topics are added last.
-- AI can suggest skipping only Medium or Low topics.
+- Evidence rules can recommend skipping only Medium or Low topics.
 - Prerequisites are placed before dependent topics.
 - Checkpoints, revision classes, practice classes and PTMs count toward capacity.
 - Over-capacity plans remain editable but show a persistent warning.

@@ -16,7 +16,8 @@ export async function POST(request: Request) {
       )
     }
 
-    const availableClasses = student.classesRemaining || 40
+    // Full-year package from Grade 5 workbook: 66 teaching + 13 structural = 79
+    const availableClasses = student.classesRemaining || 79
     const highPriorityTopics = topics.filter((t: any) => t.priority === "high")
     const totalIdealHighClasses = highPriorityTopics.reduce(
       (sum: number, t: any) => sum + (t.idealClasses || 5),

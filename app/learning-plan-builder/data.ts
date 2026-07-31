@@ -557,7 +557,8 @@ export const demoStudents: DemoStudent[] = [
     initials: "MT",
     grade: 5,
     region: "US",
-    classesRemaining: 40,
+    // Full-year package from workbook: 66 teaching + 13 structural = 79
+    classesRemaining: 79,
     placementStatus: "completed",
     placementResults: [
       { topicId: 316, score: 30 },
@@ -576,7 +577,7 @@ export const demoStudents: DemoStudent[] = [
     initials: "EC",
     grade: 5,
     region: "US",
-    classesRemaining: 40,
+    classesRemaining: 79,
     placementStatus: "not-taken",
     placementResults: [],
     completedTopics: [],
@@ -633,7 +634,7 @@ export const demoStudents: DemoStudent[] = [
     initials: "SM",
     grade: 5,
     region: "US",
-    classesRemaining: 40,
+    classesRemaining: 79,
     placementStatus: "not-taken",
     placementResults: [],
     completedTopics: [],

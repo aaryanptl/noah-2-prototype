@@ -70,15 +70,39 @@ function getPrerequisiteChain(
   return [...new Set(chain)]
 }
 
+/**
+ * Structural (non-teaching) classes from the Grade 5 workbook:
+ *   Full year = 66 teaching + 13 structural = 79 classes
+ *   Structural breakdown: 5 checkpoints + 5 RDP + 3 PTM
+ *
+ * Scales with selected topic count / package size; never exceeds the full-year
+ * structural budget. When classes are tight, structural scales down before
+ * High-priority teaching is cut (minimum 2 checkpoints when >1 topic).
+ */
 function estimateStructuralCounts(
   topicCount: number,
   classesRemaining: number
 ) {
+  if (topicCount === 0) {
+    return { checkpoints: 0, rdps: 0, ptms: 0, total: 0 }
+  }
+
+  // Workbook full-year anchors: 13 topics → 5 CP, 79-class package → 3 PTM
+  const proportionalCheckpoints = Math.ceil((topicCount / 13) * 5)
+  const checkpoints = clamp(
+    proportionalCheckpoints,
+    topicCount > 1 ? 2 : 1,
+    5
+  )
+  const rdps = checkpoints
+  const proportionalPtms = Math.ceil((classesRemaining / 79) * 3)
+  const ptms = clamp(proportionalPtms, 1, 3)
+
   return {
-    checkpoints: 0,
-    rdps: 0,
-    ptms: 0,
-    total: 0,
+    checkpoints,
+    rdps,
+    ptms,
+    total: checkpoints + rdps + ptms,
   }
 }
 
@@ -187,9 +211,6 @@ function adjustTopic(
     activities = Math.max(0, manual.activities)
   }
 
-  const easyActivities = Math.round(activities * (easyPercent / 100))
-  const practiceActivities = activities - easyActivities
-
   if (manual) {
     reasons.push(
       "A teacher override has been applied and locked into this version."
@@ -204,6 +225,10 @@ function adjustTopic(
       "Activity count adjusted per Rule G1 (max 7 questions/week cap for Grade 5)."
     )
   }
+
+  // Recompute split after any activity cap so class rows stay consistent.
+  const easyActivities = Math.round(activities * (easyPercent / 100))
+  const practiceActivities = activities - easyActivities
 
   return {
     topicId: topic.id,
@@ -586,7 +611,7 @@ export function getAiAssistedTopicSuggestion(
         topicId: topic.id,
         decision: "skip",
         evidence: "placement",
-        reason: `Placement score ${exactPlacement.score}% indicates secure readiness, so AI suggests skipping this topic.`,
+        reason: `Placement score ${exactPlacement.score}% indicates secure readiness, so this topic is recommended for skip.`,
       })
       continue
     }
@@ -613,7 +638,7 @@ export function getAiAssistedTopicSuggestion(
         topicId: topic.id,
         decision: "skip",
         evidence: "mastery",
-        reason: `${secureMasterEvidence.length} Master-level objectives are secure, so AI suggests skipping this topic.`,
+        reason: `${secureMasterEvidence.length} Master-level objectives are secure, so this topic is recommended for skip.`,
       })
       continue
     }
