@@ -154,11 +154,14 @@ function adjustTopic(
     student.currentTopicId === topic.id &&
     student.currentTopicClassAdjustment
   ) {
-    classes = Math.max(1, classes + student.currentTopicClassAdjustment)
+    // Spec Rule: Auto-increases are capped at max +2 classes to prevent major schedule disruption
+    const rawAdjustment = student.currentTopicClassAdjustment
+    const cappedAdjustment = rawAdjustment > 0 ? Math.min(2, rawAdjustment) : rawAdjustment
+    classes = Math.max(1, classes + cappedAdjustment)
     reasons.push(
-      student.currentTopicClassAdjustment < 0
+      cappedAdjustment < 0
         ? "Current progress is strong at Starter level, so one class is returned to the pool."
-        : "Current evidence shows more time is needed, so reinforcement is added."
+        : "Current evidence shows more time is needed, so reinforcement is added (capped at max +2 classes per spec)."
     )
   }
 
@@ -849,11 +852,14 @@ export function buildLearningPlan({
     )
   }
 
+  const hasManualEdits = Object.keys(manualAdjustments).length > 0
+
   return {
     id: `plan-${student.id}-v${version}`,
     version,
     studentId: student.id,
     generatedAt: "Prototype data",
+    lastModificationType: hasManualEdits ? "manual" : "auto",
     allocations: orderedAllocations,
     items: buildClassSequence(orderedAllocations, structural),
     droppedTopics,

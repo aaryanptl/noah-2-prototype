@@ -214,7 +214,7 @@ export default function LearningPlanBuilderPage() {
     {}
   )
   const [plan, setPlan] = useState<GeneratedPlan | null>(null)
-  const [planTab, setPlanTab] = useState<"classes" | "topics">("classes")
+  const [planTab, setPlanTab] = useState<"classes" | "topics" | "next2weeks">("classes")
   const [expandedItemId, setExpandedItemId] = useState<string | null>(null)
   const [detailTopicId, setDetailTopicId] = useState<number | null>(null)
   const [editingTopicId, setEditingTopicId] = useState<number | null>(null)
@@ -371,8 +371,25 @@ export default function LearningPlanBuilderPage() {
   }
 
   const applyAiPlan = () => {
-    setSelectedTopicIds(aiSuggestion.selectedTopicIds)
     setScopeMode("ai")
+    setAiLoading(true)
+    fetch("/api/learning-plan/ai-plan-generator", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        student,
+        topics: curriculumTopics,
+      }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.strategy) {
+          setAiParentExplanation(data.strategy)
+        }
+        setSelectedTopicIds(aiSuggestion.selectedTopicIds)
+      })
+      .catch((err) => console.error("AI Plan error:", err))
+      .finally(() => setAiLoading(false))
   }
 
   const unselectAiSkippableTopics = () => {
@@ -1545,6 +1562,14 @@ export default function LearningPlanBuilderPage() {
                       <Layers3 size={15} />
                       Topics
                     </button>
+                    <button
+                      type="button"
+                      className={planTab === "next2weeks" ? "active" : ""}
+                      onClick={() => setPlanTab("next2weeks")}
+                    >
+                      <Clock3 size={15} />
+                      Next 2 Weeks
+                    </button>
                   </div>
                 </header>
 
@@ -1713,7 +1738,7 @@ export default function LearningPlanBuilderPage() {
                       )
                     })}
                   </div>
-                ) : (
+                ) : planTab === "topics" ? (
                   <div className="lpb-allocation-grid">
                     {plan.allocations.map((allocation, index) => (
                       <article
@@ -1773,6 +1798,47 @@ export default function LearningPlanBuilderPage() {
                         </div>
                       </article>
                     ))}
+                  </div>
+                ) : (
+                  <div className="lpb-next2weeks-view">
+                    <div className="lpb-next2weeks-header">
+                      <h3>Descriptive Plan for Next 2 Weeks</h3>
+                      <p>Focus topics, learning objectives, and upcoming test schedule for the next 4 classes.</p>
+                    </div>
+
+                    {plan.allocations[0] && plan.allocations[0].classes <= 2 ? (
+                      <div className="lpb-test-warning-banner">
+                        <AlertTriangle size={18} />
+                        <div>
+                          <strong>Topic Test Scheduled in Next 2 Weeks</strong>
+                          <p>
+                            Less than 2 classes remaining for topic &ldquo;{plan.allocations[0].topicName}&rdquo;. A topic test will be conducted in the next 2 weeks to evaluate mastery before transitioning.
+                          </p>
+                        </div>
+                      </div>
+                    ) : null}
+
+                    <div className="lpb-next2weeks-list">
+                      {plan.items.slice(0, 4).map((item, idx) => (
+                        <div key={item.id} className="lpb-next2weeks-card">
+                          <span className="lpb-next2weeks-num">Class {idx + 1}</span>
+                          <div style={{ flex: 1 }}>
+                            <h4>{item.title}</h4>
+                            <p>{item.subtitle}</p>
+                            {item.learningObjectives.length > 0 ? (
+                              <ul className="lpb-next2weeks-los">
+                                {item.learningObjectives.map((lo) => (
+                                  <li key={lo.id}>{lo.text}</li>
+                                ))}
+                              </ul>
+                            ) : null}
+                          </div>
+                          <span className="lpb-next2weeks-badge">
+                            {item.easyActivities + item.practiceActivities} Questions
+                          </span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
               </section>

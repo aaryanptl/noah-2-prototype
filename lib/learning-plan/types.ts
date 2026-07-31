@@ -146,11 +146,14 @@ export interface PlanCapacity {
   difference: number
 }
 
+export type ModificationType = "manual" | "class" | "auto"
+
 export interface GeneratedPlan {
   id: string
   version: number
   studentId: string
   generatedAt: string
+  lastModificationType: ModificationType
   allocations: PlanTopicAllocation[]
   items: PlanItem[]
   droppedTopics: DroppedTopic[]

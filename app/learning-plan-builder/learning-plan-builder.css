@@ -2379,6 +2379,115 @@
   border: 1px solid #f8bf4b;
 }
 
+.lpb-next2weeks-view {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.lpb-next2weeks-header h3 {
+  margin: 0 0 4px;
+  font-family: "Bricolage Grotesque", sans-serif;
+  font-size: 1.25rem;
+  color: #1f5855;
+}
+
+.lpb-next2weeks-header p {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 0.85rem;
+}
+
+.lpb-test-warning-banner {
+  padding: 14px 18px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: #fefce8;
+  border: 1.5px solid #f8bf4b;
+  border-radius: 14px;
+  color: #854d0e;
+}
+
+.lpb-test-warning-banner svg {
+  color: #d97706;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.lpb-test-warning-banner strong {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: #92400e;
+  margin-bottom: 2px;
+}
+
+.lpb-test-warning-banner p {
+  margin: 0;
+  font-size: 0.84rem;
+  line-height: 1.45;
+  color: #78350f;
+}
+
+.lpb-next2weeks-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.lpb-next2weeks-card {
+  padding: 14px 18px;
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  background: #ffffff;
+  border: 1px solid #e8e5de;
+  border-radius: 12px;
+}
+
+.lpb-next2weeks-num {
+  padding: 4px 10px;
+  background: #1f5855;
+  color: #ffffff;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.lpb-next2weeks-card h4 {
+  margin: 0 0 2px;
+  font-size: 0.98rem;
+  color: #1f5855;
+}
+
+.lpb-next2weeks-card p {
+  margin: 0 0 8px;
+  color: #4b5563;
+  font-size: 0.82rem;
+}
+
+.lpb-next2weeks-los {
+  margin: 0;
+  padding-left: 18px;
+  color: #374151;
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+.lpb-next2weeks-badge {
+  padding: 5px 12px;
+  background: #e8f7f5;
+  color: #1f5855;
+  border: 1px solid #2ec4b6;
+  border-radius: 50px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
 .lpb-detail-actions button,
 .lpb-allocation-actions button {
   padding: 6px 9px;
