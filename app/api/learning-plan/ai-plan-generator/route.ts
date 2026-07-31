@@ -54,7 +54,7 @@ ${JSON.stringify(
 )}
 
 Instructions:
-1. Provide a 2-3 sentence AI learning strategy summary explaining how topics are scoped for ${student.name} based on capacity (${student.classesRemaining} classes) and evidence.
+1. Provide a direct 1-2 sentence AI learning strategy summary explaining topic sequence and capacity allocation for ${student.name}. DO NOT use greetings or conversational filler.
 2. For each topic, indicate if it should be included, skipped (due to prior mastery), or deferred (due to capacity).
 Return ONLY a valid JSON object in this exact format:
 {
@@ -76,7 +76,7 @@ Return ONLY a valid JSON object in this exact format:
         {
           role: "system",
           content:
-            "You are a friendly, expert AI Education Assistant for Noah 2.0. Always return strictly valid JSON.",
+            "You are a concise AI curriculum engine. Output direct, factual strategy JSON without greetings or pleasantries.",
         },
         { role: "user", content: prompt },
       ],

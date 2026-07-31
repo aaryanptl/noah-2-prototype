@@ -16,27 +16,34 @@ export async function POST(request: Request) {
       )
     }
 
+    const hasPrereqs = prerequisites && prerequisites.length > 0
+    const fallbackText = hasPrereqs
+      ? `Starting with ${requestedTopicName} as requested. Prerequisites (${prerequisites.join(", ")}) are scheduled first as 3-class compressed refreshers.`
+      : `Starting directly with ${requestedTopicName} as requested, followed by the remaining Grade 5 curriculum sequence.`
+
     const apiKey = process.env.OPENAI_API_KEY
     if (!apiKey) {
       return NextResponse.json({
         requestedTopicName,
-        hasPrerequisites: prerequisites && prerequisites.length > 0,
+        hasPrerequisites: hasPrereqs,
         prerequisiteNames: prerequisites || [],
-        aiExplanation: `To ensure ${studentName || "the student"} succeeds in ${requestedTopicName}, foundational prerequisites (${(prerequisites || []).join(", ")}) are scheduled first as compressed refreshers before starting ${requestedTopicName}.`,
+        aiExplanation: fallbackText,
         provider: "fallback-local",
       })
     }
 
     const openai = new OpenAI({ apiKey })
     const prompt = `
-You are an expert AI Curriculum Strategist for Grade 5 Mathematics.
-A parent has requested that student "${studentName || "the student"}" start their learning plan with the topic "${requestedTopicName}".
-However, the student has unmet prerequisite topics: ${JSON.stringify(prerequisites || [])}.
+You are a direct, concise AI Curriculum Engine for Grade 5 Mathematics.
+Generate a single, direct 1-2 sentence curriculum note for student "${studentName || "the student"}".
+Requested starting topic: "${requestedTopicName}".
+Prerequisite topics: ${JSON.stringify(prerequisites || [])}.
 
-Provide a clear, professional 2-3 sentence AI curriculum explanation to the parent and teacher explaining:
-1. Acknowledging the requested starting topic "${requestedTopicName}".
-2. Explaining why prerequisite topics (${(prerequisites || []).join(", ")}) must be covered first as compressed refreshers.
-3. Reassuring that ${requestedTopicName} will start immediately after these quick refreshers, followed by the rest of the curriculum sequence.
+CRITICAL RULES:
+- DO NOT include any greetings like "Dear Parent", "Dear Teacher", or "Thank you for your request".
+- DO NOT include conversational filler like "Rest assured", "We are pleased to inform", or "To ensure success".
+- Be 100% direct and factual. State what topic starts first and what prerequisites (if any) are scheduled before it.
+- Keep the response strictly under 30 words.
 `
 
     const response = await openai.chat.completions.create({
@@ -44,18 +51,16 @@ Provide a clear, professional 2-3 sentence AI curriculum explanation to the pare
       messages: [
         {
           role: "system",
-          content:
-            "You are a friendly, highly competent AI Education Assistant for Noah 2.0.",
+          content: "You are a concise AI engine. Output only direct, clear curriculum facts without greetings or pleasantries.",
         },
         { role: "user", content: prompt },
       ],
-      temperature: 0.3,
-      max_tokens: 250,
+      temperature: 0.1,
+      max_tokens: 100,
     })
 
     const aiExplanation =
-      response.choices[0]?.message?.content?.trim() ||
-      `Prerequisites (${(prerequisites || []).join(", ")}) are scheduled first as compressed refreshers before starting ${requestedTopicName}.`
+      response.choices[0]?.message?.content?.trim() || fallbackText
 
     return NextResponse.json({
       requestedTopicName,
