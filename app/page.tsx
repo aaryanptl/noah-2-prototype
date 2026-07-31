@@ -5,6 +5,7 @@ import {
   GraduationCap,
   LibraryBig,
   Mic,
+  SlidersHorizontal,
   Stethoscope,
   Users,
 } from "lucide-react";
@@ -19,6 +20,15 @@ const ASSESSMENT_OPTIONS = [
       "Practise stories, poems, and short speeches with a friendly realtime voice coach.",
     icon: Mic,
     accent: "#5B7CFA",
+  },
+  {
+    href: "/learning-plan-builder",
+    title: "Learning Plan Builder",
+    tagline: "Build & Adjust Plans",
+    description:
+      "Turn curriculum priorities and student evidence into a transparent, class-by-class learning plan.",
+    icon: SlidersHorizontal,
+    accent: "#7C5CFC",
   },
   {
     href: "/teacher/syllabus",
