@@ -60,6 +60,7 @@ export interface DemoStudent {
   parentRequestedTopicId?: number
   previousPlanLabel?: string
   currentTopicClassAdjustment?: number
+  classesPerWeek?: number
 }
 
 export interface AiTopicRecommendation {

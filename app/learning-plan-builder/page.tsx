@@ -1801,44 +1801,54 @@ export default function LearningPlanBuilderPage() {
                   </div>
                 ) : (
                   <div className="lpb-next2weeks-view">
-                    <div className="lpb-next2weeks-header">
-                      <h3>Descriptive Plan for Next 2 Weeks</h3>
-                      <p>Focus topics, learning objectives, and upcoming test schedule for the next 4 classes.</p>
-                    </div>
-
-                    {plan.allocations[0] && plan.allocations[0].classes <= 2 ? (
-                      <div className="lpb-test-warning-banner">
-                        <AlertTriangle size={18} />
-                        <div>
-                          <strong>Topic Test Scheduled in Next 2 Weeks</strong>
-                          <p>
-                            Less than 2 classes remaining for topic &ldquo;{plan.allocations[0].topicName}&rdquo;. A topic test will be conducted in the next 2 weeks to evaluate mastery before transitioning.
-                          </p>
-                        </div>
-                      </div>
-                    ) : null}
-
-                    <div className="lpb-next2weeks-list">
-                      {plan.items.slice(0, 4).map((item, idx) => (
-                        <div key={item.id} className="lpb-next2weeks-card">
-                          <span className="lpb-next2weeks-num">Class {idx + 1}</span>
-                          <div style={{ flex: 1 }}>
-                            <h4>{item.title}</h4>
-                            <p>{item.subtitle}</p>
-                            {item.learningObjectives.length > 0 ? (
-                              <ul className="lpb-next2weeks-los">
-                                {item.learningObjectives.map((lo) => (
-                                  <li key={lo.id}>{lo.text}</li>
-                                ))}
-                              </ul>
-                            ) : null}
+                    {(() => {
+                      const classesPerWeek = student.classesPerWeek ?? 2
+                      const twoWeekClassCount = classesPerWeek * 2
+                      return (
+                        <>
+                          <div className="lpb-next2weeks-header">
+                            <h3>Descriptive Plan for Next 2 Weeks</h3>
+                            <p>
+                              Based on {student.name}&rsquo;s schedule of {classesPerWeek} classes/week ({twoWeekClassCount} classes over 2 weeks).
+                            </p>
                           </div>
-                          <span className="lpb-next2weeks-badge">
-                            {item.easyActivities + item.practiceActivities} Questions
-                          </span>
-                        </div>
-                      ))}
-                    </div>
+
+                          {plan.allocations[0] && plan.allocations[0].classes <= 2 ? (
+                            <div className="lpb-test-warning-banner">
+                              <AlertTriangle size={18} />
+                              <div>
+                                <strong>Topic Test Scheduled in Next 2 Weeks</strong>
+                                <p>
+                                  Less than 2 classes remaining for topic &ldquo;{plan.allocations[0].topicName}&rdquo;. A topic test will be conducted in the next 2 weeks to evaluate mastery before transitioning.
+                                </p>
+                              </div>
+                            </div>
+                          ) : null}
+
+                          <div className="lpb-next2weeks-list">
+                            {plan.items.slice(0, twoWeekClassCount).map((item, idx) => (
+                              <div key={item.id} className="lpb-next2weeks-card">
+                                <span className="lpb-next2weeks-num">Class {idx + 1}</span>
+                                <div style={{ flex: 1 }}>
+                                  <h4>{item.title}</h4>
+                                  <p>{item.subtitle}</p>
+                                  {item.learningObjectives.length > 0 ? (
+                                    <ul className="lpb-next2weeks-los">
+                                      {item.learningObjectives.map((lo) => (
+                                        <li key={lo.id}>{lo.text}</li>
+                                      ))}
+                                    </ul>
+                                  ) : null}
+                                </div>
+                                <span className="lpb-next2weeks-badge">
+                                  {item.easyActivities + item.practiceActivities} Questions
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </>
+                      )
+                    })()}
                   </div>
                 )}
               </section>
