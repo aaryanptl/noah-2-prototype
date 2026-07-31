@@ -232,8 +232,12 @@ export default function LearningPlanBuilderPage() {
   const runAiAnalysisOnChooseScope = () => {
     setSetupStep(3)
 
-    const targetTopicId = student.parentRequestedTopicId || curriculumTopics[0]?.id
-    const targetTopic = topicById.get(targetTopicId)
+    if (!student.parentRequestedTopicId) {
+      setAiParentExplanation(null)
+      return
+    }
+
+    const targetTopic = topicById.get(student.parentRequestedTopicId)
     if (!targetTopic) return
 
     const prereqIds = targetTopic.prerequisiteIds || []
@@ -992,7 +996,7 @@ export default function LearningPlanBuilderPage() {
                     <Sparkles size={16} className="animate-spin" />
                     <span>Analyzing topic scope & prerequisites with OpenAI...</span>
                   </div>
-                ) : aiParentExplanation ? (
+                ) : student.parentRequestedTopicId && aiParentExplanation ? (
                   <div className="lpb-ai-analysis-banner" style={{ marginBottom: "20px" }}>
                     <Sparkles size={16} />
                     <div>
