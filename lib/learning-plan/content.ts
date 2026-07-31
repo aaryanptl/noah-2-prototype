@@ -106,6 +106,15 @@ function formatStudent(student: DemoStudent): string {
           )
           .join("\n  ")
       : "(none)"
+  const questionAttempts =
+    student.questionAttemptEvidence && student.questionAttemptEvidence.length > 0
+      ? student.questionAttemptEvidence
+          .map(
+            (attempt) =>
+              `${attempt.learningObjectiveId}: ${attempt.level} ${attempt.correct}/${attempt.attempted} — ${attempt.note}`
+          )
+          .join("\n  ")
+      : "(none)"
 
   return `STUDENT
 Name: ${student.name}
@@ -113,7 +122,9 @@ Grade: ${student.grade} · Region: ${student.region}
 Classes remaining: ${student.classesRemaining}
 Placement: ${placement}
 Mastery evidence:
-  ${mastery}`
+  ${mastery}
+Question attempt evidence:
+  ${questionAttempts}`
 }
 
 function formatSchedule(items: PlanItem[]): string {
@@ -145,20 +156,57 @@ export function fallbackTeachingContent(
       (objectiveItem) => objectiveItem.id === entry.learningObjectiveId
     )
   )
+  const attempts = (student.questionAttemptEvidence ?? []).filter((entry) =>
+    item.learningObjectives.some(
+      (objectiveItem) => objectiveItem.id === entry.learningObjectiveId
+    )
+  )
+  const starterAttempt = attempts.find((entry) => entry.level === "starter")
+  const masterAttempt = attempts.find((entry) => entry.level === "master")
+  const starterStrongMasterWeak =
+    starterAttempt &&
+    masterAttempt &&
+    starterAttempt.correct / starterAttempt.attempted >= 0.75 &&
+    masterAttempt.correct / masterAttempt.attempted < 0.5
+  const starterWeakMasterStrong =
+    starterAttempt &&
+    masterAttempt &&
+    starterAttempt.correct / starterAttempt.attempted < 0.5 &&
+    masterAttempt.correct / masterAttempt.attempted >= 0.75
+  const teachingPoints = starterStrongMasterWeak
+    ? [
+        `Start from the secure routine: ${starterAttempt.correct}/${starterAttempt.attempted} Starter questions were correct. Ask ${firstName} to name the clue that selects the method before calculating.`,
+        `Model a worked-example pair for ${bare}: one familiar example, then one unfamiliar context. Think aloud about why the method fits.`,
+        `Guide a Master task with prompts that fade: identify the information, choose the operation or representation, then justify the answer.`,
+        `Finish with a new Master application and ask ${firstName} to explain the decision, not only the calculation.`,
+      ]
+    : starterWeakMasterStrong
+      ? [
+          `Repair the core routine first: only ${starterAttempt.correct}/${starterAttempt.attempted} Starter questions were correct, despite ${masterAttempt.correct}/${masterAttempt.attempted} correct Master questions.`,
+          `Use a visual model and one worked example for ${bare}; have ${firstName} narrate each routine step.`,
+          `Practise short Starter items until the method is automatic, correcting the exact step that breaks down.`,
+          `Re-check with one Master task so the stronger reasoning is anchored in an accurate routine.`,
+        ]
+      : [
+          evidence?.note
+            ? `Surface the observation first: ${evidence.note}`
+            : `Check what ${firstName} already knows about ${item.title.toLowerCase()} with two quick questions.`,
+          `Model one worked example for ${bare}, narrating each step.`,
+          `Guide ${firstName} through starter questions with immediate feedback.`,
+          `Close with a master-level application question and a one-sentence recap.`,
+        ]
 
   return {
     goal: `By the end, ${firstName} can ${bare.charAt(0).toLowerCase()}${bare.slice(1)}.`,
-    teachingPoints: [
-      evidence?.note
-        ? `Surface the observation first: ${evidence.note}`
-        : `Check what ${firstName} already knows about ${item.title.toLowerCase()} with two quick questions.`,
-      `Model one worked example for ${bare}, narrating each step.`,
-      `Guide ${firstName} through starter questions with immediate feedback.`,
-      `Close with a master-level application question and a one-sentence recap.`,
-    ],
+    teachingPoints,
     practice: `${total} question(s) on ${item.title}: ${item.easyActivities} starter (single-step) then ${item.practiceActivities} master (multi-step / word problems).`,
     successCriteria: `Solves starter questions with ≥80% accuracy and attempts master-level word problems with clear reasoning.`,
-    rationale: item.reason,
+    rationale:
+      starterStrongMasterWeak
+        ? `Teach the bridge from a secure Starter routine to Master-level transfer: ${starterAttempt!.correct}/${starterAttempt!.attempted} Starter versus ${masterAttempt!.correct}/${masterAttempt!.attempted} Master.`
+        : starterWeakMasterStrong
+          ? `Make the basic method reliable before relying on the stronger Master result: ${starterAttempt!.correct}/${starterAttempt!.attempted} Starter versus ${masterAttempt!.correct}/${masterAttempt!.attempted} Master.`
+          : item.reason,
     source: "fallback",
   }
 }

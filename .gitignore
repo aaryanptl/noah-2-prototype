@@ -44,3 +44,5 @@ next-env.d.ts
 
 .scratch/
 .tmp-google-docs-skill/
+.tmp-artifact-workbook/
+.tmp-lpb-guide-render/

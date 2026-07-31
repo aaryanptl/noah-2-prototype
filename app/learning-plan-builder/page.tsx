@@ -97,6 +97,9 @@ const SCENARIO_COPY: Record<
   },
 }
 
+const DEFAULT_EVIDENCE_STUDENT =
+  demoStudents.find((candidate) => candidate.scenario === "C") ?? demoStudents[0]
+
 const PRIORITY_COPY: Record<Priority, { label: string; description: string }> =
   {
     high: {
@@ -132,6 +135,8 @@ interface PendingPlanUpdate {
   changes: string[]
 }
 
+type PersistenceState = "idle" | "saving" | "saved" | "error"
+
 function plural(value: number, singular: string, multiple = `${singular}s`) {
   return `${value} ${value === 1 ? singular : multiple}`
 }
@@ -146,6 +151,41 @@ function placementLabel(score: number) {
   if (score >= 75) return "Strong"
   if (score < 40) return "Needs support"
   return "On track"
+}
+
+type MentorObjectiveLevel = "master" | "stuck" | "not_attempted"
+
+function getMentorObjectiveLevel(
+  objectiveId: string,
+  student: DemoStudent,
+  attempts: NonNullable<DemoStudent["questionAttemptEvidence"]>
+): MentorObjectiveLevel {
+  const objectiveEvidence = student.objectiveEvidence.filter(
+    (evidence) => evidence.learningObjectiveId === objectiveId
+  )
+  if (objectiveEvidence.some((evidence) => evidence.level === "master" && evidence.result === "secure")) {
+    return "master"
+  }
+  if (objectiveEvidence.some((evidence) => evidence.result === "not-secure")) {
+    return "stuck"
+  }
+
+  const objectiveAttempts = attempts.filter(
+    (attempt) => attempt.learningObjectiveId === objectiveId
+  )
+  if (objectiveAttempts.some((attempt) => attempt.level === "master" && attempt.correct / attempt.attempted >= 0.75)) {
+    return "master"
+  }
+  if (objectiveAttempts.some((attempt) => attempt.correct / attempt.attempted < 0.5)) {
+    return "stuck"
+  }
+  return "not_attempted"
+}
+
+function mentorLevelCopy(level: MentorObjectiveLevel) {
+  if (level === "master") return "Master ✓"
+  if (level === "stuck") return "Stuck after Starter"
+  return "Not attempted"
 }
 
 function findNextTeachingItem(items: PlanItem[], completedCount: number) {
@@ -296,10 +336,12 @@ function mergePlanChanges(...groups: string[][]) {
 
 function ClassLessonGuide({
   item,
+  student,
   contentGenerating,
   contentSource,
 }: {
   item: PlanItem
+  student: DemoStudent
   contentGenerating: boolean
   contentSource: "ai" | "fallback" | null
 }) {
@@ -308,6 +350,11 @@ function ClassLessonGuide({
   const activityGroups = groupActivitiesByObjective(activities)
   const totalActivities = item.easyActivities + item.practiceActivities
   const teaching: ClassTeachingContent | undefined = item.teachingContent
+  const topicAttempts = (student.questionAttemptEvidence ?? []).filter(
+    (attempt) => attempt.topicId === item.topicId
+  )
+  const starterAttempt = topicAttempts.find((attempt) => attempt.level === "starter")
+  const masterAttempt = topicAttempts.find((attempt) => attempt.level === "master")
 
   return (
     <div className="lpb-lesson-plan-card lpb-lesson-minimal">
@@ -320,6 +367,24 @@ function ClassLessonGuide({
           <span className="lpb-content-source ai">AI</span>
         ) : null}
       </p>
+
+      {starterAttempt && masterAttempt ? (
+        <section className="lpb-class-attempt-score" aria-label="Question attempt evidence">
+          <div>
+            <span className="lpb-detail-label">Student attempt evidence</span>
+            <strong>Use these results to decide what to teach</strong>
+          </div>
+          <div className="lpb-class-attempt-badges">
+            <span className={starterAttempt.correct / starterAttempt.attempted >= 0.75 ? "secure" : "not-secure"}>
+              Starter <b>{starterAttempt.correct}/{starterAttempt.attempted}</b>
+            </span>
+            <span className={masterAttempt.correct / masterAttempt.attempted >= 0.75 ? "secure" : "not-secure"}>
+              Master <b>{masterAttempt.correct}/{masterAttempt.attempted}</b>
+            </span>
+          </div>
+          <p>{starterAttempt.note} {masterAttempt.note}</p>
+        </section>
+      ) : null}
 
       {item.learningObjectives.length > 0 ? (
         <div className="lpb-lesson-block">
@@ -399,10 +464,11 @@ function ClassLessonGuide({
 }
 
 export default function LearningPlanBuilderPage() {
-  const [student, setStudent] = useState<DemoStudent>(demoStudents[0])
+  const [student, setStudent] = useState<DemoStudent>(DEFAULT_EVIDENCE_STUDENT)
+  const [studentSelected, setStudentSelected] = useState(false)
   const [setupStep, setSetupStep] = useState(1)
   const [selectedTopicIds, setSelectedTopicIds] = useState<number[]>(() =>
-    getSuggestedTopicIds(curriculumTopics, demoStudents[0])
+    getSuggestedTopicIds(curriculumTopics, DEFAULT_EVIDENCE_STUDENT)
   )
   const [topicOrder, setTopicOrder] = useState<number[]>(() =>
     getDefaultTopicOrder(curriculumTopics)
@@ -412,8 +478,11 @@ export default function LearningPlanBuilderPage() {
   const [manualAdjustments, setManualAdjustments] = useState<ManualAdjustments>(
     {}
   )
+  const [manualOverrideActive, setManualOverrideActive] = useState(false)
   const [plan, setPlan] = useState<GeneratedPlan | null>(null)
-  const [planTab, setPlanTab] = useState<"classes" | "topics" | "next2weeks">("classes")
+  const [planTab, setPlanTab] = useState<
+    "classes" | "topics" | "structure" | "next2weeks" | "mentor"
+  >("classes")
   const [expandedItemId, setExpandedItemId] = useState<string | null>(null)
   const [detailTopicId, setDetailTopicId] = useState<number | null>(null)
   const [editingTopicId, setEditingTopicId] = useState<number | null>(null)
@@ -431,6 +500,9 @@ export default function LearningPlanBuilderPage() {
   const [contentSource, setContentSource] = useState<"ai" | "fallback" | null>(
     null
   )
+  const [databasePlanId, setDatabasePlanId] = useState<string | null>(null)
+  const [persistenceState, setPersistenceState] =
+    useState<PersistenceState>("idle")
 
   const runAiAnalysisOnChooseScope = () => {
     setSetupStep(3)
@@ -569,6 +641,20 @@ export default function LearningPlanBuilderPage() {
     (total, adjustment) => total + adjustment.savedClasses,
     0
   )
+  const attemptProfiles = useMemo(() => {
+    const attempts = student.questionAttemptEvidence ?? []
+    return [...new Set(attempts.map((attempt) => attempt.topicId))].map(
+      (topicId) => ({
+        topic: topicById.get(topicId),
+        starter: attempts.find(
+          (attempt) => attempt.topicId === topicId && attempt.level === "starter"
+        ),
+        master: attempts.find(
+          (attempt) => attempt.topicId === topicId && attempt.level === "master"
+        ),
+      })
+    )
+  }, [student.questionAttemptEvidence])
 
   const activeDetailTopic =
     detailTopicId === null ? null : topicById.get(detailTopicId)
@@ -588,13 +674,49 @@ export default function LearningPlanBuilderPage() {
   const nextTeachingItem = plan
     ? findNextTeachingItem(plan.items, completedCount)
     : undefined
+  const structuralItems = plan
+    ? plan.items.filter((item) => item.kind !== "teaching")
+    : []
+  const mentorTopic =
+    plan?.allocations.find((allocation) => allocation.topicId === student.currentTopicId) ??
+    plan?.allocations[0]
+  const mentorAttempts = (student.questionAttemptEvidence ?? []).filter(
+    (attempt) => attempt.topicId === mentorTopic?.topicId
+  )
+  const isNewStudent = student.completedTopics.length === 0 && !student.currentTopicId
+  const mentorObjectiveLevels = useMemo(
+    () =>
+      new Map(
+        (mentorTopic?.learningObjectives ?? []).map((objective) => [
+          objective.id,
+          getMentorObjectiveLevel(objective.id, student, mentorAttempts),
+        ])
+      ),
+    [mentorAttempts, mentorTopic?.learningObjectives, student]
+  )
+  const mentorFixText = useMemo(() => {
+    if (!mentorTopic) return ""
+    const needsFocus = mentorTopic.learningObjectives.filter((objective) => {
+      const level = mentorObjectiveLevels.get(objective.id)
+      return level === "stuck" || level === "not_attempted"
+    })
+    const focusText = needsFocus.length
+      ? `Prioritize ${needsFocus.map((objective) => objective.subtopic).filter((value, index, values) => values.indexOf(value) === index).join(", ")}.`
+      : "Continue extending the secure objectives with Master-level application."
+    const testText = mentorTopic.classes < 2
+      ? " A topic test should be scheduled before moving on."
+      : ""
+    return `${focusText}${testText}`
+  }, [mentorObjectiveLevels, mentorTopic])
 
   const chooseStudent = (nextStudent: DemoStudent) => {
     setStudent(nextStudent)
+    setStudentSelected(true)
     setSelectedTopicIds(getSuggestedTopicIds(curriculumTopics, nextStudent))
     setTopicOrder(getDefaultTopicOrder(curriculumTopics))
     setScopeMode("manual")
     setManualAdjustments({})
+    setManualOverrideActive(false)
     setPlan(null)
     setSetupStep(1)
     setPlanTab("classes")
@@ -603,9 +725,79 @@ export default function LearningPlanBuilderPage() {
     setDetailTopicId(null)
     setEditingTopicId(null)
     setPendingUpdate(null)
+    setDatabasePlanId(null)
+    setPersistenceState("idle")
+  }
+
+  const savePlanToDatabase = async (nextPlan: GeneratedPlan) => {
+    setPersistenceState("saving")
+    try {
+      const response = await fetch("/api/learning-plan/prototype", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "save", student, plan: nextPlan }),
+      })
+      if (!response.ok) throw new Error("Could not save the plan")
+      const data = (await response.json()) as { planId: string }
+      setDatabasePlanId(data.planId)
+      setPersistenceState("saved")
+    } catch (error) {
+      console.error("Plan save failed:", error)
+      setPersistenceState("error")
+    }
+  }
+
+  const savePlanUpdate = async ({
+    nextPlan,
+    kind,
+    changes,
+    completedCount: nextCompletedCount,
+    outcome: recordedOutcome,
+    note,
+    taughtPrototypeTopicId,
+    autoApplied,
+  }: {
+    nextPlan: GeneratedPlan
+    kind: "manual" | "class"
+    changes: string[]
+    completedCount: number
+    outcome?: ClassOutcome
+    note?: string
+    taughtPrototypeTopicId?: number
+    autoApplied?: boolean
+  }) => {
+    if (!databasePlanId) return
+    setPersistenceState("saving")
+    try {
+      const response = await fetch("/api/learning-plan/prototype", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "update",
+          planId: databasePlanId,
+          student,
+          plan: nextPlan,
+          update: {
+            kind,
+            changes,
+            completedCount: nextCompletedCount,
+            outcome: recordedOutcome,
+            note,
+            taughtPrototypeTopicId,
+            autoApplied,
+          },
+        }),
+      })
+      if (!response.ok) throw new Error("Could not save the plan update")
+      setPersistenceState("saved")
+    } catch (error) {
+      console.error("Plan update save failed:", error)
+      setPersistenceState("error")
+    }
   }
 
   const toggleTopic = (topicId: number) => {
+    setManualOverrideActive(true)
     setSelectedTopicIds((current) =>
       current.includes(topicId)
         ? current.filter((id) => id !== topicId)
@@ -614,6 +806,7 @@ export default function LearningPlanBuilderPage() {
   }
 
   const applyEvidencePlan = () => {
+    if (manualOverrideActive) return
     setScopeMode("evidence")
     setAiLoading(true)
     fetch("/api/learning-plan/ai-plan-generator", {
@@ -649,6 +842,7 @@ export default function LearningPlanBuilderPage() {
   }
 
   const unselectAiSkippableTopics = () => {
+    if (manualOverrideActive) return
     setSelectedTopicIds((current) =>
       current.filter((topicId) => !aiSkippableSet.has(topicId))
     )
@@ -656,6 +850,7 @@ export default function LearningPlanBuilderPage() {
   }
 
   const unselectTopic = (topicId: number) => {
+    setManualOverrideActive(true)
     setSelectedTopicIds((current) =>
       current.filter((selectedId) => selectedId !== topicId)
     )
@@ -669,6 +864,7 @@ export default function LearningPlanBuilderPage() {
       nextOrder.splice(targetIndex < 0 ? nextOrder.length : targetIndex, 0, draggedTopicId)
       return nextOrder
     })
+    setManualOverrideActive(true)
     setDraggedTopicId(null)
   }
 
@@ -753,6 +949,7 @@ export default function LearningPlanBuilderPage() {
               "Refitted the remaining topics into the new 24-class window.",
             ]
           : [],
+      lastModificationType: manualOverrideActive ? "manual" : "auto",
     })
     if (basePlan.capacity.difference > 0) {
       setSetupStep(4)
@@ -775,6 +972,7 @@ export default function LearningPlanBuilderPage() {
     setCompletedCount(0)
     setPlanTab("classes")
     window.scrollTo({ top: 0, behavior: "smooth" })
+    await savePlanToDatabase(withActivities)
     const enriched = await enrichPlan(withActivities)
     setPlan(enriched)
   }
@@ -783,6 +981,7 @@ export default function LearningPlanBuilderPage() {
     setPlan(null)
     setSetupStep(4)
     setCompletedCount(0)
+    setDatabasePlanId(null)
     window.scrollTo({ top: 0, behavior: "smooth" })
   }
 
@@ -822,6 +1021,7 @@ export default function LearningPlanBuilderPage() {
     ]
 
     setManualAdjustments(nextAdjustments)
+    setManualOverrideActive(true)
     const nextBasePlan = buildLearningPlan({
       topics: curriculumTopics,
       student,
@@ -829,6 +1029,7 @@ export default function LearningPlanBuilderPage() {
       topicOrder,
       manualAdjustments: nextAdjustments,
       version: plan.version + 1,
+      lastModificationType: "manual",
     })
     if (nextBasePlan.capacity.difference > 0) return
     const nextPlan: GeneratedPlan = {
@@ -840,6 +1041,12 @@ export default function LearningPlanBuilderPage() {
     }
     setPlan(nextPlan)
     void enrichPlan(nextPlan).then(setPlan)
+    void savePlanUpdate({
+      nextPlan,
+      kind: "manual",
+      changes: nextPlan.changesFromPrevious,
+      completedCount,
+    })
     setEditingTopicId(null)
     setEditDraft(null)
   }
@@ -891,6 +1098,7 @@ export default function LearningPlanBuilderPage() {
       topicOrder,
       manualAdjustments: nextAdjustments,
       version: plan.version + 1,
+      lastModificationType: "class",
     })
     if (nextBasePlan.capacity.difference > 0) return
     const nextPlan: GeneratedPlan = {
@@ -913,14 +1121,28 @@ export default function LearningPlanBuilderPage() {
     setPlan(pendingUpdate.plan)
     void enrichPlan(pendingUpdate.plan).then(setPlan)
     setManualAdjustments(pendingUpdate.adjustments)
+    setManualOverrideActive(false)
     setCompletedCount((current) => current + 1)
+    void savePlanUpdate({
+      nextPlan: pendingUpdate.plan,
+      kind: "class",
+      changes: pendingUpdate.changes,
+      completedCount: completedCount + 1,
+      outcome,
+      note: outcomeNote,
+      taughtPrototypeTopicId: nextTeachingItem?.topicId,
+      autoApplied: outcome !== "on-track",
+    })
     setPendingUpdate(null)
     setOutcomeOpen(false)
     setOutcome("on-track")
     setOutcomeNote("")
   }
 
-  const resetPrototype = () => chooseStudent(demoStudents[0])
+  const resetPrototype = () => {
+    chooseStudent(DEFAULT_EVIDENCE_STUDENT)
+    setStudentSelected(false)
+  }
 
   return (
     <div className="lpb">
@@ -1009,7 +1231,7 @@ export default function LearningPlanBuilderPage() {
                 <div className="lpb-student-grid">
                   {demoStudents.map((candidate) => {
                     const copy = SCENARIO_COPY[candidate.scenario]
-                    const selected = candidate.id === student.id
+                    const selected = studentSelected && candidate.id === student.id
                     return (
                       <button
                         type="button"
@@ -1039,6 +1261,7 @@ export default function LearningPlanBuilderPage() {
                   })}
                 </div>
 
+                {studentSelected ? (
                 <div className="lpb-profile-strip">
                   <div>
                     <span>Student</span>
@@ -1067,6 +1290,11 @@ export default function LearningPlanBuilderPage() {
                     </strong>
                   </div>
                 </div>
+                ) : (
+                  <div className="lpb-profile-strip lpb-profile-empty">
+                    <strong>Select a student profile to review their evidence and build a plan.</strong>
+                  </div>
+                )}
 
                 <footer className="lpb-setup-footer">
                   <span>
@@ -1077,6 +1305,7 @@ export default function LearningPlanBuilderPage() {
                     type="button"
                     className="lpb-button lpb-button-primary"
                     onClick={() => setSetupStep(2)}
+                    disabled={!studentSelected}
                   >
                     Review evidence
                     <ArrowRight size={16} />
@@ -1194,8 +1423,9 @@ export default function LearningPlanBuilderPage() {
                 ) : null}
 
                 {student.scenario === "C" ? (
-                  <div className="lpb-returning-layout">
-                    <section className="lpb-evidence-panel">
+                  <>
+                    <div className="lpb-returning-layout">
+                      <section className="lpb-evidence-panel">
                       <div className="lpb-panel-title">
                         <CheckCircle2 size={18} />
                         <div>
@@ -1225,8 +1455,8 @@ export default function LearningPlanBuilderPage() {
                           )
                         })}
                       </div>
-                    </section>
-                    <section className="lpb-evidence-panel">
+                      </section>
+                      <section className="lpb-evidence-panel">
                       <div className="lpb-panel-title">
                         <Gauge size={18} />
                         <div>
@@ -1251,8 +1481,38 @@ export default function LearningPlanBuilderPage() {
                           </div>
                         ))}
                       </div>
+                      </section>
+                    </div>
+                    <section className="lpb-attempt-evidence">
+                      <div>
+                        <span className="lpb-detail-label">Attempted questions</span>
+                        <h3>What the plan will teach next</h3>
+                        <p>Starter and Master results are used to choose the teaching response—not just to list questions.</p>
+                      </div>
+                      <div className="lpb-attempt-profile-list">
+                        {attemptProfiles.map(({ topic, starter, master }) => {
+                          if (!topic || !starter || !master) return null
+                          const starterStrong = starter.correct / starter.attempted >= 0.75
+                          const masterStrong = master.correct / master.attempted >= 0.75
+                          const focus = starterStrong && !masterStrong
+                            ? "Bridge secure methods into unfamiliar Master tasks."
+                            : !starterStrong && masterStrong
+                              ? "Repair the Starter routine so the stronger reasoning is reliable."
+                              : "Use both levels to confirm the next teaching step."
+                          return (
+                            <article key={topic.id}>
+                              <strong>{topic.name}</strong>
+                              <div className="lpb-attempt-scores">
+                                <span className={starterStrong ? "secure" : "not-secure"}>Starter {starter.correct}/{starter.attempted}</span>
+                                <span className={masterStrong ? "secure" : "not-secure"}>Master {master.correct}/{master.attempted}</span>
+                              </div>
+                              <p>{focus}</p>
+                            </article>
+                          )
+                        })}
+                      </div>
                     </section>
-                  </div>
+                  </>
                 ) : null}
 
                 {student.scenario === "D" || student.parentRequestedTopicId ? (
@@ -1397,6 +1657,7 @@ export default function LearningPlanBuilderPage() {
                     type="button"
                     className={`lpb-planning-mode evidence${scopeMode === "evidence" ? " active" : ""}`}
                     onClick={applyEvidencePlan}
+                    disabled={manualOverrideActive}
                   >
                     <span className="lpb-mode-icon evidence">
                       <Lightbulb size={20} />
@@ -1443,6 +1704,13 @@ export default function LearningPlanBuilderPage() {
                   </section>
                 ) : null}
 
+                {manualOverrideActive ? (
+                  <output className="lpb-manual-override-notice">
+                    <LockKeyhole size={16} />
+                    Manual change recorded — automatic updates stay paused until the next class data arrives.
+                  </output>
+                ) : null}
+
                 <div className="lpb-topic-tools">
                   <div className="lpb-priority-legend">
                     {(["high", "medium", "low"] as const).map((priority) => (
@@ -1457,6 +1725,7 @@ export default function LearningPlanBuilderPage() {
                       type="button"
                       onClick={() => {
                         setScopeMode("manual")
+                        setManualOverrideActive(true)
                         setSelectedTopicIds(
                           curriculumTopics
                             .filter(
@@ -1475,6 +1744,7 @@ export default function LearningPlanBuilderPage() {
                       type="button"
                       onClick={() => {
                         setScopeMode("manual")
+                        setManualOverrideActive(true)
                         setSelectedTopicIds(highTopicIds)
                       }}
                     >
@@ -1484,6 +1754,7 @@ export default function LearningPlanBuilderPage() {
                       type="button"
                       onClick={() => {
                         setScopeMode("manual")
+                        setManualOverrideActive(true)
                         setSelectedTopicIds(suggestedTopicIds)
                       }}
                     >
@@ -1874,9 +2145,29 @@ export default function LearningPlanBuilderPage() {
           </section>
 
           {(contentGenerating ||
+            persistenceState !== "idle" ||
             plan.warnings.length > 0 ||
-            plan.changesFromPrevious.length > 0) && (
+            plan.changesFromPrevious.length > 0 ||
+            manualOverrideActive) && (
             <div className="lpb-status-strip">
+              {persistenceState === "saving" ? (
+                <span className="lpb-status-chip generating">
+                  <Save size={13} />
+                  Saving plan changesâ€¦
+                </span>
+              ) : null}
+              {persistenceState === "saved" ? (
+                <span className="lpb-status-chip muted">
+                  <CheckCircle2 size={13} />
+                  Saved to plan history
+                </span>
+              ) : null}
+              {persistenceState === "error" ? (
+                <span className="lpb-status-chip warning">
+                  <CircleAlert size={13} />
+                  Could not save changes. Try again after editing or recording an outcome.
+                </span>
+              ) : null}
               {contentGenerating ? (
                 <span className="lpb-status-chip generating">
                   <Sparkles size={13} />
@@ -1897,6 +2188,12 @@ export default function LearningPlanBuilderPage() {
               {plan.changesFromPrevious.length > 0 ? (
                 <span className="lpb-status-chip muted">
                   Updated: {plan.changesFromPrevious[0]}
+                </span>
+              ) : null}
+              {manualOverrideActive ? (
+                <span className="lpb-status-chip manual">
+                  <LockKeyhole size={13} />
+                  Manual change recorded — automatic updates paused until the next class data arrives.
                 </span>
               ) : null}
             </div>
@@ -1961,10 +2258,24 @@ export default function LearningPlanBuilderPage() {
                     </button>
                     <button
                       type="button"
+                      className={planTab === "structure" ? "active" : ""}
+                      onClick={() => setPlanTab("structure")}
+                    >
+                      Structure
+                    </button>
+                    <button
+                      type="button"
                       className={planTab === "next2weeks" ? "active" : ""}
                       onClick={() => setPlanTab("next2weeks")}
                     >
                       2 weeks
+                    </button>
+                    <button
+                      type="button"
+                      className={planTab === "mentor" ? "active" : ""}
+                      onClick={() => setPlanTab("mentor")}
+                    >
+                      Mentor view
                     </button>
                   </div>
                 </header>
@@ -2025,6 +2336,7 @@ export default function LearningPlanBuilderPage() {
                               {item.kind === "teaching" ? (
                                 <ClassLessonGuide
                                   item={item}
+                                  student={student}
                                   contentGenerating={contentGenerating}
                                   contentSource={contentSource}
                                 />
@@ -2106,7 +2418,26 @@ export default function LearningPlanBuilderPage() {
                       </article>
                     ))}
                   </div>
-                ) : (
+                ) : planTab === "structure" ? (
+                  <div className="lpb-structural-view">
+                    <header>
+                      <span className="lpb-detail-label">Structural classes</span>
+                      <h3>{plan.capacity.structural} of 13 full-package structural classes</h3>
+                      <p>Checkpoints assess the preceding block; each is followed by revision, doubts and practice. PTMs keep families aligned.</p>
+                    </header>
+                    <div className="lpb-structural-list">
+                      {structuralItems.map((item) => (
+                        <article key={item.id} className={item.kind}>
+                          <span>Class {String(item.classNumber).padStart(2, "0")}</span>
+                          <div>
+                            <strong>{KIND_COPY[item.kind].label}</strong>
+                            <p>{item.title} · {item.reason}</p>
+                          </div>
+                        </article>
+                      ))}
+                    </div>
+                  </div>
+                ) : planTab === "next2weeks" ? (
                   <div className="lpb-next2weeks-view">
                     {(() => {
                       const classesPerWeek = student.classesPerWeek ?? 2
@@ -2156,6 +2487,92 @@ export default function LearningPlanBuilderPage() {
                         </>
                       )
                     })()}
+                  </div>
+                ) : (
+                  <div className="lpb-mentor-view">
+                    <section className="lpb-mentor-snapshot">
+                      <div>
+                        <span>Classes remaining</span>
+                        <b>{student.classesRemaining}</b>
+                      </div>
+                      <div>
+                        <span>Topics completed</span>
+                        <b>{student.completedTopics.length} of 13</b>
+                      </div>
+                      <div>
+                        <span>Current topic</span>
+                        <b>{mentorTopic?.topicName ?? "No topic selected"}</b>
+                      </div>
+                      <div>
+                        <span>Structural classes</span>
+                        <b>{plan.capacity.structural} planned</b>
+                      </div>
+                    </section>
+
+                    <section className="lpb-mentor-timeline">
+                      <span className="lpb-detail-label">Plan at a glance</span>
+                      <div>
+                        {student.completedTopics.map((completed) => (
+                          <span className="done" key={completed.topicId}>
+                            {topicById.get(completed.topicId)?.name}
+                          </span>
+                        ))}
+                        {plan.allocations.map((allocation) => (
+                          <span
+                            className={allocation.topicId === mentorTopic?.topicId ? "current" : ""}
+                            key={allocation.topicId}
+                          >
+                            {allocation.topicName} ({allocation.classes})
+                          </span>
+                        ))}
+                        {structuralItems.filter((item) => item.kind === "checkpoint").map((item) => (
+                          <span className="checkpoint" key={item.id}>{item.title}</span>
+                        ))}
+                      </div>
+                    </section>
+
+                    <section className="lpb-mentor-diagnosis">
+                      <div className="lpb-mentor-section-head">
+                        <div>
+                          <span className="lpb-detail-label">Question-level diagnosis</span>
+                          <h3>{mentorTopic?.topicName ?? "Selected topic"}</h3>
+                        </div>
+                        {mentorTopic ? (
+                          <button type="button" onClick={() => startEdit(mentorTopic.topicId)}>
+                            <SlidersHorizontal size={14} /> Adjust classes
+                          </button>
+                        ) : null}
+                      </div>
+                      {mentorTopic ? (
+                        <div className="lpb-mentor-table-wrap">
+                          {isNewStudent ? (
+                            <p className="lpb-mentor-guidance">Starter and Master questions are shown as teaching guidance because this student has no attempt data yet.</p>
+                          ) : null}
+                          <table>
+                            <thead><tr><th>Learning objective</th>{!isNewStudent ? <th>Level</th> : null}<th>Starter question</th><th>Master question</th></tr></thead>
+                            <tbody>
+                              {mentorTopic.learningObjectives.map((objective) => {
+                                const guideline = questionGuidelines.find((item) => item.learningObjectiveId === objective.id)
+                                const level = mentorObjectiveLevels.get(objective.id) ?? "not_attempted"
+                                return <tr key={objective.id}>
+                                  <td>{objective.text}</td>
+                                  {!isNewStudent ? <td><span className={`lpb-diagnosis-pill ${level === "master" ? "secure" : level === "stuck" ? "support" : "neutral"}`}>{mentorLevelCopy(level)}</span></td> : null}
+                                  <td>{guideline?.starter ?? "No supplied question"}</td>
+                                  <td>{guideline?.master ?? "No supplied question"}</td>
+                                </tr>
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+                      ) : null}
+                    </section>
+
+                    {mentorTopic ? (
+                      <section className="lpb-mentor-next">
+                        <Lightbulb size={18} />
+                        <div><span className="lpb-detail-label">What to fix in upcoming classes</span><p>{mentorFixText}</p></div>
+                      </section>
+                    ) : null}
                   </div>
                 )}
               </section>

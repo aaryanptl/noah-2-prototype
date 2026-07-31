@@ -43,6 +43,16 @@ export interface ObjectiveEvidence {
   note: string
 }
 
+/** Result of the supplied Starter or Master question set for one objective. */
+export interface QuestionAttemptEvidence {
+  topicId: number
+  learningObjectiveId: string
+  level: "starter" | "master"
+  correct: number
+  attempted: number
+  note: string
+}
+
 export interface DemoStudent {
   id: string
   scenario: "A" | "B" | "C" | "D"
@@ -57,9 +67,11 @@ export interface DemoStudent {
   completedTopics: CompletedTopic[]
   currentTopicId?: number
   objectiveEvidence: ObjectiveEvidence[]
+  questionAttemptEvidence?: QuestionAttemptEvidence[]
   parentRequestedTopicId?: number
   previousPlanLabel?: string
-  currentTopicClassAdjustment?: number
+  /** Classes already taught in the student's active topic. */
+  currentTopicClassesUsed?: number
   classesPerWeek?: number
 }
 

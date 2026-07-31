@@ -160,9 +160,22 @@ function adjustTopic(
     student.placementStatus === "completed" &&
     placementScore !== undefined &&
     placementScore >= 75
+  const topicAttempts = (student.questionAttemptEvidence ?? []).filter(
+    (attempt) => attempt.topicId === topic.id
+  )
+  const starterAttempt = topicAttempts.find((attempt) => attempt.level === "starter")
+  const masterAttempt = topicAttempts.find((attempt) => attempt.level === "master")
+  const starterAccuracy = starterAttempt
+    ? starterAttempt.correct / starterAttempt.attempted
+    : undefined
+  const masterAccuracy = masterAttempt
+    ? masterAttempt.correct / masterAttempt.attempted
+    : undefined
+  const hasMasterGap = masterAccuracy !== undefined && masterAccuracy < 0.5
 
   if (
     !placementAlreadyReduced &&
+    !hasMasterGap &&
     secureMasterCount >= 2 &&
     secureMasterRatio >= 0.75
   ) {
@@ -174,18 +187,23 @@ function adjustTopic(
     )
   }
 
-  if (
-    student.currentTopicId === topic.id &&
-    student.currentTopicClassAdjustment
-  ) {
-    // Spec Rule: Auto-increases are capped at max +2 classes to prevent major schedule disruption
-    const rawAdjustment = student.currentTopicClassAdjustment
-    const cappedAdjustment = rawAdjustment > 0 ? Math.min(2, rawAdjustment) : rawAdjustment
-    classes = Math.max(1, classes + cappedAdjustment)
+  if (starterAccuracy !== undefined && masterAccuracy !== undefined) {
+    if (starterAccuracy >= 0.75 && masterAccuracy < 0.5) {
+      classes = Math.max(classes, topic.idealClasses)
+      reasons.push(
+        `Starter accuracy is ${starterAttempt!.correct}/${starterAttempt!.attempted}, but Master accuracy is ${masterAttempt!.correct}/${masterAttempt!.attempted}; keep the full topic allocation and teach transfer to unfamiliar problems.`
+      )
+    } else if (starterAccuracy < 0.5 && masterAccuracy >= 0.75) {
+      reasons.push(
+        `Starter accuracy is ${starterAttempt!.correct}/${starterAttempt!.attempted} while Master accuracy is ${masterAttempt!.correct}/${masterAttempt!.attempted}; repair the core routine first so the stronger reasoning is reliable.`
+      )
+    }
+  }
+
+  if (student.currentTopicId === topic.id && student.currentTopicClassesUsed) {
+    classes = Math.max(1, topic.idealClasses - student.currentTopicClassesUsed)
     reasons.push(
-      cappedAdjustment < 0
-        ? "Current progress is strong at Starter level, so one class is returned to the pool."
-        : "Current evidence shows more time is needed, so reinforcement is added (capped at max +2 classes per spec)."
+      `${student.currentTopicClassesUsed} ${student.currentTopicClassesUsed === 1 ? "class has" : "classes have"} already been taught in this active topic, so the remaining allocation is calculated from the ideal plan.`
     )
   }
 
@@ -740,6 +758,7 @@ export function buildLearningPlan({
   manualAdjustments = {},
   version = 1,
   changesFromPrevious = [],
+  lastModificationType,
 }: {
   topics: CurriculumTopic[]
   student: DemoStudent
@@ -749,6 +768,7 @@ export function buildLearningPlan({
   manualAdjustments?: ManualAdjustments
   version?: number
   changesFromPrevious?: string[]
+  lastModificationType?: "manual" | "class" | "auto"
 }): GeneratedPlan {
   const topicMap = getTopicMap(topics)
   const completedIds = getCompletedTopicIds(student)
@@ -896,8 +916,8 @@ export function buildLearningPlan({
     id: `plan-${student.id}-v${version}`,
     version,
     studentId: student.id,
-    generatedAt: "Prototype data",
-    lastModificationType: hasManualEdits ? "manual" : "auto",
+    generatedAt: new Date().toISOString(),
+    lastModificationType: lastModificationType ?? (hasManualEdits ? "manual" : "auto"),
     allocations: orderedAllocations,
     items: buildClassSequence(orderedAllocations, structural),
     droppedTopics,

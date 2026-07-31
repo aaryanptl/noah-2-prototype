@@ -590,7 +590,7 @@ export const demoStudents: DemoStudent[] = [
     initials: "AS",
     grade: 5,
     region: "US",
-    classesRemaining: 24,
+    classesRemaining: 45,
     placementStatus: "not-applicable",
     placementResults: [],
     completedTopics: [
@@ -598,7 +598,7 @@ export const demoStudents: DemoStudent[] = [
       { topicId: 314, plannedClasses: 6, actualClasses: 6 },
     ],
     currentTopicId: 315,
-    currentTopicClassAdjustment: -1,
+    currentTopicClassesUsed: 2,
     objectiveEvidence: [
       {
         learningObjectiveId: "315-hcf",
@@ -624,6 +624,14 @@ export const demoStudents: DemoStudent[] = [
         result: "not-secure",
         note: "Needs support with factor trees and index notation.",
       },
+    ],
+    questionAttemptEvidence: [
+      { topicId: 313, learningObjectiveId: "313-order-operations", level: "starter", correct: 3, attempted: 4, note: "Uses the order-of-operations routine accurately on familiar expressions." },
+      { topicId: 313, learningObjectiveId: "313-brackets", level: "master", correct: 1, attempted: 3, note: "Loses track of how brackets change the order in multi-step expressions." },
+      { topicId: 315, learningObjectiveId: "315-hcf-lcm-problems", level: "starter", correct: 4, attempted: 4, note: "Finds HCF and LCM correctly when the method is named." },
+      { topicId: 315, learningObjectiveId: "315-hcf-lcm-problems", level: "master", correct: 1, attempted: 4, note: "Needs to decide whether an unfamiliar real-world problem calls for HCF or LCM." },
+      { topicId: 316, learningObjectiveId: "316-common-denominator", level: "starter", correct: 1, attempted: 4, note: "Still needs fluency finding equivalent fractions and a common denominator." },
+      { topicId: 316, learningObjectiveId: "316-common-denominator", level: "master", correct: 3, attempted: 4, note: "Can reason through a supported multi-step fraction task, but the basic routine is not reliable yet." },
     ],
     previousPlanLabel: "Baseline plan · 11 classes completed",
   },
