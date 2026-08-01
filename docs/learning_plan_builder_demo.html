@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Learning Plan Builder — Demo</title>
+<style>
+  :root{
+    --bg:#f7f5f0; --panel:#ffffff; --ink:#22302a; --sub:#67736c; --line:#e2ded6;
+    --green:#175e4c; --green-soft:#e3efe9; --amber:#a2680a; --amber-soft:#fbf1dc;
+    --red:#a63d2a; --red-soft:#f9e9e4; --gray-soft:#eef0ee;
+    --hi:#b0311c; --med:#a2680a; --lo:#6b7681;
+  }
+  *{box-sizing:border-box;margin:0;}
+  body{font-family:"Segoe UI",system-ui,Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:14px;padding-bottom:60px;}
+  .top{background:var(--panel);border-bottom:1px solid var(--line);padding:12px 28px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:5;}
+  .brand{font-weight:700;color:var(--green);}
+  .brand span{color:var(--sub);font-weight:400;margin-left:10px;}
+  .reset{border:1px solid var(--line);background:#fff;border-radius:6px;padding:6px 14px;cursor:pointer;font-size:13px;color:var(--sub);}
+  .wrap{max-width:1040px;margin:0 auto;padding:26px 20px;}
+  .eyebrow{font-size:11px;letter-spacing:1.4px;color:var(--green);font-weight:700;text-transform:uppercase;}
+  h1{font-family:Georgia,"Times New Roman",serif;font-size:34px;margin:6px 0 4px;}
+  .lede{color:var(--sub);margin-bottom:18px;}
+  .stepper{display:flex;gap:0;align-items:center;margin:18px 0 22px;}
+  .stp{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--sub);}
+  .stp .dot{width:26px;height:26px;border-radius:50%;border:1.5px solid var(--line);display:flex;align-items:center;justify-content:center;background:#fff;font-size:12px;}
+  .stp.on .dot{background:var(--green);border-color:var(--green);color:#fff;}
+  .stp.on{color:var(--ink);font-weight:600;}
+  .stp.done .dot{background:var(--green-soft);border-color:var(--green);color:var(--green);}
+  .bar{flex:1;height:1.5px;background:var(--line);margin:0 10px;min-width:30px;}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:20px 22px;margin-bottom:16px;}
+  .card h2{font-size:17px;margin-bottom:4px;}
+  .hint{color:var(--sub);font-size:12.5px;margin-bottom:14px;}
+  .grid4{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;}
+  .stu{border:1.5px solid var(--line);border-radius:10px;padding:14px;cursor:pointer;background:#fff;}
+  .stu:hover{border-color:#b9c9c0;}
+  .stu.sel{border-color:var(--green);box-shadow:0 0 0 1px var(--green);}
+  .stu .tag{font-size:10px;letter-spacing:.8px;color:var(--sub);}
+  .stu b{display:block;font-size:15px;margin:6px 0 2px;}
+  .stu .kind{font-size:11px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:.5px;}
+  .stu p{font-size:12px;color:var(--sub);margin-top:6px;line-height:1.45;}
+  .profile{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px;}
+  .chip{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:9px 14px;min-width:130px;}
+  .chip span{display:block;font-size:10.5px;letter-spacing:.6px;color:var(--sub);text-transform:uppercase;}
+  .chip b{font-size:14px;}
+  .nav{display:flex;justify-content:space-between;margin-top:18px;}
+  button.primary{background:var(--green);color:#fff;border:none;border-radius:8px;padding:11px 20px;font-size:14px;cursor:pointer;font-weight:600;}
+  button.ghost{background:#fff;color:var(--sub);border:1px solid var(--line);border-radius:8px;padding:11px 18px;font-size:14px;cursor:pointer;}
+  .evid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  @media(max-width:760px){.evid{grid-template-columns:1fr;}}
+  .evid h3{font-size:13.5px;margin-bottom:10px;color:var(--green);}
+  .score{display:flex;justify-content:space-between;padding:7px 10px;border-bottom:1px solid var(--line);font-size:13px;}
+  .score:last-child{border-bottom:none;}
+  .score b.low{color:var(--red);} .score b.high{color:var(--green);}
+  .ev-line{padding:8px 11px;border-radius:7px;margin-bottom:7px;font-size:12.5px;}
+  .ev-ok{background:var(--green-soft);color:#1c5442;}
+  .ev-bad{background:var(--red-soft);color:#7c3a2c;}
+  .pri{display:inline-block;font-size:10.5px;font-weight:700;padding:2px 9px;border-radius:9px;letter-spacing:.4px;}
+  .pri.H{background:var(--red-soft);color:var(--hi);} .pri.M{background:var(--amber-soft);color:var(--med);} .pri.L{background:var(--gray-soft);color:var(--lo);}
+  table.topics{width:100%;border-collapse:collapse;}
+  table.topics td{padding:10px 8px;border-bottom:1px solid var(--line);font-size:13px;vertical-align:middle;}
+  table.topics tr:last-child td{border-bottom:none;}
+  .tname b{display:block;} .tname span{font-size:11.5px;color:var(--sub);}
+  .num{text-align:center;} .num b{display:block;font-size:14px;} .num span{font-size:10.5px;color:var(--sub);}
+  .flag{font-size:11px;color:var(--sub);text-align:right;white-space:nowrap;}
+  .flag.comp{color:var(--amber,#a2680a);} .flag.req{color:var(--green);}
+  .cap{display:flex;gap:22px;align-items:flex-start;flex-wrap:wrap;}
+  .capbox{flex:1;min-width:300px;}
+  .cap h2{font-size:22px;font-family:Georgia,serif;}
+  .capbar{height:10px;background:var(--line);border-radius:6px;overflow:hidden;margin:14px 0;}
+  .capbar div{height:100%;background:var(--green);}
+  .capbar.over div{background:var(--red);}
+  .capchips{display:flex;gap:10px;flex-wrap:wrap;}
+  .warn{background:var(--amber-soft);border:1px solid #e5cf9a;border-radius:8px;padding:10px 13px;font-size:12.5px;margin-top:12px;color:#6d4d0d;}
+  .warn.red{background:var(--red-soft);border-color:#e6b3a5;color:#7c3a2c;}
+  .planhead{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:6px;}
+  .planhead h2{font-family:Georgia,serif;font-size:24px;}
+  .planhead .meta{color:var(--sub);font-size:12.5px;}
+  .tabs{display:flex;gap:6px;margin:14px 0;}
+  .tab{border:1px solid var(--line);background:#fff;border-radius:20px;padding:7px 16px;font-size:12.5px;cursor:pointer;color:var(--sub);}
+  .tab.on{background:var(--green);border-color:var(--green);color:#fff;font-weight:600;}
+  .seqrow{display:flex;align-items:center;gap:12px;border:1px solid var(--line);border-radius:9px;padding:11px 14px;margin-bottom:8px;background:#fff;}
+  .seqrow .idx{width:30px;height:30px;border-radius:7px;background:var(--green-soft);color:var(--green);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex:none;}
+  .seqrow.struct{background:var(--bg);border-style:dashed;}
+  .seqrow.struct .idx{background:#fff;border:1px dashed var(--line);color:var(--sub);}
+  .seqrow.refresh{border-left:4px solid var(--amber);}
+  .seqrow .body{flex:1;}
+  .seqrow .body b{font-size:13.5px;}
+  .seqrow .body span{display:block;font-size:11.5px;color:var(--sub);}
+  .seqrow .acts{display:flex;gap:6px;align-items:center;}
+  .mini{border:1px solid var(--line);background:#fff;border-radius:6px;width:26px;height:26px;cursor:pointer;font-size:14px;color:var(--sub);}
+  .mini:hover{border-color:var(--green);color:var(--green);}
+  .mini.x:hover{border-color:var(--red);color:var(--red);}
+  .lock{font-size:10px;background:var(--gray-soft);color:var(--sub);border-radius:8px;padding:2px 8px;}
+  .drop{border:1px dashed var(--line);border-radius:9px;padding:10px 14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:10px;background:var(--bg);color:var(--sub);font-size:12.5px;}
+  .drop b{color:var(--ink);font-size:13px;}
+  .addbtn{border:1px solid var(--green);color:var(--green);background:#fff;border-radius:6px;padding:5px 12px;font-size:12px;cursor:pointer;white-space:nowrap;}
+  .twk .cls{border:1px solid var(--line);border-radius:9px;padding:11px 14px;margin-bottom:8px;background:#fff;}
+  .twk .cls .cl{display:inline-block;background:var(--green);color:#fff;border-radius:6px;font-size:11px;padding:3px 9px;margin-right:10px;font-weight:600;}
+  .twk .cls b{font-size:13.5px;}
+  .twk .cls p{font-size:12.5px;color:var(--sub);margin-top:5px;}
+  .twk .test{background:var(--amber-soft);border-color:#e5cf9a;}
+  .twk .test .cl{background:var(--amber);}
+  table.diag{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px;}
+  table.diag th{background:var(--green);color:#fff;text-align:left;padding:8px 10px;font-size:12px;}
+  table.diag td{border:1px solid var(--line);padding:8px 10px;vertical-align:top;}
+  .pill{display:inline-block;padding:2px 10px;border-radius:10px;font-size:11px;font-weight:600;white-space:nowrap;}
+  .pill.ok{background:var(--green-soft);color:var(--green);}
+  .pill.stuck{background:var(--red-soft);color:var(--red);}
+  .pill.na{background:var(--gray-soft);color:var(--lo);}
+  .q{color:var(--sub);font-size:11.5px;}
+  .fix{background:var(--red-soft);border:1px solid #e6b3a5;border-radius:8px;padding:11px 14px;font-size:13px;margin-top:12px;}
+  .fix b{color:var(--red);}
+  .notice{background:var(--green-soft);border:1px solid #bcd8cc;border-radius:8px;padding:10px 13px;font-size:12.5px;color:#1c5442;margin-bottom:12px;}
+  .footer-note{font-size:11.5px;color:var(--sub);margin-top:8px;}
+  .hidden{display:none;}
+  .manual-note{font-size:11.5px;color:var(--amber);margin-top:6px;font-style:italic;}
+</style>
+</head>
+<body>
+<div class="top">
+  <div class="brand">Learning Plan Builder <span>Maths · Grade 5 · US curriculum · demo build</span></div>
+  <button class="reset" onclick="resetAll()">Reset</button>
+</div>
+
+<div class="wrap">
+  <div class="eyebrow">Prototype · dummy data only</div>
+  <h1>Build a plan a teacher can trust.</h1>
+  <div class="lede">Curriculum priorities and student evidence turned into a class-by-class plan — without hiding the rules.</div>
+
+  <div class="stepper" id="stepper"></div>
+  <div id="screen"></div>
+</div>
+
+<script>
+/* ================= DATA (from the Grade 5 Learning Plan Inputs workbook) ================= */
+const TOPICS = [
+ {id:313,seq:1, name:"Number Sense & Operations", fam:"Number Sense", pri:"H", pre:[],        ideal:5,min:3,act:20,easy:60,los:4},
+ {id:314,seq:2, name:"Multi-Digit Operations",    fam:"Multiplication & Division",pri:"H",pre:[313],ideal:6,min:4,act:24,easy:60,los:4},
+ {id:315,seq:3, name:"Factors, Multiples & Primes",fam:"Number Theory",pri:"H", pre:[314],    ideal:6,min:4,act:25,easy:60,los:5},
+ {id:321,seq:4, name:"Data Analysis",             fam:"Data & Statistics",pri:"M",pre:[],     ideal:5,min:3,act:16,easy:65,los:4},
+ {id:316,seq:5, name:"Fraction Arithmetic",       fam:"Fractions", pri:"H", pre:[315],        ideal:8,min:5,act:30,easy:55,los:6},
+ {id:317,seq:6, name:"Decimal Arithmetic",        fam:"Decimals", pri:"H", pre:[316],         ideal:6,min:4,act:22,easy:60,los:4},
+ {id:319,seq:7, name:"2D & 3D Geometry",          fam:"Geometry", pri:"M", pre:[],            ideal:5,min:3,act:16,easy:65,los:4},
+ {id:320,seq:8, name:"Perimeter, Area & Measurement",fam:"Measurement",pri:"H",pre:[317,319], ideal:7,min:5,act:25,easy:60,los:6},
+ {id:582,seq:9, name:"Algebraic Expressions",     fam:"Patterns & Algebra",pri:"H",pre:[313], ideal:5,min:3,act:20,easy:60,los:4},
+ {id:589,seq:10,name:"Geometric Transformations", fam:"Geometry", pri:"M", pre:[319],         ideal:4,min:3,act:14,easy:65,los:4},
+ {id:585,seq:11,name:"Theoretical & Experimental Probability",fam:"Probability",pri:"M",pre:[316],ideal:4,min:3,act:14,easy:65,los:4},
+ {id:404,seq:12,name:"Logical Reasoning",         fam:"Enrichment",pri:"M",pre:[],            ideal:3,min:2,act:10,easy:70,los:4},
+ {id:403,seq:13,name:"Vedic Mathematics",         fam:"Enrichment",pri:"L",pre:[314],         ideal:2,min:1,act:6, easy:70,los:2},
+];
+const LO = {
+ 313:[["Read, write, and work with numbers up to 10 million","Write 4,205,000 in words","Write 'seven million forty thousand and nine' — then increase it by 100,000"],
+      ["Use estimation strategies to check reasonableness","Estimate 298 + 512 by rounding to hundreds","Is 4,890 × 21 ≈ 10,000 reasonable? Estimate properly and explain the error"],
+      ["Apply the correct order of operations","12 + 3 × 2 = ?","36 ÷ (2 + 4) × 3 − 5 = ?"],
+      ["Use brackets to change the order of evaluation","(5 + 3) × 2 vs 5 + 3 × 2 — why do they differ?","Insert brackets: 4 + 8 ÷ 2 × 3 = 18"]],
+ 315:[["Find the HCF of two or more numbers","Find the HCF of 8 and 12","HCF of 24, 36, 60 — explain what it tells you"],
+      ["Find the LCM of two or more numbers","Find the LCM of 4 and 6","Bells ring every 12 and 18 min — when together again?"],
+      ["Apply HCF and LCM to real-world problems","Longest piece measuring 6 cm and 9 cm ribbons exactly","Ropes 42/56/70 m — greatest equal length + total pieces"],
+      ["Express a number as a product of prime factors","Write 12 as a product of primes","360 in index notation — divisible by 27?"],
+      ["Use factor trees and index notation","Complete a factor tree for 18","Two factor trees for 48 — same primes, explain why"]],
+ 316:[["Find a common denominator to add and subtract fractions","1/4 + 2/4 = ?","5/6 − 3/8 + 1/4 = ? (simplify)"],
+      ["Add and subtract mixed numbers","1½ + 2½ = ?","4⅖ − 2¾ = ? (borrowing)"],
+      ["Multiply fractions","½ × 4 = ?","¾ × ⅚ — why is the product smaller?"],
+      ["Fraction word problems","½ cup sugar per recipe — 2 recipes?","Tank ¾ full, ⅔ of the water used — fraction of full tank used?"],
+      ["Divide unit fractions","½ ÷ 2 = ?","How many ¼-litre bottles from 6 litres?"],
+      ["Model fraction division with diagrams","Shade ½ ÷ 2","Model 3 ÷ ⅕ and write the division sentence"]],
+};
+const SUBS = {313:["Large Numbers","Large Numbers","Order of Operations","Order of Operations"],
+              314:["Multi-Digit Multiplication","Multi-Digit Multiplication","Long Division","Long Division"]};
+
+const SCEN = {
+ A:{name:"Maya Thompson",ini:"MT",kind:"New student with evidence",tag:"Placement completed",pkg:"Full year (79 classes)",remain:79,freq:2,
+    desc:"High and low placement scores adjust the first plan.",
+    scores:{316:30,314:35,313:85,321:80,315:60,317:55,320:60,582:65,319:60}},
+ B:{name:"Ethan Carter",ini:"EC",kind:"New student without a test",tag:"No placement",pkg:"Half year (40 classes)",remain:40,freq:2,
+    desc:"Half-year package — shows the fit, compress and drop rules working.",scores:null},
+ C:{name:"Aarav Shah",ini:"AS",kind:"Returning student",tag:"Plan update",pkg:"Full year (79 classes) · 24 left",remain:24,freq:2,
+    desc:"Completed work and current evidence reshape the plan.",scores:null,
+    done:[{id:313,used:4},{id:314,used:6}], current:{id:315,used:3,
+      ev:[["ok","Solves Starter-level HCF questions correctly"],["ok","Solves Starter-level LCM questions correctly"],
+          ["bad","Gets Master-level real-world HCF/LCM questions wrong"],["bad","Needs support with factor trees and index notation"]],
+      loLevel:["Master ✓","Master ✓","Stuck after Starter","Stuck after Starter","Not attempted"]}},
+ D:{name:"Sofia Martinez",ini:"SM",kind:"Requested starting topic",tag:"Parent request",pkg:"Full year (79 classes)",remain:79,freq:2,
+    desc:"Prerequisite refreshers move before the requested topic.",scores:null,request:316},
+};
+
+/* ================= STATE ================= */
+let state={step:1,scen:null,edits:{},removed:new Set(),added:new Set(),manual:false,tab:"seq"};
+function resetAll(){state={step:1,scen:null,edits:{},removed:new Set(),added:new Set(),manual:false,tab:"seq"};render();}
+
+/* ================= PLAN ENGINE (the reference logic) ================= */
+function byId(id){return TOPICS.find(t=>t.id===id);}
+function chainPre(id,done){ // transitive unmet prerequisites, curriculum order
+  const out=[],seen=new Set();
+  (function walk(tid){ byId(tid).pre.forEach(p=>{ if(!done.has(p)&&!seen.has(p)){seen.add(p);walk(p);out.push(p);} }); })(id);
+  return out.sort((a,b)=>byId(a).seq-byId(b).seq);
+}
+function structuralFor(nTopics,avail){
+  let ck=Math.max(2,Math.min(5,Math.round(nTopics/2.5)));
+  let ptm=avail>=60?3:1;
+  return {ck,rdp:ck,ptm,total:ck*2+ptm};
+}
+function buildPlan(s){
+  const sc=SCEN[s];
+  const doneIds=new Set((sc.done||[]).map(d=>d.id));
+  const avail=sc.remain;
+  // 1. base list: not completed, minus manual removals, plus manual adds handled via removed/added sets
+  let items=TOPICS.filter(t=>!doneIds.has(t.id)&&!state.removed.has(t.id)).map(t=>({...t,cls:t.ideal,flags:[],refresher:false}));
+  // 2. scenario shaping
+  if(sc.current){ const it=items.find(i=>i.id===sc.current.id); if(it){it.cls=Math.max(it.min,it.ideal-sc.current.used); it.flags.push("in progress · "+sc.current.used+" of "+it.ideal+" done");} }
+  if(sc.scores){ items.forEach(i=>{const p=sc.scores[i.id];
+      if(p!==undefined&&p>=75){i.cls=Math.max(i.min,Math.ceil(i.ideal*0.7));i.flags.push("reduced · placement "+p+"%");}
+      if(p!==undefined&&p<40){i.flags.push("practice-heavy · placement "+p+"%");i.easy=Math.max(30,i.easy-15);}});}
+  // 3. parent request: reorder with refreshers
+  let order;
+  if(sc.request){
+    const pre=chainPre(sc.request,doneIds);
+    pre.forEach(pid=>{const it=items.find(i=>i.id===pid); if(it){it.cls=Math.max(1,Math.ceil(it.ideal/2)); it.refresher=true; it.flags.push("prerequisite refresher");}});
+    const first=[...pre,sc.request];
+    order=[...first.map(id=>items.find(i=>i.id===id)),...items.filter(i=>!first.includes(i.id)).sort((a,b)=>a.seq-b.seq)];
+  } else order=items.sort((a,b)=>a.seq-b.seq);
+  // 4. fit: compress toward min (lowest priority, latest seq first), then drop L→M
+  const teach=()=>order.reduce((n,i)=>n+i.cls,0);
+  let struct=structuralFor(order.length,avail);
+  const rank={L:0,M:1,H:2};
+  const overBy=()=>teach()+struct.total-avail;
+  if(overBy()>0){
+    const compOrder=[...order].sort((a,b)=>rank[a.pri]-rank[b.pri]||b.seq-a.seq);
+    for(const i of compOrder){ while(overBy()>0&&i.cls>i.min&&!i.refresher){i.cls--; if(!i.flags.some(f=>f.startsWith("compressed"))) i.flags.push("compressed toward minimum");} if(overBy()<=0)break; }
+  }
+  const dropped=[];
+  if(overBy()>0){
+    for(const pr of ["L","M"]){
+      const cand=[...order].filter(i=>i.pri===pr&&!state.added.has(i.id)).sort((a,b)=>b.seq-a.seq);
+      for(const i of cand){ if(overBy()<=0)break; order=order.filter(x=>x.id!==i.id); struct=structuralFor(order.length,avail);
+        dropped.push({t:i,reason:pr==="L"?"Low priority — does not fit the remaining classes":"Medium priority — dropped after compression to fit High-priority topics"}); }
+      if(overBy()<=0)break;
+    }
+  }
+  const warnings=[];
+  if(overBy()>0) warnings.push("Plan is still "+(overBy()===1?"1 class":overBy()+" classes")+" over capacity even after compressing all topics to minimum and dropping Medium/Low. A High-priority topic needs a manual decision — the system will not drop it silently.");
+  // saved classes note (Scenario C)
+  let savedNote=null;
+  if(sc.done){const saved=sc.done.reduce((n,d)=>n+(byId(d.id).ideal-d.used),0); if(saved>0)savedNote=(saved===1?"1 class":saved+" classes")+" saved by faster progress returned to the pool.";}
+  return {order,struct,dropped,warnings,teach:teach(),avail,savedNote,
+          planned:teach()+struct.total};
+}
+function twoWeek(plan,s){
+  const sc=SCEN[s]; const n=sc.freq*2; const out=[]; let c=0;
+  for(const t of plan.order){ if(c>=n)break;
+    const los=LO[t.id]; const subs=SUBS[t.id];
+    for(let k=0;k<t.cls&&c<n;k++){
+      const loIdx=Math.min(k,(t.los-1));
+      const loName=los?los[Math.min(loIdx,los.length-1)][0]:(subs?subs[Math.min(loIdx,subs.length-1)]:t.fam);
+      const remainAfter=t.cls-k-1;
+      out.push({cls:c+1,topic:t.name,lo:loName,acts:Math.max(2,Math.round(t.act/t.cls)),test:remainAfter<2&&!t.refresher,refresher:t.refresher});
+      c++;
+    }
+  }
+  return {classes:out,n};
+}
+
+/* ================= RENDER ================= */
+const $=(h)=>{const d=document.createElement("div");d.innerHTML=h;return d.innerHTML;};
+function stepper(){
+  const names=["Student","Evidence","Topic scope","Review"];
+  document.getElementById("stepper").innerHTML=names.map((n,i)=>{
+    const k=i+1;const cls=k===state.step?"on":(k<state.step?"done":"");
+    return `<div class="stp ${cls}"><div class="dot">${k<state.step?"✓":k}</div>${n}</div>${k<4?'<div class="bar"></div>':''}`;
+  }).join("");
+}
+function render(){ stepper(); const el=document.getElementById("screen");
+  if(state.step===1)el.innerHTML=sStudent();
+  if(state.step===2)el.innerHTML=sEvidence();
+  if(state.step===3)el.innerHTML=sScope();
+  if(state.step===4)el.innerHTML=sReview();
+  window.scrollTo({top:0});
+}
+function sStudent(){
+  const cards=Object.entries(SCEN).map(([k,s])=>`
+   <div class="stu ${state.scen===k?'sel':''}" onclick="pick('${k}')">
+     <span class="tag">DEMO ${k}</span><b>${s.name}</b>
+     <span class="kind">${s.tag}</span>
+     <div style="font-weight:600;font-size:12.5px;margin-top:3px;">${s.kind}</div>
+     <p>${s.desc}</p></div>`).join("");
+  const s=state.scen?SCEN[state.scen]:null;
+  return `<div class="card"><h2>01 · Choose a demo student</h2>
+   <div class="hint">Each student shows a different planning path from the supplied test scenarios.</div>
+   <div class="grid4">${cards}</div>
+   ${s?`<div class="profile">
+     <div class="chip"><span>Student</span><b>${s.name}</b></div>
+     <div class="chip"><span>Grade</span><b>Grade 5</b></div>
+     <div class="chip"><span>Region</span><b>United States</b></div>
+     <div class="chip"><span>Package</span><b>${s.pkg}</b></div>
+     <div class="chip"><span>Classes remaining</span><b>${s.remain}</b></div>
+     <div class="chip"><span>Schedule</span><b>${s.freq} classes / week</b></div>
+   </div>`:""}
+   <div class="nav"><span class="footer-note">All information on this page is prototype dummy data.</span>
+   <button class="primary" ${state.scen?"":"disabled style='opacity:.4'"} onclick="go(2)">Review evidence →</button></div></div>`;
+}
+function pick(k){state.scen=k;state.edits={};state.removed=new Set();state.added=new Set();state.manual=false;render();}
+function go(n){state.step=n;render();}
+function sEvidence(){
+  const s=SCEN[state.scen];
+  let body="";
+  if(s.scores){ body=`<div class="evid"><div><h3>Placement test results (score out of 100)</h3>
+    ${Object.entries(s.scores).map(([id,p])=>`<div class="score">${byId(+id).name}<b class="${p>=75?'high':(p<40?'low':'')}">${p}</b></div>`).join("")}</div>
+    <div><h3>How scores shape the plan</h3>
+    <div class="ev-line ev-ok">75%+ → classes reduce by ~30%, never below the topic minimum.</div>
+    <div class="ev-line ev-bad">Below 40% → full classes kept, activity mix shifts toward practice.</div>
+    <div class="ev-line" style="background:var(--gray-soft);color:var(--sub);">Mid-range → the academic team's ideal allocations apply exactly.</div></div></div>`;}
+  else if(s.done){ body=`<div class="evid"><div><h3>Completed since the previous plan</h3>
+     ${s.done.map(d=>{const t=byId(d.id);const sv=t.ideal-d.used;return `<div class="ev-line ev-ok">${t.name} — ${d.used} of ${t.ideal} planned classes ${sv>0?`<b>· ${sv} saved</b>`:"· on plan"}</div>`}).join("")}
+     <div class="ev-line" style="background:var(--gray-soft);color:var(--sub);">Baseline: previous plan · updates always start from it.</div></div>
+     <div><h3>Current-topic evidence — ${byId(s.current.id).name}</h3>
+     ${s.current.ev.map(e=>`<div class="ev-line ev-${e[0]}">${e[1]}</div>`).join("")}</div></div>`;}
+  else if(s.request){ const t=byId(s.request); const pre=chainPre(s.request,new Set());
+    body=`<h3 style="font-size:13.5px;color:var(--green);margin-bottom:8px;">Parent request</h3>
+    <div class="chip" style="display:inline-block;min-width:280px;"><span>Start with</span><b>${t.name} (${t.pri==="H"?"High":"Medium"} priority · ${t.ideal} classes)</b></div>
+    <p class="hint" style="margin-top:10px;">Unmet prerequisites (${pre.map(p=>byId(p).name).join(" → ")}) move forward as compressed refreshers, then the requested topic runs in full, then the plan returns to the normal curriculum sequence. Nothing is deleted.</p>`;}
+  else { body=`<div class="ev-line" style="background:var(--gray-soft);color:var(--sub);">No placement test and no history — the plan uses the academic team's ideal allocations exactly as given.</div>`; }
+  return `<div class="card"><h2>02 · Review the evidence</h2>
+    <div class="hint">This is the information the rules will use. Nothing is inferred outside the dummy dataset.</div>
+    ${body}
+    <div class="nav"><button class="ghost" onclick="go(1)">← Back</button><button class="primary" onclick="go(3)">Choose topic scope →</button></div></div>`;
+}
+function sScope(){
+  const plan=buildPlan(state.scen);
+  const rows=TOPICS.filter(t=>{const sc=SCEN[state.scen];return !(sc.done||[]).some(d=>d.id===t.id);}).map(t=>{
+    const inPlan=plan.order.some(o=>o.id===t.id); const o=plan.order.find(o=>o.id===t.id);
+    const removedManually=state.removed.has(t.id);
+    return `<tr>
+      <td style="width:26px;"><input type="checkbox" ${inPlan?"checked":""} onchange="toggleTopic(${t.id})" ${t.pri==="H"&&inPlan?"disabled title='High priority — locked in the plan'":""}></td>
+      <td class="tname"><b>${t.name}</b><span>${t.fam} · ${t.los} learning objectives</span></td>
+      <td><span class="pri ${t.pri}">${t.pri==="H"?"High":t.pri==="M"?"Medium":"Low"}</span></td>
+      <td class="num"><b>${o?o.cls:t.ideal}</b><span>of ${t.ideal} classes · min ${t.min}</span></td>
+      <td class="num"><b>${t.act}</b><span>activities</span></td>
+      <td class="flag ${o&&o.flags.length?'comp':(inPlan?'req':'')}">${removedManually?"removed by teacher":(o&&o.flags.length?o.flags[0]:(inPlan?(t.pri==="H"?"required":"recommended"):"dropped — see review"))}</td></tr>`;
+  }).join("");
+  return `<div class="card"><h2>03 · Choose the topic scope</h2>
+   <div class="hint">Recommended topics are pre-selected by the rules. The teacher controls the final scope — High-priority topics stay locked.</div>
+   <table class="topics"><tbody>${rows}</tbody></table>
+   ${state.manual?'<div class="manual-note">Manual change recorded — automatic updates stay paused until the next class data arrives (update-precedence rule).</div>':''}
+   <div class="nav"><button class="ghost" onclick="go(2)">← Back</button><button class="primary" onclick="go(4)">Review capacity & build plan →</button></div></div>`;
+}
+function toggleTopic(id){ if(state.removed.has(id)){state.removed.delete(id);} else {state.removed.add(id);} state.manual=true; render(); }
+function sReview(){
+  const s=SCEN[state.scen]; const plan=buildPlan(state.scen);
+  const over=plan.planned>plan.avail; const pct=Math.min(100,Math.round(plan.planned/plan.avail*100));
+  const tw=twoWeek(plan,state.scen);
+  // sequence rows with structural inserts (checkpoint after every ~2-3 topics)
+  let seqRows="",count=0,ck=0;
+  plan.order.forEach((t,i)=>{
+    seqRows+=`<div class="seqrow ${t.refresher?'refresh':''}">
+      <div class="idx">${String(i+1).padStart(2,"0")}</div>
+      <div class="body"><b>${t.name}</b><span>${t.refresher?"Prerequisite refresher · compressed":t.fam} · ${t.act} activities (${t.easy}:${100-t.easy} easy:practice)${t.flags.length?" · "+t.flags.join(" · "):""}</span></div>
+      <span class="pri ${t.pri}">${t.pri==="H"?"High":t.pri==="M"?"Medium":"Low"}</span>
+      <div class="num" style="min-width:52px;"><b>${t.cls}</b><span>classes</span></div>
+      <div class="acts">
+        <button class="mini" title="+1 class" onclick="bump(${t.id},1)">+</button>
+        <button class="mini" title="−1 class" onclick="bump(${t.id},-1)">−</button>
+        <button class="mini x" title="Remove topic" onclick="toggleTopic(${t.id});go(4)">✕</button>
+      </div>
+      ${state.edits[t.id]?'<span class="lock">teacher edited</span>':''}
+    </div>`;
+    count++;
+    if(count%3===0&&ck<plan.struct.ck&&i<plan.order.length-1){ck++;
+      seqRows+=`<div class="seqrow struct"><div class="idx">✓</div><div class="body"><b>Checkpoint ${ck} + RDP class</b><span>Assessment on the last block, then revision, doubts and practice</span></div><div class="num" style="min-width:52px;"><b>2</b><span>classes</span></div></div>`;}
+  });
+  const droppedRows=plan.dropped.map(d=>`<div class="drop"><div><b>${d.t.name}</b> — ${d.reason}</div><button class="addbtn" onclick="readd(${d.t.id})">Add back</button></div>`).join("");
+  const twRows=tw.classes.map(c=>`<div class="cls ${c.test?'test':''}"><span class="cl">Class ${c.cls}</span><b>${c.topic}</b>
+    <p>${c.lo} · ~${c.acts} activities${c.test?" · <b>Topic test scheduled — fewer than 2 classes remain on this topic</b>":""}${c.refresher?" · refresher":""}</p></div>`).join("");
+  // mentor view
+  let mentor="";
+  if(s.current){ const cur=byId(s.current.id); const los=LO[cur.id];
+    mentor=`<div class="notice">Question-level diagnosis for the current topic — built from homework, practice and test attempts. This is the mentor's "what to fix" view from the Learning Plan Builder document.</div>
+    <table class="diag"><tr><th style="width:30%">Learning objective — ${cur.name}</th><th style="width:16%">Student level</th><th style="width:27%">Starter question</th><th style="width:27%">Master question</th></tr>
+    ${los.map((l,i)=>{const lv=s.current.loLevel[i];const cls=lv.includes("✓")?"ok":(lv.includes("Stuck")?"stuck":"na");
+      return `<tr><td>${l[0]}</td><td><span class="pill ${cls}">${lv}</span></td><td class="q">${l[1]}</td><td class="q">${l[2]}</td></tr>`}).join("")}</table>
+    <div class="fix"><b>Fix in upcoming classes:</b> word problems applying HCF/LCM (solves direct questions but cannot choose the method in context) and prime factorisation beyond small numbers. Factor trees not yet attempted — introduce before the checkpoint. Fewer than 2 classes left on this topic → checkpoint test scheduled.</div>`;
+  } else { const first=plan.order[0]; const los=LO[first.id];
+    mentor=`<div class="notice">New student — no attempt data yet. The viewer shows the Starter and Master questions for the first topic as teaching guidance; the diagnosis fills in as activity data arrives.</div>
+    ${los?`<table class="diag"><tr><th style="width:34%">Learning objective — ${first.name}</th><th style="width:33%">Starter question</th><th style="width:33%">Master question</th></tr>
+    ${los.map(l=>`<tr><td>${l[0]}</td><td class="q">${l[1]}</td><td class="q">${l[2]}</td></tr>`).join("")}</table>`:
+    `<p class="hint">Question guidelines for ${first.name} will be added as the Academics team completes the full Grade 5 set (sample topics available: Number Sense, Factors & Multiples, Fractions).</p>`}`;
+  }
+  return `<div class="card"><div class="planhead">
+     <h2>${s.name}</h2><div class="meta">Grade 5 · ${plan.order.length} topics · ${plan.planned}/${plan.avail} classes planned</div></div>
+   <div class="cap">
+     <div class="capbox"><div class="eyebrow">Capacity check</div>
+       <h2>${over?`${plan.planned-plan.avail} classes over`:`${plan.avail-plan.planned} classes to spare`}</h2>
+       <div class="capbar ${over?'over':''}"><div style="width:${pct}%"></div></div>
+       <div class="capchips">
+         <div class="chip"><span>Available</span><b>${plan.avail}</b></div>
+         <div class="chip"><span>Teaching</span><b>${plan.teach}</b></div>
+         <div class="chip"><span>Structural</span><b>${plan.struct.total}</b></div>
+         <div class="chip"><span>Total planned</span><b>${plan.planned}</b></div>
+       </div>
+       ${plan.savedNote?`<div class="notice" style="margin-top:12px;">${plan.savedNote}</div>`:""}
+       ${(plan.avail-plan.planned)>=10?`<div class="warn">Spare classes are reserved for <b>Revision / School Help</b> — the plan does not stretch topics to fill them.</div>`:""}
+       ${plan.warnings.map(w=>`<div class="warn red">⚠ ${w}</div>`).join("")}
+       ${state.manual?'<div class="manual-note">Manual change recorded — automatic updates stay paused until the next class data arrives.</div>':''}
+     </div>
+   </div>
+   <div class="tabs">
+     <div class="tab ${state.tab==='seq'?'on':''}" onclick="tab('seq')">Sequence</div>
+     <div class="tab ${state.tab==='tw'?'on':''}" onclick="tab('tw')">Next 2 weeks</div>
+     <div class="tab ${state.tab==='mentor'?'on':''}" onclick="tab('mentor')">Mentor view</div>
+     ${plan.dropped.length?`<div class="tab ${state.tab==='drop'?'on':''}" onclick="tab('drop')">Not in plan (${plan.dropped.length})</div>`:""}
+   </div>
+   <div class="${state.tab==='seq'?'':'hidden'}">${seqRows}
+     <p class="footer-note">Checkpoints, RDP and PTM classes are counted in "structural". +/− respects each topic's minimum and a maximum of ideal + 2.</p></div>
+   <div class="${state.tab==='tw'?'':'hidden'} twk">
+     <p class="hint">Descriptive plan for the next 2 weeks — ${s.freq} classes/week → ${tw.n} classes. This section will live in the Student Progress Report.</p>${twRows}</div>
+   <div class="${state.tab==='mentor'?'':'hidden'}">${mentor}</div>
+   <div class="${state.tab==='drop'?'':'hidden'}">${droppedRows||'<p class="hint">Every topic fits.</p>'}</div>
+   <div class="nav"><button class="ghost" onclick="go(3)">← Edit scope</button><button class="primary" onclick="resetAll()">Start another student</button></div>
+  </div>`;
+}
+function tab(t){state.tab=t;render();}
+function bump(id,d){ const t=byId(id); const plan=buildPlan(state.scen); const o=plan.order.find(o=>o.id===id); if(!o)return;
+  // store as edit: adjust ideal used in engine via edits map — simple approach: mutate TOPICS ideal copy
+  const cur=o.cls+d; if(cur<t.min||cur>t.ideal+2)return;
+  t.ideal=t.ideal + d; // treat as teacher override of allocation
+  state.edits[id]=true; state.manual=true; render();
+}
+function readd(id){ state.added.add(id); state.removed.delete(id); const t=byId(id); state.manual=true; render(); }
+render();
+</script>
+</body>
+</html>
