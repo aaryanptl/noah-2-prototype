@@ -814,28 +814,13 @@ export default function LearningPlanBuilderPage({
       .map((id) => topicById.get(id)?.name)
       .filter((name): name is string => Boolean(name))
 
-    setAiLoading(true)
-    fetch("/api/learning-plan/parent-request-ai", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        requestedTopicName: targetTopic.name,
-        prerequisites: prereqNames,
-        studentName: student.name,
-      }),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.aiExplanation) {
-          setAiParentExplanation(data.aiExplanation)
-        }
-      })
-      .catch((err) => {
-        console.error("AI analysis error:", err)
-      })
-      .finally(() => {
-        setAiLoading(false)
-      })
+    const explanation =
+      prereqNames.length > 0
+        ? `Starting with ${targetTopic.name} as requested. Prerequisites (${prereqNames.join(", ")}) are scheduled first as compressed refreshers.`
+        : `Starting with ${targetTopic.name} as requested. This topic has no unmet prerequisites.`
+
+    setAiParentExplanation(explanation)
+    setAiLoading(false)
   }
 
   const suggestedTopicIds = useMemo(
@@ -1584,6 +1569,22 @@ export default function LearningPlanBuilderPage({
         <span className="lpb-top-divider" />
         <span className="lpb-product-name">Learning Plan Builder</span>
         <div className="lpb-top-actions">
+          {plan ? (
+            <button
+              type="button"
+              className="lpb-button lpb-button-ghost"
+              onClick={() => {
+                if (savedPlanId) {
+                  router.push("/learning-plan-builder")
+                } else {
+                  returnToSetup()
+                }
+              }}
+            >
+              <ArrowLeft size={15} />
+              Back to setup
+            </button>
+          ) : null}
           <button
             type="button"
             className="lpb-button lpb-button-ghost"
@@ -2117,17 +2118,16 @@ export default function LearningPlanBuilderPage({
                 </header>
 
                 {aiLoading ? (
-                  <div className="lpb-ai-analysis-banner loading" style={{ marginBottom: "20px" }}>
-                    <Sparkles size={16} className="animate-spin" />
-                    <span>Analyzing topic scope & prerequisites with OpenAI...</span>
+                  <div className="lpb-prereq-note" style={{ marginBottom: "14px" }}>
+                    <Sparkles size={14} className="animate-spin lpb-prereq-note-icon" />
+                    <span>Analyzing topic scope & prerequisites...</span>
                   </div>
                 ) : student.parentRequestedTopicId && aiParentExplanation ? (
-                  <div className="lpb-ai-analysis-banner" style={{ marginBottom: "20px" }}>
-                    <Sparkles size={16} />
-                    <div>
-                      <strong>AI Curriculum Analysis (OpenAI)</strong>
-                      <p>{aiParentExplanation}</p>
-                    </div>
+                  <div className="lpb-prereq-note" style={{ marginBottom: "14px" }}>
+                    <Sparkles size={14} className="lpb-prereq-note-icon" />
+                    <span>
+                      <strong>Prerequisite note:</strong> {aiParentExplanation}
+                    </span>
                   </div>
                 ) : null}
 
@@ -2290,6 +2290,62 @@ export default function LearningPlanBuilderPage({
                           previewAllocation.activities < topic.idealActivities)
                       const capacityCompressed =
                         (previewAllocation?.compressedByCapacity ?? 0) > 0
+
+                      const isRequestedStartTopic = student.parentRequestedTopicId === topic.id
+                      const requestedPrereqChain = student.parentRequestedTopicId
+                        ? getPrerequisiteChainLocal(student.parentRequestedTopicId, topicById)
+                        : []
+                      const isRequestedPrereqRefresher = requestedPrereqChain.includes(topic.id) && !completed
+
+                      const directPrereqs = (topic.prerequisiteIds || [])
+                        .map((id) => topicById.get(id))
+                        .filter((t): t is CurriculumTopic => Boolean(t) && !student.completedTopics.some((c) => c.topicId === t.id))
+
+                      const dependentTopics = curriculumTopics.filter(
+                        (t) => selectedSet.has(t.id) && (t.prerequisiteIds || []).includes(topic.id)
+                      )
+
+                      const prereqSeqList = directPrereqs.map((t) => `#${String(t.sequence).padStart(2, "0")}`).join(", ")
+                      const depSeqList = dependentTopics.map((t) => `#${String(t.sequence).padStart(2, "0")}`).join(", ")
+
+                      const isClassCompressed =
+                        selected &&
+                        previewAllocation !== undefined &&
+                        previewAllocation.classes < topic.idealClasses
+
+                      const isAtMinimum =
+                        selected &&
+                        previewAllocation !== undefined &&
+                        previewAllocation.classes <= topic.minimumClasses
+
+                      const statusText = !selected
+                        ? "Not selected"
+                        : completed
+                        ? "Completed"
+                        : isAtMinimum
+                        ? "At class minimum"
+                        : isClassCompressed
+                        ? "Compressed"
+                        : topic.priority === "high"
+                        ? "Full allocation"
+                        : scopeMode === "evidence" && aiRecommendation?.decision === "defer"
+                        ? "Deferred for capacity"
+                        : scopeMode === "evidence"
+                        ? "Evidence suggested"
+                        : suggested
+                        ? "Recommended"
+                        : "Teacher added"
+
+                      const statusTone = completed
+                        ? "completed"
+                        : statusText === "Full allocation" || statusText === "At class minimum" || statusText === "Recommended" || statusText === "Teacher added"
+                        ? "green"
+                        : statusText === "Compressed" || statusText === "Compressed to fit"
+                        ? "amber"
+                        : statusText === "Not selected"
+                        ? "muted"
+                        : "blue"
+
                       return (
                         <button
                           type="button"
@@ -2360,26 +2416,22 @@ export default function LearningPlanBuilderPage({
                             </small>
                           </span>
                           <span className="lpb-topic-state">
-                            {completed ? (
-                              "Completed"
-                            ) : capacityCompressed ? (
-                              previewAllocation?.atMinimum
-                                ? "At class minimum"
-                                : "Compressed to fit"
-                            ) : topic.priority === "high" ? (
-                              evidenceCompressed ? "Compressed" : selected ? "Selected by mentor" : "Not selected"
-                            ) : scopeMode === "evidence" &&
-                              aiRecommendation?.decision === "defer" ? (
-                              "Deferred for capacity"
-                            ) : scopeMode === "evidence" && selected ? (
-                              "Evidence suggested"
-                            ) : suggested ? (
-                              "Recommended"
-                            ) : selected ? (
-                              "Teacher added"
-                            ) : (
-                              "Not selected"
-                            )}
+                            {isRequestedStartTopic ? (
+                              <span className="lpb-prereq-badge requested">★ Requested Start</span>
+                            ) : isRequestedPrereqRefresher ? (
+                              <span className="lpb-prereq-badge refresher">⚡ Prerequisite Refresher</span>
+                            ) : directPrereqs.length > 0 ? (
+                              <span className="lpb-prereq-badge requires" title={`Needs ${directPrereqs.map((t) => t.name).join(", ")}`}>
+                                Requires {prereqSeqList}
+                              </span>
+                            ) : dependentTopics.length > 0 ? (
+                              <span className="lpb-prereq-badge prerequisite" title={`Prerequisite for ${dependentTopics.map((t) => t.name).join(", ")}`}>
+                                Prereq for {depSeqList}
+                              </span>
+                            ) : null}
+                            <span className={`lpb-status-pill ${statusTone}`}>
+                              {statusText}
+                            </span>
                           </span>
                         </button>
                       )
@@ -2682,6 +2734,20 @@ export default function LearningPlanBuilderPage({
               </div>
             </div>
             <div className="lpb-hero-actions">
+              <button
+                type="button"
+                className="lpb-button lpb-button-secondary"
+                onClick={() => {
+                  if (savedPlanId) {
+                    router.push("/learning-plan-builder")
+                  } else {
+                    returnToSetup()
+                  }
+                }}
+              >
+                <ArrowLeft size={16} />
+                Back to setup
+              </button>
               <button
                 type="button"
                 className="lpb-button lpb-button-ghost"

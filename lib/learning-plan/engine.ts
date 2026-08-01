@@ -1010,22 +1010,7 @@ export function buildLearningPlan({
 }): GeneratedPlan {
   const topicMap = getTopicMap(topics)
   const completedIds = getCompletedTopicIds(student)
-  const selectedSet = new Set(selectedTopicIds)
-  const prerequisiteIds = new Set<number>()
-  const visitedPrerequisites = new Set<number>()
-  const collectPrerequisites = (topicId: number) => {
-    if (visitedPrerequisites.has(topicId)) return
-    visitedPrerequisites.add(topicId)
-    const topic = topicMap.get(topicId)
-    for (const prerequisiteId of topic?.prerequisiteIds ?? []) {
-      if (!completedIds.has(prerequisiteId)) {
-        prerequisiteIds.add(prerequisiteId)
-        collectPrerequisites(prerequisiteId)
-      }
-    }
-  }
-  for (const topicId of selectedSet) collectPrerequisites(topicId)
-  const effectiveSelectedSet = new Set([...selectedSet, ...prerequisiteIds])
+  const effectiveSelectedSet = new Set(selectedTopicIds)
   const requestedPrerequisites = student.parentRequestedTopicId
     ? getPrerequisiteChain(student.parentRequestedTopicId, topicMap)
     : []
@@ -1143,18 +1128,9 @@ export function buildLearningPlan({
     }
   }
 
-  const autoAddedPrerequisites = [...prerequisiteIds]
-    .filter((topicId) => !selectedSet.has(topicId))
-    .map((topicId) => topicMap.get(topicId)?.name)
-    .filter((topicName): topicName is string => Boolean(topicName))
   const explanations = [
     "Topics are sequenced by curriculum order, with every selected prerequisite placed before the topic that depends on it.",
   ]
-  if (autoAddedPrerequisites.length > 0) {
-    explanations.push(
-      `Added prerequisite coverage before dependent topics: ${autoAddedPrerequisites.join(", ")}.`
-    )
-  }
   if (student.placementStatus === "completed") {
     explanations.push(
       "Placement scores below 40% keep the full allocation; scores of 75% or more shorten the topic and increase easy consolidation."
