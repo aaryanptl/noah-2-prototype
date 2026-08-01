@@ -2299,7 +2299,8 @@ export default function LearningPlanBuilderPage({
 
                       const directPrereqs = (topic.prerequisiteIds || [])
                         .map((id) => topicById.get(id))
-                        .filter((t): t is CurriculumTopic => Boolean(t) && !student.completedTopics.some((c) => c.topicId === t.id))
+                        .filter((t): t is CurriculumTopic => Boolean(t))
+                        .filter((t) => !student.completedTopics.some((c) => c.topicId === t.id))
 
                       const dependentTopics = curriculumTopics.filter(
                         (t) => selectedSet.has(t.id) && (t.prerequisiteIds || []).includes(topic.id)
@@ -2340,7 +2341,7 @@ export default function LearningPlanBuilderPage({
                         ? "completed"
                         : statusText === "Full allocation" || statusText === "At class minimum" || statusText === "Recommended" || statusText === "Teacher added"
                         ? "green"
-                        : statusText === "Compressed" || statusText === "Compressed to fit"
+                        : statusText === "Compressed"
                         ? "amber"
                         : statusText === "Not selected"
                         ? "muted"
