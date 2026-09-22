@@ -5,6 +5,7 @@ import {
   GraduationCap,
   LibraryBig,
   Mic,
+  Repeat,
   SlidersHorizontal,
   Stethoscope,
   Users,
@@ -29,6 +30,15 @@ const ASSESSMENT_OPTIONS = [
       "Turn curriculum priorities and student evidence into a transparent, class-by-class learning plan.",
     icon: SlidersHorizontal,
     accent: "#7C5CFC",
+  },
+  {
+    href: "/mastery",
+    title: "Mastery Loop",
+    tagline: "Next activity, per student",
+    description:
+      "Read a real student's evidence on a topic and get the one activity the loop prescribes next, with the rule that chose it.",
+    icon: Repeat,
+    accent: "#1F7169",
   },
   {
     href: "/teacher/syllabus",

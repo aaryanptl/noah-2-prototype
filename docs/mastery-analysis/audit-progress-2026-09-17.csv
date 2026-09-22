@@ -1,0 +1,5 @@
+As of,Content Type,Total Questions,Reviewed,Corrected,Remaining to Review,Notes
+2026-09-17,MCQ,98607,92834,45132,5773,"42,184 corrections ready as DB updates + 2,948 need adding as new rows; 1,128 review errors and 4,645 visual rows not audited"
+2026-09-17,FITB,1056,1056,833,0,"Review complete; 833 corrections in DB handoff"
+2026-09-17,DND,553,0,0,553,"Review not started"
+2026-09-17,Total,100216,93890,45965,6326,
