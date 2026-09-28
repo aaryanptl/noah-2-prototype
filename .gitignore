@@ -48,3 +48,5 @@ next-env.d.ts
 .tmp-lpb-guide-render/
 
 files/
+# full FITB handoff file (sampled into data/fitb/fitb-demo.csv)
+/fitb-db-ready-handoff*.csv

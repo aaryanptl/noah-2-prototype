@@ -1,7 +1,10 @@
-// Build data/fitb/fitb-demo.csv — a small, shareable slice of files/fitb_fixed.csv
-// for the public /fitb demo. The full file stays local (files/ is gitignored).
+// Build data/fitb/fitb-demo.csv — a small, shareable slice of the FITB handoff
+// file for the public /fitb demo. The full file stays local and out of git.
 //
-//   node scripts/build-fitb-demo.mjs
+//   node scripts/build-fitb-demo.mjs [source.csv]
+//
+// Source defaults to the reviewed DB handoff, fitb-db-ready-handoff(exiting_db)v2.csv.
+// Its reviewed `input_type` column wins over the older `Category` column.
 //
 // Picks PER_GRADE blanks per grade, split evenly across answer categories
 // (Number / Fraction / Text / Alphanumeric) so every "Answer" chip has something
@@ -15,7 +18,10 @@ import path from "node:path";
 import { parse } from "csv-parse/sync";
 
 const ROOT = process.cwd();
-const SOURCE = path.join(ROOT, "files", "fitb_fixed.csv");
+const SOURCE = path.resolve(
+  ROOT,
+  process.argv[2] ?? "fitb-db-ready-handoff(exiting_db)v2.csv",
+);
 const OUTPUT = path.join(ROOT, "data", "fitb", "fitb-demo.csv");
 const PER_GRADE = 50;
 const SEED = 20260928;
@@ -111,7 +117,15 @@ const source = parse(fs.readFileSync(SOURCE), {
   columns: true,
   skip_empty_lines: true,
   relax_column_count: true,
+  bom: true,
 });
+
+/** "number" -> "Number"; falls back to the file's Category column. */
+function category(row) {
+  const reviewed = clean(row.input_type).toLowerCase();
+  const match = CATEGORIES.find((c) => c.toLowerCase() === reviewed);
+  return match ?? clean(row.Category);
+}
 
 // Usable rows only, one per question text (regional copies repeat the wording).
 const seenText = new Set();
@@ -119,13 +133,18 @@ const usable = [];
 for (const row of shuffle(source, random)) {
   if (clean(row.question_type).toLowerCase() !== "fitb") continue;
   if (!clean(row.id) || !clean(row.question_text)) continue;
-  if (!CATEGORIES.includes(clean(row.Category))) continue;
+  const rowCategory = category(row);
+  if (!CATEGORIES.includes(rowCategory)) continue;
   const payload = answerPayload(row);
   if (!payload) continue;
   const textKey = clean(row.question_text).toLowerCase();
   if (seenText.has(textKey)) continue;
   seenText.add(textKey);
-  usable.push({ ...row, generation_metadata: JSON.stringify({ payload }) });
+  usable.push({
+    ...row,
+    Category: rowCategory,
+    generation_metadata: JSON.stringify({ payload }),
+  });
 }
 
 const grades = [...new Set(usable.map((r) => clean(r.grade)))].sort((a, b) =>

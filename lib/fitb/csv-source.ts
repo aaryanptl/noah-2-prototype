@@ -9,9 +9,9 @@ import { parse } from "csv-parse/sync";
 // FITB question source — a CSV read once into memory.
 //
 // By default this is data/fitb/fitb-demo.csv: 50 blanks per grade sampled from
-// files/fitb_fixed.csv by scripts/build-fitb-demo.mjs, small enough to commit and
-// deploy. The full file stays local (files/ is gitignored); point FITB_CSV_PATH
-// at it to grade against the whole bank.
+// the reviewed DB handoff (fitb-db-ready-handoff(exiting_db)v2.csv) by
+// scripts/build-fitb-demo.mjs, small enough to commit and deploy. The full file
+// stays local and out of git; point FITB_CSV_PATH at it to use the whole bank.
 //
 // This replaces the `serveQuestions` path for the FITB pages. Two reasons:
 //
