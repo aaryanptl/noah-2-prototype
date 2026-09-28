@@ -7,6 +7,7 @@ import {
   Mic,
   Repeat,
   SlidersHorizontal,
+  SpellCheck,
   Stethoscope,
   Users,
 } from "lucide-react";
@@ -39,6 +40,15 @@ const ASSESSMENT_OPTIONS = [
       "Read a real student's evidence on a topic and get the one activity the loop prescribes next, with the rule that chose it.",
     icon: Repeat,
     accent: "#1F7169",
+  },
+  {
+    href: "/fitb",
+    title: "FITB Matching",
+    tagline: "Grade the near-misses",
+    description:
+      "See where exact matching marks a right fill-in-the-blank answer wrong, and how normalising then Jev catches it.",
+    icon: SpellCheck,
+    accent: "#0EA5E9",
   },
   {
     href: "/teacher/syllabus",

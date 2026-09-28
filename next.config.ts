@@ -12,6 +12,8 @@ const nextConfig: NextConfig = {
     ],
     "/api/admin/generator/ideas": ["./Question Bank Plan - 13 ap.xlsx"],
     "/api/admin/generator/list": ["./Question Bank Plan - 13 ap.xlsx"],
+    "/api/fitb/questions": ["./data/fitb/fitb-demo.csv"],
+    "/api/fitb/check": ["./data/fitb/fitb-demo.csv"],
   },
 };
 
