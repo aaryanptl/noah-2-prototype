@@ -5,7 +5,7 @@ Scripts read the production replica via `MAIN_DATABASE_READ_ONLY_URL` (add it to
 and must be run from the repo root:
 
 ```
-node scripts/mastery-analysis/build-mastery-demo.mjs               # -> docs/mastery-analysis/mastery-learning-real-data.html
+node scripts/mastery-analysis/build-mastery-demo.mjs               # -> docs/mastery-analysis/mastery-learning-real-data.html + .data.js (data is gitignored)
 node scripts/mastery-analysis/build-performance-audit.mjs          # -> docs/mastery-analysis/student-performance-mastery-analysis.html + output/analysis/performance-mastery-audit.json
 node scripts/mastery-analysis/build-student-score-progression.mjs  # -> docs/mastery-analysis/student-score-progression.html
 node scripts/mastery-analysis/analyze-score-patterns.mjs           # -> output/analysis/student-score-patterns-<date>.json

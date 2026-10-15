@@ -52,4 +52,4 @@ files/
 /fitb-db-ready-handoff*.csv
 
 # Production student rows — keep local (repo is public)
-docs/mastery-analysis/mastery-learning-real-data.html
+docs/mastery-analysis/mastery-learning-real-data.data.js

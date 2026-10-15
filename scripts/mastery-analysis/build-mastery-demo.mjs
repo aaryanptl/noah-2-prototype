@@ -31,6 +31,8 @@ order by s.started_at,s.id,q.ordinal`);
 await client.query('ROLLBACK');
 const data={generated:new Date().toISOString(),rows};
 const template=fs.readFileSync('scripts/mastery-analysis/mastery-demo-template.html','utf8');
-fs.writeFileSync('docs/mastery-analysis/mastery-learning-real-data.html',template.replace('__DATA__',JSON.stringify(data).replaceAll('<','\\u003c')));
+// The page is code and goes in git; the data is production student rows and stays local (gitignored).
+fs.writeFileSync('docs/mastery-analysis/mastery-learning-real-data.html',template);
+fs.writeFileSync('docs/mastery-analysis/mastery-learning-real-data.data.js','window.MASTERY_DATA='+JSON.stringify(data)+';\n');
 console.log(JSON.stringify({rows:rows.length,sessions:new Set(rows.map(r=>r.session)).size,students:new Set(rows.map(r=>r.student)).size}));
 }finally{await client.end();}
