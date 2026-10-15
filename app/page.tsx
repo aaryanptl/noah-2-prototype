@@ -1,6 +1,7 @@
 import {
   ArrowRight,
   BookOpen,
+  Compass,
   Database,
   GraduationCap,
   LibraryBig,
@@ -49,6 +50,15 @@ const ASSESSMENT_OPTIONS = [
       "See where exact matching marks a right fill-in-the-blank answer wrong, and how normalising then Jev catches it.",
     icon: SpellCheck,
     accent: "#0EA5E9",
+  },
+  {
+    href: "/why-wrong",
+    title: "Why It Was Wrong",
+    tagline: "Read the mistake, not the mark",
+    description:
+      "Replay a real session where Jev judges why each answer was wrong, and see the difficulty the student should have been given instead.",
+    icon: Compass,
+    accent: "#B8432C",
   },
   {
     href: "/teacher/syllabus",

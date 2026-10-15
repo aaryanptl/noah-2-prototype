@@ -50,3 +50,6 @@ next-env.d.ts
 files/
 # full FITB handoff file (sampled into data/fitb/fitb-demo.csv)
 /fitb-db-ready-handoff*.csv
+
+# Production student rows — keep local (repo is public)
+docs/mastery-analysis/mastery-learning-real-data.html

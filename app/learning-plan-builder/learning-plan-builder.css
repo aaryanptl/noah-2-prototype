@@ -9730,3 +9730,194 @@ p.lpb-methodology-live {
   font-weight: 700;
   white-space: nowrap;
 }
+
+/* ------------------------------------------------------------------ *
+ * Presenter guide — the running order for a demo, at the top of the
+ * "About this tool" dialog.
+ * ------------------------------------------------------------------ */
+
+.lpb-methodology-present {
+  padding: 18px 20px 20px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: linear-gradient(
+    180deg,
+    rgba(46, 196, 182, 0.07),
+    rgba(255, 255, 255, 0) 120px
+  ),
+  var(--surface);
+  display: grid;
+  gap: 16px;
+}
+
+.lpb-methodology-present > header {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.lpb-methodology-present > header svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--teal);
+}
+
+.lpb-methodology-present > header strong {
+  display: block;
+  color: var(--ink);
+  font-size: 0.98rem;
+}
+
+.lpb-methodology-present > header p {
+  margin: 3px 0 0;
+  color: var(--ink-muted);
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.lpb-present-headline {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid rgba(31, 113, 105, 0.22);
+  border-radius: 10px;
+  background: rgba(46, 196, 182, 0.09);
+  color: var(--ink);
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1.55;
+}
+
+.lpb-present-headline svg {
+  flex-shrink: 0;
+  margin-top: 4px;
+  color: var(--teal);
+}
+
+.lpb-present-beats {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.lpb-present-beats li {
+  display: grid;
+  grid-template-columns: 170px minmax(0, 1fr);
+  gap: 14px;
+  padding: 11px 0;
+  border-top: 1px solid var(--line);
+}
+
+.lpb-present-beats li:first-child {
+  border-top: 0;
+}
+
+.lpb-present-beat-where span {
+  display: block;
+  color: var(--teal);
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  line-height: 1.4;
+}
+
+.lpb-present-beat-where em {
+  display: block;
+  margin-top: 3px;
+  color: var(--ink-muted);
+  font-family: "Space Mono", monospace;
+  font-size: 0.72rem;
+  font-style: normal;
+}
+
+.lpb-present-say {
+  margin: 0;
+  color: var(--ink);
+  font-size: 0.89rem;
+  line-height: 1.6;
+}
+
+.lpb-present-then {
+  margin: 5px 0 0;
+  color: var(--ink-muted);
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+.lpb-present-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 10px;
+}
+
+.lpb-present-split > article {
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface-warm);
+}
+
+.lpb-present-split > article > header {
+  padding-bottom: 9px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid var(--line);
+}
+
+.lpb-present-split > article > header strong {
+  color: var(--ink);
+  font-size: 0.88rem;
+}
+
+.lpb-present-split ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 11px;
+}
+
+.lpb-present-flat {
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: 0.8rem;
+  line-height: 1.5;
+  text-decoration: line-through;
+  text-decoration-color: rgba(244, 122, 98, 0.6);
+}
+
+.lpb-present-sharp {
+  margin: 4px 0 0;
+  padding-left: 10px;
+  border-left: 2px solid var(--green);
+  color: var(--ink);
+  font-size: 0.83rem;
+  line-height: 1.55;
+}
+
+.lpb-present-rules li strong {
+  display: block;
+  color: var(--ink);
+  font-size: 0.83rem;
+}
+
+.lpb-present-rules li p {
+  margin: 3px 0 0;
+  color: var(--ink-soft);
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+@media (max-width: 900px) {
+  .lpb-present-beats li,
+  .lpb-present-split {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 6px;
+  }
+}

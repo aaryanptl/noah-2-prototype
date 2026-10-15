@@ -27,6 +27,8 @@ import {
   Lightbulb,
   ListOrdered,
   PieChart,
+  Presentation,
+  Quote,
   Repeat,
   RefreshCw,
   ShieldCheck,
@@ -262,6 +264,146 @@ const HOW_TO_USE: UseStep[] = [
     title: "Teach, then record the outcome",
     body: "After each class mark faster, on track or needs more time. The change is previewed first and written as a new version only on approval.",
     where: "Plan board · Record outcome",
+  },
+]
+
+/* ------------------------------------------------------------------ *
+ * Presenter guide — how to walk somebody through the tool
+ * ------------------------------------------------------------------ */
+
+/**
+ * The demo is shown to people who know their business and nothing about this
+ * builder, so the order it is explained in matters as much as what it does.
+ *
+ * Each beat is one screen and one sentence: `say` is the line to lead with,
+ * `then` is what to do on screen once it has landed. Deliberately short — a
+ * presenter reads this once before the call, not during it.
+ */
+interface PresentBeat {
+  where: string
+  minutes: string
+  say: string
+  then: string
+}
+
+const PRESENT_BEATS: PresentBeat[] = [
+  {
+    where: "Before any screen",
+    minutes: "30 sec",
+    say: "A parent buys a package of classes. After that, every teacher decides on their own what to teach and in what order. Two students in the same grade end up with two different journeys, and nobody can say what was actually covered.",
+    then: "Stay off the app. This is the problem, and it is theirs, not ours.",
+  },
+  {
+    where: "Still before any screen",
+    minutes: "30 sec",
+    say: "The Learning Plan Builder is a tool for teachers. It reads what the student has already proven, fits the teaching into the classes the package actually has left, and produces a class-by-class plan. In about five minutes.",
+    then: "One definition, one promise. Do not list features yet.",
+  },
+  {
+    where: "Setup · Student",
+    minutes: "40 sec",
+    say: "We have taken four students to test it. One has done our placement test, one is brand new, one had topics requested by a parent, one is already part-way through a plan. Same rules for all four, and you will see four very different plans.",
+    then: "Open one profile so they see the evidence is real, then move on.",
+  },
+  {
+    where: "Setup · Evidence",
+    minutes: "30 sec",
+    say: "This is everything the system knows about the student, on one screen, before a single decision is taken. Nothing beyond this is assumed.",
+    then: "Point at one weak objective and one strong one. Two examples, not ten.",
+  },
+  {
+    where: "Setup · Topic scope",
+    minutes: "40 sec",
+    say: "High-priority topics are locked in, because the curriculum requires them. Everything else the teacher can add, remove or reorder, and the bar keeps showing what still fits in the package.",
+    then: "Remove one topic live so they watch the capacity move. That one click sells the control.",
+  },
+  {
+    where: "Setup · Review before building",
+    minutes: "1 min",
+    say: "Before we build anything, the teacher sees the full maths. Two topics were already proven in the placement test, so those get compressed and the classes come back. What is left goes to teaching, to checkpoints, and a small reserve for the reschedules that always happen.",
+    then: "Land the trust line: every number here is explained before the teacher commits to it. Then hit Build.",
+  },
+  {
+    where: "Plan board · Classes",
+    minutes: "1 min",
+    say: "Here is the whole year, class by class, with the reason attached to each one.",
+    then: "Give the headline count first, then scroll. Never read the tiles out one by one.",
+  },
+  {
+    where: "Plan board · one class open",
+    minutes: "1 min",
+    say: "Every class tells the teacher exactly what to teach and exactly what to evaluate. That is what brings predictability into the classroom instead of every teacher doing it their own way.",
+    then: "Open the activities on one class only. One is the example; three is a list.",
+  },
+  {
+    where: "Plan board · Record outcome",
+    minutes: "1 min",
+    say: "Say the student needed more time on this topic. The teacher records it, and this topic gets one more lecture. The rest of the plan reflows on its own, and the package extends.",
+    then: "Say the business half out loud: a slower student means more classes, not a broken plan.",
+  },
+  {
+    where: "Plan board · Structure",
+    minutes: "40 sec",
+    say: "Today a student can finish eighty classes and nobody can say what was actually achieved. Checkpoints fix that. Each one defines where the student should be by then, and checks whether they are.",
+    then: "This is the line most people remember. Slow down for it.",
+  },
+  {
+    where: "Close",
+    minutes: "30 sec",
+    say: "The flow and the design are final, the back end is in progress, and integration is a couple of weeks out.",
+    then: "Always end on status. They want to know where it stands, not just what it does.",
+  },
+]
+
+/**
+ * The same fact said two ways. The left column is what the screen literally
+ * shows; the right column is what it means to the person watching. Numbers read
+ * aloud are forgotten before the next sentence.
+ */
+const SAY_SWAPS: { flat: string; sharp: string }[] = [
+  {
+    flat: "Seventy-five classes, then it becomes seventy-four.",
+    sharp: "For this topic we have taken out one lecture, because she has already proven it.",
+  },
+  {
+    flat: "In package 79, teaching 62, checkpoint and RDP 10, ops reserve 3.",
+    sharp: "Most of the package goes to teaching. Ten classes are checkpoints, and three are held back for the reschedules that always happen.",
+  },
+  {
+    flat: "Record outcome is a basic check after the class.",
+    sharp: "The teacher marks how the class went, and the rest of the plan adjusts to it.",
+  },
+  {
+    flat: "Each class has starter and master questions.",
+    sharp: "Each class already knows what the teacher should teach and what they should evaluate.",
+  },
+  {
+    flat: "This tab shows the checkpoint classes.",
+    sharp: "This is where we stop and check whether the student is actually where they should be.",
+  },
+]
+
+/** House rules for the demo itself, learned the hard way. */
+const PRESENT_RULES: { title: string; body: string }[] = [
+  {
+    title: "Never talk for two minutes without something on screen",
+    body: "If there is no screen for it, it belongs in the opening, and the opening is one minute long.",
+  },
+  {
+    title: "Decide which five minutes they keep",
+    body: "Nobody remembers thirty minutes of equal weight. Pick the checkpoints line and the record-outcome line, and give those the pauses.",
+  },
+  {
+    title: "Say the difference, do not let them find it",
+    body: "Moving to the next student, name what changed out loud before they start hunting for it.",
+  },
+  {
+    title: "Narrate where you are going",
+    body: "\"Let us look at this part first, we will come back to that one\" stops the room reading ahead of you.",
+  },
+  {
+    title: "Generate the plan before the call",
+    body: "Have a built plan ready in a second tab. Nobody should watch a loading state.",
   },
 ]
 
@@ -1029,6 +1171,103 @@ interface MethodologyViewProps {
   student?: DemoStudent | null
 }
 
+/**
+ * The headline sentence for the plan board, built from the plan on screen so it
+ * can be read out as-is. One sentence carrying three numbers beats three
+ * sentences carrying one each.
+ */
+function headlineLine(
+  plan: GeneratedPlan | null,
+  student: DemoStudent | null
+): string {
+  if (!plan) {
+    return "For <student>, we have planned <n> activities across <n> topics, delivered in <n> lectures."
+  }
+  const name = student?.name?.split(" ")[0] ?? "this student"
+  const activities = plan.allocations.reduce(
+    (sum, allocation) => sum + allocation.activities,
+    0
+  )
+  return `For ${name}, we have planned ${activities} activities across ${plan.allocations.length} topics, delivered in ${plan.capacity.total} lectures.`
+}
+
+/**
+ * How to present the tool, not how the tool decides. It sits first because the
+ * people opening this dialog before a demo need the running order more than
+ * they need the thresholds.
+ */
+function PresenterGuide({
+  plan,
+  student,
+}: {
+  plan: GeneratedPlan | null
+  student: DemoStudent | null
+}) {
+  return (
+    <section className="lpb-methodology-present">
+      <header>
+        <Presentation size={16} />
+        <div>
+          <strong>How to present this</strong>
+          <p>
+            The running order for a demo, with the line to lead each screen
+            with. Roughly eight minutes end to end.
+          </p>
+        </div>
+      </header>
+
+      <p className="lpb-present-headline">
+        <Quote size={13} />
+        <span>{headlineLine(plan, student)}</span>
+      </p>
+
+      <ol className="lpb-present-beats">
+        {PRESENT_BEATS.map((beat) => (
+          <li key={beat.where}>
+            <div className="lpb-present-beat-where">
+              <span>{beat.where}</span>
+              <em>{beat.minutes}</em>
+            </div>
+            <div className="lpb-present-beat-body">
+              <p className="lpb-present-say">“{beat.say}”</p>
+              <p className="lpb-present-then">{beat.then}</p>
+            </div>
+          </li>
+        ))}
+      </ol>
+
+      <div className="lpb-present-split">
+        <article className="lpb-present-swaps">
+          <header>
+            <strong>Say it this way, not that way</strong>
+          </header>
+          <ul>
+            {SAY_SWAPS.map((swap) => (
+              <li key={swap.flat}>
+                <p className="lpb-present-flat">{swap.flat}</p>
+                <p className="lpb-present-sharp">{swap.sharp}</p>
+              </li>
+            ))}
+          </ul>
+        </article>
+        <article className="lpb-present-rules">
+          <header>
+            <strong>Rules for the demo itself</strong>
+          </header>
+          <ul>
+            {PRESENT_RULES.map((rule) => (
+              <li key={rule.title}>
+                <strong>{rule.title}</strong>
+                <p>{rule.body}</p>
+              </li>
+            ))}
+          </ul>
+        </article>
+      </div>
+    </section>
+  )
+}
+
 /** The methodology itself, rendered as the plan board's Methodology tab. */
 export function MethodologyView({
   plan = null,
@@ -1041,16 +1280,19 @@ export function MethodologyView({
     <div className="lpb-methodology">
       <header className="lpb-methodology-intro">
         <span className="lpb-detail-label">About this tool</span>
-        <h3>How this plan is decided</h3>
+        <h3>What this tool is, and how to explain it</h3>
         <p>
           The builder does not pick topics by feel. It reads what the student has
           already proven, fits the required teaching into the classes the package
           actually has left, and keeps a written reason on every decision. This
-          page is the whole method: what the tool does, how a teacher drives it,
-          every threshold it uses, and a worked example of the lot applied to one
+          page starts with how to walk somebody through that in a demo, then
+          gives the whole method underneath it: what the tool does, how a teacher
+          drives it, every threshold it uses, and a worked example applied to one
           topic.
         </p>
       </header>
+
+      <PresenterGuide plan={plan} student={student} />
 
       {/*
         What the tool is and how it is driven, before any rule is quoted — this

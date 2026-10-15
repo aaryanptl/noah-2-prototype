@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0d0f10" />
+    <title>Audit plan</title>
+    <style>
+      :root {
+        --bg: #0d0f10;
+        --paper: #15191a;
+        --paper-soft: #1b2021;
+        --line: #303839;
+        --text: #edf1ec;
+        --muted: #a5afaa;
+        --quiet: #737d78;
+        --green: #c6f36b;
+        --blue: #9acbff;
+        --orange: #ffbd75;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        color: var(--text);
+        background: var(--bg);
+        font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+        line-height: 1.55;
+      }
+
+      .page { width: min(100% - 40px, 980px); margin: 0 auto; }
+
+      .top {
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+        padding: 25px 0 17px;
+        border-bottom: 1px solid var(--line);
+        color: var(--quiet);
+        font: 500 11px/1.2 "IBM Plex Mono", Consolas, monospace;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+      }
+
+      .top strong { color: var(--green); font-weight: 500; }
+      header { padding: 70px 0 55px; }
+      .kicker { margin: 0 0 17px; color: var(--green); font: 500 12px/1.2 "IBM Plex Mono", Consolas, monospace; letter-spacing: .08em; text-transform: uppercase; }
+      h1, h2, h3, p { margin-top: 0; }
+      h1 { max-width: 720px; margin-bottom: 20px; font-size: clamp(42px, 8vw, 76px); font-weight: 600; letter-spacing: -.065em; line-height: .98; }
+      .intro { max-width: 640px; margin-bottom: 0; color: var(--muted); font-size: 19px; }
+
+      .section { padding: 30px 0 58px; }
+      .section-title { display: flex; align-items: center; justify-content: space-between; gap: 25px; margin-bottom: 18px; border-bottom: 1px solid var(--line); padding-bottom: 13px; }
+      h2 { margin-bottom: 0; font-size: 26px; letter-spacing: -.04em; }
+      .section-title p { max-width: 460px; margin-bottom: 0; color: var(--muted); font-size: 14px; }
+
+      .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; border: 1px solid var(--line); background: var(--line); }
+      .step { min-height: 175px; padding: 20px; background: var(--paper); }
+      .step-number { display: block; margin-bottom: 35px; color: var(--green); font: 500 12px "IBM Plex Mono", Consolas, monospace; }
+      h3 { margin-bottom: 7px; font-size: 16px; line-height: 1.25; }
+      .step p, .audit-card p, .rule p, .output p { margin-bottom: 0; color: var(--muted); font-size: 13px; }
+
+      .audit-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+      .audit-card { padding: 19px 20px; border: 1px solid var(--line); background: var(--paper); }
+      .audit-card:nth-child(3n + 2) { border-top: 2px solid var(--blue); }
+      .audit-card:nth-child(3n + 3) { border-top: 2px solid var(--orange); }
+      .audit-card:nth-child(3n + 1) { border-top: 2px solid var(--green); }
+      .action { margin-top: 15px; padding-top: 11px; border-top: 1px solid var(--line); color: var(--green); font-size: 12px; }
+      .action span { color: var(--quiet); }
+
+      .example-label { margin-bottom: 8px; color: var(--quiet); font: 500 10px "IBM Plex Mono", Consolas, monospace; letter-spacing: .08em; text-transform: uppercase; }
+      .example-stat { margin-bottom: 8px; color: var(--text); font: 600 22px/1.1 "IBM Plex Mono", Consolas, monospace; letter-spacing: -.04em; }
+      .example-note { margin: 18px 0 0; padding: 16px 18px; border: 1px solid var(--line); background: var(--paper-soft); color: var(--muted); font-size: 13px; }
+      .example-note strong { color: var(--text); font-weight: 600; }
+
+      .rules { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+      .rule { display: grid; grid-template-columns: 34px 1fr; gap: 13px; padding: 18px 20px; border: 1px solid var(--line); background: var(--paper-soft); }
+      .rule-number { color: var(--blue); font: 500 12px "IBM Plex Mono", Consolas, monospace; }
+
+      .output { display: grid; grid-template-columns: 1fr 250px; gap: 10px; }
+      .output > div, .output aside { padding: 21px; border: 1px solid var(--line); background: var(--paper); }
+      .output h3 { font-size: 18px; }
+      .output-list { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; margin-top: 20px; }
+      .decision { padding: 12px; border: 1px solid var(--line); color: var(--text); font-size: 12px; }
+      .decision::before { display: block; width: 7px; height: 7px; margin-bottom: 12px; border-radius: 50%; background: var(--green); content: ""; }
+      .decision:nth-child(2)::before { background: var(--blue); }
+      .decision:nth-child(3)::before { background: var(--orange); }
+      .decision:nth-child(4)::before { background: #ff7c7c; }
+      aside .kicker { margin-bottom: 14px; }
+      aside ul { margin: 0; padding: 0; list-style: none; }
+      aside li { padding: 8px 0; border-bottom: 1px solid var(--line); color: var(--muted); font-size: 13px; }
+      aside li:last-child { border-bottom: 0; }
+      aside li::before { margin-right: 8px; color: var(--green); content: "•"; }
+
+      .say-this { margin: 0 0 70px; padding: 20px 22px; border-left: 2px solid var(--green); background: rgba(198, 243, 107, .06); color: var(--text); font-size: 16px; }
+      footer { padding: 18px 0 35px; border-top: 1px solid var(--line); color: var(--quiet); font-size: 12px; }
+
+      @media (max-width: 700px) {
+        .steps, .audit-grid, .rules, .output { grid-template-columns: 1fr; }
+        .output-list { grid-template-columns: repeat(2, 1fr); }
+        .section-title { display: block; }
+        .section-title p { margin-top: 9px; }
+      }
+
+      @media (max-width: 460px) {
+        .page { width: min(100% - 28px, 980px); }
+        header { padding: 52px 0 42px; }
+        h1 { font-size: 50px; }
+        .intro { font-size: 16px; }
+        .top span:last-child { display: none; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <div class="top"><strong>Noah / audit plan</strong><span>working version · 02 September 2026</span></div>
+
+      <header>
+        <p class="kicker">The plan</p>
+        <h1>Check what we can trust.</h1>
+        <p class="intro">I'll look at the question bank and student activity, then turn the findings into a short list of things to keep, fix, rewrite or remove.</p>
+      </header>
+
+      <main>
+        <section class="section">
+          <div class="section-title"><h2>How I'll audit</h2><p>The aim is to understand what the data is telling us before we change the product.</p></div>
+          <div class="steps">
+            <article class="step"><span class="step-number">01</span><h3>Check the records</h3><p>Look for missing values, duplicates, broken links between tables, invalid scores and questions that do not render correctly.</p></article>
+            <article class="step"><span class="step-number">02</span><h3>Look for patterns</h3><p>Compare accuracy, completion, response time and second attempts. A single number is rarely enough to explain what happened.</p></article>
+            <article class="step"><span class="step-number">03</span><h3>Decide what to do</h3><p>Write down the evidence, the likely cause, the owner and the next action. Keep the original data unchanged.</p></article>
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="section-title"><h2>Question bank</h2><p>I want to know whether a low score reflects learning difficulty or a problem with the question itself.</p></div>
+          <div class="audit-grid">
+            <article class="audit-card"><h3>Almost everyone gets it wrong</h3><p>The answer key or the wording may be wrong.</p><div class="action"><span>Action:</span> Check the key, explanation and question.</div></article>
+            <article class="audit-card"><h3>Strong students fail, weak students pass</h3><p>The question may be confusing or testing the wrong skill.</p><div class="action"><span>Action:</span> Review the options and rewrite or retire it.</div></article>
+            <article class="audit-card"><h3>One wrong option attracts most answers</h3><p>Two options may look correct, or the intended answer may be unclear.</p><div class="action"><span>Action:</span> Fix the key or make the option clearer.</div></article>
+            <article class="audit-card"><h3>Some options are never selected</h3><p>The question may be easier to guess than we think.</p><div class="action"><span>Action:</span> Replace the options that are not useful.</div></article>
+            <article class="audit-card"><h3>The difficulty label does not match results</h3><p>A question marked hard may be easy in practice, or the other way round.</p><div class="action"><span>Action:</span> Recheck the label using real results.</div></article>
+            <article class="audit-card"><h3>Students skip, time out or answer unusually fast</h3><p>The question may be unclear, too long or being guessed.</p><div class="action"><span>Action:</span> Review the wording, interaction and time limit.</div></article>
+            <article class="audit-card"><h3>The same question appears more than once</h3><p>Repeats split the results and give students the same task again.</p><div class="action"><span>Action:</span> Merge the records or remove one version.</div></article>
+            <article class="audit-card"><h3>The question is broken</h3><p>Missing answers, blank options or unloaded images make the result unusable.</p><div class="action"><span>Action:</span> Repair it or stop serving it.</div></article>
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="section-title"><h2>Student activity</h2><p>This tells us where students need help and whether the learning loop is helping them improve.</p></div>
+          <div class="audit-grid">
+            <article class="audit-card"><h3>Where do students spend time but score poorly?</h3><p>These topics may need more teaching time or better practice.</p><div class="action"><span>Action:</span> Prioritise the weakest objectives.</div></article>
+            <article class="audit-card"><h3>Where does performance fall at higher thinking levels?</h3><p>A student may remember an idea but struggle to use it.</p><div class="action"><span>Action:</span> Adjust the question mix.</div></article>
+            <article class="audit-card"><h3>Which activities do students finish?</h3><p>If students finish tests but abandon homework, the homework may be too long.</p><div class="action"><span>Action:</span> Reduce the size and compare completion again.</div></article>
+            <article class="audit-card"><h3>Where do students stop in a test?</h3><p>A common drop-off point may mean the test is too long.</p><div class="action"><span>Action:</span> Check the drop-off before changing difficulty.</div></article>
+            <article class="audit-card"><h3>Who is probably guessing?</h3><p>Very fast wrong answers or the same option repeatedly can distort mastery.</p><div class="action"><span>Action:</span> Mark those attempts separately.</div></article>
+            <article class="audit-card"><h3>Do second attempts improve?</h3><p>This is a direct check of whether the learning loop is working.</p><div class="action"><span>Action:</span> Compare the same topic across attempts.</div></article>
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="section-title"><h2>Examples from the test-data audit</h2><p>These findings came from the staging clone. They show how the audit works, but they are not production conclusions yet.</p></div>
+          <div class="audit-grid">
+            <article class="audit-card"><div class="example-label">Question quality</div><div class="example-stat">0% pass rate</div><p>Questions 122630 and 122714 were answered 10 times each and never got a correct answer. Question 122631 had 1 correct answer from 40 attempts.</p><div class="action"><span>Next:</span> Check the answer key, wording and question type.</div></article>
+            <article class="audit-card"><div class="example-label">Distractor check</div><div class="example-stat">1,041 flagged</div><p>In 1,041 questions, one wrong option was chosen more often than the correct one. Many had only one or two attempts, so this number includes noise.</p><div class="action"><span>Next:</span> Rerun the check with at least 10 attempts.</div></article>
+            <article class="audit-card"><div class="example-label">Data integrity</div><div class="example-stat">33,875 versions</div><p>Many question versions were flagged for a missing correct answer or another structural issue. Some may be FITB or drag-and-drop records that store answers differently.</p><div class="action"><span>Next:</span> Split the result by question type before fixing anything.</div></article>
+            <article class="audit-card"><div class="example-label">Topic performance</div><div class="example-stat">5.45% accuracy</div><p>Money &amp; Currency had 110 attempts with 5.45% accuracy. Multiplication &amp; Division had 231 attempts with 18.18% accuracy.</p><div class="action"><span>Next:</span> Check the teaching sequence and the question mix.</div></article>
+            <article class="audit-card"><div class="example-label">Completion and fatigue</div><div class="example-stat">47.87% finished</div><p>191 of 399 sessions were completed. Accuracy falls to 10.42% by question 20, which suggests many students stop trying late in the session.</p><div class="action"><span>Next:</span> Test a shorter session, with 15 questions as a starting point.</div></article>
+            <article class="audit-card"><div class="example-label">Retries and guessing</div><div class="example-stat">28.21% → 26.57%</div><p>Accuracy fell between the first and second attempt before improving on later attempts. One account had 108 fast wrong answers out of 236 attempts.</p><div class="action"><span>Next:</span> Review the feedback after attempt one and separate fast guesses from mastery data.</div></article>
+          </div>
+          <p class="example-note"><strong>Checks with no findings:</strong> no strong-student-fail / weak-student-pass pattern, no hard questions with unusually high accuracy, no repeated question within one session, and no broad skip or long-struggle pattern.</p>
+        </section>
+
+        <section class="section">
+          <div class="section-title"><h2>Rules I'll follow</h2><p>These keep the audit from turning a small or messy sample into a big conclusion.</p></div>
+          <div class="rules">
+            <article class="rule"><div class="rule-number">A1</div><div><h3>Use enough attempts</h3><p>I won't call a question broken when only a few students have seen it. Small samples go on a watch list.</p></div></article>
+            <article class="rule"><div class="rule-number">A2</div><div><h3>Compare similar groups</h3><p>I'll separate grade, subject, region, test type and time period when those differences affect the result.</p></div></article>
+            <article class="rule"><div class="rule-number">A3</div><div><h3>Keep incomplete attempts separate</h3><p>A skip, timeout and wrong answer are different events. I won't count them as the same thing.</p></div></article>
+            <article class="rule"><div class="rule-number">A4</div><div><h3>Do not overwrite source data</h3><p>The audit will produce a separate report. Any fix will happen in a controlled staging environment.</p></div></article>
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="section-title"><h2>What I'll deliver</h2><p>A short problem list that the team can review and assign.</p></div>
+          <div class="output">
+            <div><h3>Each finding will include</h3><p>The affected records or group, the evidence, the likely reason, how confident we are, and who should decide the next step.</p><div class="output-list"><div class="decision">Keep</div><div class="decision">Fix the answer</div><div class="decision">Rewrite</div><div class="decision">Retire</div></div></div>
+            <aside><p class="kicker">Needed before I start</p><ul><li>Read-only data access</li><li>Anonymised student IDs</li><li>Data dictionary</li><li>Approved test students</li><li>Staging for changes</li></ul></aside>
+          </div>
+        </section>
+
+        <p class="say-this">"I'll first check whether the records are complete and consistent. Then I'll compare question quality with student behaviour. I'll only recommend a change when the evidence is strong enough, and I'll keep every source record unchanged."</p>
+      </main>
+
+      <footer>Prepared for team discussion · Noah</footer>
+    </div>
+  </body>
+</html>
