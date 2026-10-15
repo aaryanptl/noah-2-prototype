@@ -81,7 +81,12 @@ type Slot = Journey | { error: string } | null;
 
 async function getJson<T>(url: string): Promise<T> {
   const res = await fetch(url);
-  const json = await res.json();
+  // A dev server that has lost its API routes answers with an HTML 404 page.
+  const json = await res.json().catch(() => null);
+  if (!json)
+    throw new Error(
+      `the server answered ${res.status} with no data. Restart the dev server and reload.`,
+    );
   if (!json.success) throw new Error(json.error?.message ?? "Request failed");
   return json.data as T;
 }
