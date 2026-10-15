@@ -161,6 +161,8 @@ export interface TopicEvidence {
 export async function loadTopicEvidence(
   studentId: string,
   topicId: number,
+  /** Ignore sessions started after this ISO time — freezes a story as data grows. */
+  until?: string,
 ): Promise<TopicEvidence | null> {
   const pool = prodPool();
   const topicRes = await pool.query(
@@ -199,10 +201,11 @@ export async function loadTopicEvidence(
     join test_session_questions sq on sq.test_session_id = ts.id
     left join first_attempt fa on fa.tsq = sq.id
     where ts.student_id = $1 and sq.topic_id = $2 and ts.completed_at is not null
+      and ($3::timestamptz is null or ts.started_at <= $3)
     group by 1, 2, 3, 4, 5
     order by ts.started_at, ts.id
     `,
-    [studentId, topicId],
+    [studentId, topicId, until ?? null],
   );
 
   const measurements: Measurement[] = [];

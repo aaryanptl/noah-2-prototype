@@ -1,6 +1,13 @@
 "use client";
 
-import { ArrowRight, Check, FlaskConical, Search, X } from "lucide-react";
+import {
+  ArrowRight,
+  Check,
+  FlaskConical,
+  Presentation,
+  Search,
+  X,
+} from "lucide-react";
 import Link from "next/link";
 import type React from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -19,6 +26,7 @@ import {
 } from "@/lib/mastery/rules";
 import { cn } from "@/lib/utils";
 
+import { ErrorRead } from "./error-read";
 import { MethodologyButton } from "./methodology";
 import { type ChartPoint, ScoreChart } from "./score-chart";
 import {
@@ -185,6 +193,13 @@ export default function MasteryPage() {
               )}
             </form>
             <Link
+              href="/mastery/story"
+              className="inline-flex h-10 items-center gap-2 rounded-md border border-[var(--heading)]/30 bg-white px-4 text-sm font-medium text-[var(--heading)] transition hover:bg-[var(--heading)] hover:text-white"
+            >
+              <Presentation className="size-4" />
+              Explain it
+            </Link>
+            <Link
               href="/mastery/sandbox"
               className="inline-flex h-10 items-center gap-2 rounded-md border border-[var(--heading)]/30 bg-white px-4 text-sm font-medium text-[var(--heading)] transition hover:bg-[var(--heading)] hover:text-white"
             >
@@ -235,6 +250,12 @@ export default function MasteryPage() {
                 <ScorecardTable
                   card={data.scorecard}
                   placement={data.placement}
+                />
+                <ErrorRead
+                  student={data.student}
+                  topicId={data.topic.id}
+                  rows={data.scorecard.rows}
+                  decision={data.decision}
                 />
                 <Timeline
                   steps={data.steps}

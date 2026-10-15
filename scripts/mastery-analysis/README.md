@@ -9,6 +9,7 @@ node scripts/mastery-analysis/build-mastery-demo.mjs               # -> docs/mas
 node scripts/mastery-analysis/build-performance-audit.mjs          # -> docs/mastery-analysis/student-performance-mastery-analysis.html + output/analysis/performance-mastery-audit.json
 node scripts/mastery-analysis/build-student-score-progression.mjs  # -> docs/mastery-analysis/student-score-progression.html
 node scripts/mastery-analysis/analyze-score-patterns.mjs           # -> output/analysis/student-score-patterns-<date>.json
+npx tsx scripts/mastery-analysis/backtest-gap-share.ts --n=812     # -> output/analysis/gap-backtest.json (needs dataset.json + TYPESAFE_API_KEY; see docs/mastery-analysis/gap-share-backtest.md)
 ```
 
 Pre-built copies of the reports are in `docs/mastery-analysis/`. `output/` is gitignored.

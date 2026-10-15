@@ -21,7 +21,11 @@ import {
 import { WRONG_REASONS, type WrongReason } from "./ladder";
 
 /** Expected time per band — `DIFFICULTY_TIME_LIMITS_MS` in the production scorer. */
-const BAND_SECONDS: Record<string, number> = { easy: 45, medium: 55, hard: 70 };
+export const BAND_SECONDS: Record<string, number> = {
+  easy: 45,
+  medium: 55,
+  hard: 70,
+};
 
 /* ------------------------------------------------------------------ */
 /* The questions                                                       */

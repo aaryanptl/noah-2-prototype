@@ -8,22 +8,27 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 /**
- * GET /api/mastery/decide?student=ID&topic=57
+ * GET /api/mastery/decide?student=ID&topic=57[&until=2026-10-15]
  * Builds the scorecard from the student's real sessions on the topic, replays
  * the router before every session, and returns the decision for right now.
  */
 export async function GET(request: NextRequest) {
   const student = request.nextUrl.searchParams.get("student")?.trim();
   const topic = Number(request.nextUrl.searchParams.get("topic"));
-  if (!student || !Number.isInteger(topic)) {
+  const until = request.nextUrl.searchParams.get("until") ?? undefined;
+  if (
+    !student ||
+    !Number.isInteger(topic) ||
+    (until !== undefined && Number.isNaN(Date.parse(until)))
+  ) {
     return apiError(
       "VALIDATION_ERROR",
-      "student and an integer topic are required.",
+      "student and an integer topic are required; until, if given, must be a date.",
       { status: 400 },
     );
   }
   try {
-    const evidence = await loadTopicEvidence(student, topic);
+    const evidence = await loadTopicEvidence(student, topic, until);
     if (!evidence) {
       return apiError("NOT_FOUND", `Topic ${topic} does not exist.`, {
         status: 404,
