@@ -6,7 +6,7 @@ const poolConfig = {
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME || "postgres",
   port: parseInt(process.env.DB_PORT || "5432"),
-  ssl: {
+  ssl: process.env.DB_SSL === "false" ? false : {
     rejectUnauthorized: false, // Required for some RDS instances
   },
 };
