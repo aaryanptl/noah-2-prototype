@@ -76,6 +76,8 @@ import { getTopicsForGrade } from "./curriculum"
 import { demoStudents, questionGuidelines, topicById } from "./data"
 import "./learning-plan-builder.css"
 
+const GUIDE_BATCH_SIZE = 5
+
 const SETUP_STEPS = [
   { id: 1, label: "Student" },
   { id: 2, label: "Evidence" },
@@ -152,25 +154,6 @@ type PersistenceState = "idle" | "saving" | "saved" | "error"
 
 /** Progress of the build-plan run; null once the finished plan is on screen. */
 type BuildStage = null | "structure" | "saving" | "content"
-
-const BUILD_STAGES: { id: Exclude<BuildStage, null>; label: string; detail: string }[] =
-  [
-    {
-      id: "structure",
-      label: "Applying the planning rules",
-      detail: "Fitting topics, classes and activities into the package capacity.",
-    },
-    {
-      id: "saving",
-      label: "Saving the plan version",
-      detail: "Recording this version so every later change is traceable.",
-    },
-    {
-      id: "content",
-      label: "Writing the teaching guides",
-      detail: "Generating goals, teaching points and success criteria per class.",
-    },
-  ]
 
 function plural(value: number, singular: string, multiple = `${singular}s`) {
   return `${value} ${value === 1 ? singular : multiple}`
@@ -599,9 +582,8 @@ function ClassLessonGuide({
   return (
     <div className="lpb-lesson-plan-card lpb-lesson-minimal">
       <p className="lpb-lesson-goal">
-        {teaching?.goal ??
-          `Master ${item.title} through instruction, guided practice, and application.`}
-        {contentGenerating ? (
+        {teaching?.goal ?? "Teaching guide pending"}
+        {contentGenerating && !teaching ? (
           <span className="lpb-content-source generating">Generating…</span>
         ) : teaching?.source === "ai" ? (
           <span className="lpb-content-source ai">AI</span>
@@ -657,7 +639,8 @@ function ClassLessonGuide({
         </div>
       ) : null}
 
-      <div className="lpb-lesson-block">
+      {!teaching ? <p className="lpb-muted-text">Teaching guide not generated yet. Use Generate next guides above.</p> : null}
+      {teaching ? <><div className="lpb-lesson-block">
         <span className="lpb-detail-label">Teach</span>
         <ul className="lpb-lesson-bullets points">
           {(
@@ -679,6 +662,8 @@ function ClassLessonGuide({
             "≥80% on starter questions; attempts a master word problem with reasoning."}
         </p>
       </div>
+
+      </> : null}
 
       <div className="lpb-lesson-block">
         <span className="lpb-detail-label">
@@ -749,6 +734,7 @@ export default function LearningPlanBuilderPage({
     getDefaultTopicOrder(getTopicsForGrade(DEFAULT_EVIDENCE_STUDENT.grade))
   )
   const [draggedTopicId, setDraggedTopicId] = useState<number | null>(null)
+  const [showTopicDetails, setShowTopicDetails] = useState(false)
   const [scopeMode, setScopeMode] = useState<"manual" | "evidence">("manual")
   /** Topic the mentor view is focused on. null = follow the active topic. */
   const [mentorTopicId, setMentorTopicId] = useState<number | null>(null)
@@ -784,6 +770,8 @@ export default function LearningPlanBuilderPage({
   const [aiParentExplanation, setAiParentExplanation] = useState<string | null>(null)
   const [aiLoading, setAiLoading] = useState(false)
   const [contentGenerating, setContentGenerating] = useState(false)
+  const [batchSaving, setBatchSaving] = useState(false)
+  const [contentError, setContentError] = useState<string | null>(null)
   const [contentSource, setContentSource] = useState<"ai" | "fallback" | null>(
     null
   )
@@ -1253,7 +1241,7 @@ export default function LearningPlanBuilderPage({
     nextCompletedCount: number
   ) => {
     try {
-      await fetch("/api/learning-plan/prototype", {
+      const response = await fetch("/api/learning-plan/prototype", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -1268,8 +1256,13 @@ export default function LearningPlanBuilderPage({
           },
         }),
       })
+      if (!response.ok) throw new Error("Could not save the plan snapshot")
+      setPersistenceState("saved")
+      return true
     } catch (error) {
       console.error("Plan snapshot save failed:", error)
+      setPersistenceState("error")
+      return false
     }
   }
 
@@ -1407,7 +1400,8 @@ export default function LearningPlanBuilderPage({
    */
   const enrichPlan = async (
     basePlan: GeneratedPlan,
-    previousPlan?: GeneratedPlan | null
+    previousPlan?: GeneratedPlan | null,
+    batchSize = GUIDE_BATCH_SIZE
   ): Promise<GeneratedPlan> => {
     const reusableContent = new Map<string, ClassTeachingContent>()
     for (const item of previousPlan?.items ?? []) {
@@ -1432,8 +1426,8 @@ export default function LearningPlanBuilderPage({
     }
 
     const pendingItems = withLocalActivities.items.filter(
-      (item) => item.kind === "teaching" && !item.teachingContent
-    )
+      (item) => item.kind === "teaching" && item.status !== "skipped" && !item.teachingContent
+    ).slice(0, batchSize)
 
     // Nothing new to write — an outcome that only renumbered classes lands here.
     if (pendingItems.length === 0) {
@@ -1441,6 +1435,7 @@ export default function LearningPlanBuilderPage({
     }
 
     setContentGenerating(true)
+    setContentError(null)
     try {
       const response = await fetch("/api/learning-plan/generate-content", {
         method: "POST",
@@ -1474,7 +1469,7 @@ export default function LearningPlanBuilderPage({
       }
     } catch (error) {
       console.error("Plan content enrichment failed:", error)
-      setContentSource("fallback")
+      setContentError("Could not generate teaching guides. Please try again.")
       return withLocalActivities
     } finally {
       setContentGenerating(false)
@@ -1515,31 +1510,48 @@ export default function LearningPlanBuilderPage({
       ),
     }
 
-    // Hold the plan back until the teaching guides are ready, so the
-    // final page renders complete instead of filling in behind the user.
+    // Open the complete schedule after the first batch of teaching guides.
     setCompletedCount(0)
     setPlanTab("classes")
     setClassDiff(null)
     setBuildStage("structure")
     window.scrollTo({ top: 0, behavior: "smooth" })
     try {
-      setBuildStage("saving")
-      const planId = await savePlanToDatabase(withActivities)
       setBuildStage("content")
-      const enriched = await enrichPlan(withActivities)
+      const [planId, enriched] = await Promise.all([
+        savePlanToDatabase(withActivities),
+        enrichPlan(withActivities),
+      ])
       setPlan(enriched)
       if (planId) {
         // Persist the enriched plan, then move to its own URL so the plan can
         // be reopened and shared by id.
-        await savePlanSnapshot(planId, enriched, 0)
-        router.replace(`/learning-plan-builder/${planId}`)
+        if (await savePlanSnapshot(planId, enriched, 0)) {
+          router.replace(`/learning-plan-builder/${planId}`)
+        }
       }
     } finally {
       setBuildStage(null)
     }
   }
 
+  const generateMoreGuides = async () => {
+    if (!plan || contentGenerating || batchSaving || persistenceState === "saving") return
+    setBatchSaving(true)
+    try {
+      const enriched = await enrichPlan(plan)
+      setPlan(enriched)
+      if (databasePlanId) {
+        setPersistenceState("saving")
+        await savePlanSnapshot(databasePlanId, enriched, completedCount)
+      }
+    } finally {
+      setBatchSaving(false)
+    }
+  }
+
   const returnToSetup = () => {
+    if (contentGenerating || batchSaving) return
     setPlan(null)
     setSetupStep(4)
     setCompletedCount(0)
@@ -1549,6 +1561,7 @@ export default function LearningPlanBuilderPage({
   }
 
   const startEdit = (topicId: number) => {
+    if (contentGenerating || batchSaving) return
     const allocation = plan?.allocations.find(
       (item) => item.topicId === topicId
     )
@@ -1602,19 +1615,15 @@ export default function LearningPlanBuilderPage({
         describePlanChanges(plan, nextBasePlan)
       ),
     }
-    setPlan(nextPlan)
     setClassDiff(diffPlanClasses(plan, nextPlan))
-    void enrichPlan(nextPlan, plan).then((enriched) => {
+    void enrichPlan(nextPlan, plan, 0).then((enriched) => {
       setPlan(enriched)
-      if (databasePlanId) {
-        void savePlanSnapshot(databasePlanId, enriched, completedCount)
-      }
-    })
-    void savePlanUpdate({
-      nextPlan,
-      kind: "manual",
-      changes: nextPlan.changesFromPrevious,
-      completedCount,
+      void savePlanUpdate({
+        nextPlan: enriched,
+        kind: "manual",
+        changes: enriched.changesFromPrevious,
+        completedCount,
+      })
     })
     setEditingTopicId(null)
     setEditDraft(null)
@@ -1695,29 +1704,26 @@ export default function LearningPlanBuilderPage({
   const approveClassOutcome = () => {
     if (!pendingUpdate) return
     const previousPlan = plan
-    setPlan(pendingUpdate.plan)
     if (previousPlan) {
       setClassDiff(diffPlanClasses(previousPlan, pendingUpdate.plan))
     }
-    void enrichPlan(pendingUpdate.plan, previousPlan).then((enriched) => {
+    const updateToSave = pendingUpdate
+    void enrichPlan(updateToSave.plan, previousPlan, 0).then((enriched) => {
       setPlan(enriched)
-      if (databasePlanId) {
-        void savePlanSnapshot(databasePlanId, enriched, completedCount + 1)
-      }
+      void savePlanUpdate({
+        nextPlan: enriched,
+        kind: "class",
+        changes: updateToSave.changes,
+        completedCount: completedCount + 1,
+        outcome,
+        note: outcomeNote,
+        taughtPrototypeTopicId: nextTeachingItem?.topicId,
+        autoApplied: outcome !== "on-track",
+      })
     })
     setManualAdjustments(pendingUpdate.adjustments)
     setManualOverrideActive(false)
     setCompletedCount((current) => current + 1)
-    void savePlanUpdate({
-      nextPlan: pendingUpdate.plan,
-      kind: "class",
-      changes: pendingUpdate.changes,
-      completedCount: completedCount + 1,
-      outcome,
-      note: outcomeNote,
-      taughtPrototypeTopicId: nextTeachingItem?.topicId,
-      autoApplied: outcome !== "on-track",
-    })
     setPendingUpdate(null)
     setOutcomeOpen(false)
     setOutcome("on-track")
@@ -1731,7 +1737,7 @@ export default function LearningPlanBuilderPage({
    * reached without clicking through every class before it.
    */
   const fastForwardTo = (targetCompleted: number) => {
-    if (!plan) return
+    if (!plan || contentGenerating || batchSaving) return
     const liveTotal = plan.items.filter(isLiveClass).length
     const target = Math.min(Math.max(targetCompleted, 0), liveTotal)
     const advanced = target - completedCount
@@ -1850,6 +1856,7 @@ export default function LearningPlanBuilderPage({
             <button
               type="button"
               className="lpb-button lpb-button-ghost"
+              disabled={contentGenerating || batchSaving}
               onClick={() => {
                 if (savedPlanId) {
                   router.push("/learning-plan-builder")
@@ -1895,6 +1902,7 @@ export default function LearningPlanBuilderPage({
           <button
             type="button"
             className="lpb-button lpb-button-ghost"
+            disabled={contentGenerating || batchSaving}
             onClick={resetPrototype}
           >
             <RotateCcw size={15} />
@@ -1939,52 +1947,16 @@ export default function LearningPlanBuilderPage({
             </span>
             <span className="lpb-kicker">Building the plan</span>
             <h1>Generating {student.name}&apos;s learning plan…</h1>
-            <p>
-              The structure comes from the planning rules; the teaching guides
-              are written per class. This can take a minute on a full-year
-              package.
-            </p>
-            <ol className="lpb-building-steps">
-              {BUILD_STAGES.map((stage) => {
-                const currentIndex = BUILD_STAGES.findIndex(
-                  (candidate) => candidate.id === buildStage
-                )
-                const stageIndex = BUILD_STAGES.findIndex(
-                  (candidate) => candidate.id === stage.id
-                )
-                const state =
-                  stageIndex < currentIndex
-                    ? "done"
-                    : stageIndex === currentIndex
-                      ? "active"
-                      : "waiting"
-                return (
-                  <li key={stage.id} className={state}>
-                    <span className="lpb-building-step-mark">
-                      {state === "done" ? <Check size={13} /> : null}
-                    </span>
-                    <div>
-                      <strong>{stage.label}</strong>
-                      <small>{stage.detail}</small>
-                    </div>
-                  </li>
-                )
-              })}
-            </ol>
+            <p>Preparing the full schedule and the first five teaching guides.</p>
+            <p className="lpb-muted-text">Saving the plan and writing the first teaching guides?</p>
           </section>
         </main>
       ) : plan === null ? (
         <main className="lpb-setup-shell">
           <section className="lpb-setup-heading">
             <div>
-              <span className="lpb-kicker">
-                Maths · Grade 5 · US curriculum
-              </span>
-              <h1>Build a plan a teacher can trust.</h1>
-              <p>
-                Turn curriculum priorities and student evidence into a
-                class-by-class plan—without hiding the rules.
-              </p>
+              <h1>Build a learning plan</h1>
+              <p>Choose a student, review their needs, and plan their classes.</p>
             </div>
           </section>
 
@@ -2000,9 +1972,9 @@ export default function LearningPlanBuilderPage({
                       ? "complete"
                       : ""
                 }
-                onClick={() => {
-                  if (step.id <= setupStep) setSetupStep(step.id)
-                }}
+                aria-current={setupStep === step.id ? "step" : undefined}
+                disabled={step.id > setupStep}
+                onClick={() => setSetupStep(step.id)}
               >
                 <span>
                   {setupStep > step.id ? <Check size={15} /> : step.id}
@@ -2017,12 +1989,8 @@ export default function LearningPlanBuilderPage({
               <>
                 <header className="lpb-section-head">
                   <div>
-                    <span className="lpb-section-no">01</span>
-                    <h2>Choose a demo student</h2>
-                    <p>
-                      Each student shows a different planning path from the
-                      supplied test scenarios.
-                    </p>
+                    <h2>Choose a student</h2>
+                    <p>Select a demo profile to get started.</p>
                   </div>
                   <span className="lpb-count-chip">4 profiles</span>
                 </header>
@@ -2034,30 +2002,28 @@ export default function LearningPlanBuilderPage({
                     return (
                       <div
                         key={candidate.id}
-                        className={`lpb-student-slot lpb-scenario-${candidate.scenario.toLowerCase()}`}
+                        className={`lpb-student-slot lpb-scenario-${candidate.scenario.toLowerCase()}${selected ? " selected" : ""}`}
                       >
                         <button
                           type="button"
                           className={`lpb-student-card${selected ? " selected" : ""}`}
                           onClick={() => chooseStudent(candidate)}
+                          aria-pressed={selected}
                         >
-                          <span className="lpb-scenario-tag">
-                            Demo {candidate.scenario}
-                          </span>
                           <span className="lpb-student-card-top">
-                            <span className="lpb-avatar">
-                              {candidate.initials}
+                            <span className="lpb-avatar">{candidate.initials}</span>
+                            <span className="lpb-student-identity">
+                              <strong>{candidate.name}</strong>
+                              <span>{copy.title}</span>
                             </span>
-                            {selected ? (
-                              <span className="lpb-selected-check">
-                                <Check size={14} />
-                              </span>
-                            ) : null}
+                            <span className="lpb-student-select-mark" aria-hidden="true">
+                              {selected ? <Check size={14} /> : null}
+                            </span>
                           </span>
-                          <strong>{candidate.name}</strong>
-                          <span className="lpb-card-eyebrow">{copy.eyebrow}</span>
-                          <b>{copy.title}</b>
-                          <p>{copy.description}</p>
+                          <span className="lpb-student-card-bottom">
+                            <span className="lpb-scenario-tag">Demo {candidate.scenario}</span>
+                            <span className="lpb-card-classes"><b>{candidate.classesRemaining}</b> classes remaining</span>
+                          </span>
                         </button>
                         {/*
                           A sibling, not a child: the card itself is a button and
@@ -2067,6 +2033,7 @@ export default function LearningPlanBuilderPage({
                         <button
                           type="button"
                           className="lpb-student-profile-button"
+                          aria-label={`View ${candidate.name}'s profile`}
                           onClick={(event) => {
                             event.stopPropagation()
                             setProfileStudent(candidate)
@@ -2141,12 +2108,8 @@ export default function LearningPlanBuilderPage({
               <>
                 <header className="lpb-section-head">
                   <div>
-                    <span className="lpb-section-no">02</span>
                     <h2>Review the evidence</h2>
-                    <p>
-                      This is the information the rules will use. Nothing is
-                      inferred outside the dummy dataset.
-                    </p>
+                    <p>See what we know about {student.name} before planning.</p>
                   </div>
                   <span
                     className={`lpb-count-chip accent lpb-scenario-${student.scenario.toLowerCase()}`}
@@ -2198,7 +2161,8 @@ export default function LearningPlanBuilderPage({
                       </div>
                     </section>
 
-                    <aside className="lpb-rule-preview">
+                    <details className="lpb-rule-preview">
+                      <summary>How placement scores affect the plan</summary>
                       <div className="lpb-rule-preview-topline">
                         <span className="lpb-rule-preview-icon">
                           <Lightbulb size={20} />
@@ -2220,7 +2184,7 @@ export default function LearningPlanBuilderPage({
                           <span>Keep the ideal workbook class and activity values.</span>
                         </li>
                       </ul>
-                    </aside>
+                    </details>
                   </div>
                 ) : null}
 
@@ -2234,17 +2198,10 @@ export default function LearningPlanBuilderPage({
                       <span className="lpb-kicker">No placement test</span>
                       <h3>Use the academic defaults.</h3>
                       <p>
-                        Every selected topic starts with its ideal class,
-                        activity and Easy-to-Practice allocation from the
-                        workbook. If the package is smaller than the full year,
-                        topics compress toward their class minimums before any
-                        topic is dropped.
+                        We'll start with the curriculum defaults and fit them to the available classes.
                       </p>
                     </div>
                     <div className="lpb-default-summary">
-                      <span>13 curriculum topics</span>
-                      <span>66 teaching + 13 structural = 79 classes</span>
-                      <span>43 classes at the minimums</span>
                       <span>
                         {student.packageLabel ??
                           `${student.classesRemaining} classes available`}
@@ -2436,12 +2393,8 @@ export default function LearningPlanBuilderPage({
               <>
                 <header className="lpb-section-head lpb-topic-scope-head">
                   <div>
-                    <span className="lpb-section-no">03</span>
-                    <h2>Choose the topic scope</h2>
-                    <p>
-                      Recommended topics are preselected. The teacher controls
-                      the final scope.
-                    </p>
+                    <h2>Choose topics</h2>
+                    <p>Review the recommendations and adjust the teaching order.</p>
                   </div>
                   <span className="lpb-count-chip">
                     {selectedTopicIds.length} selected
@@ -2471,15 +2424,18 @@ export default function LearningPlanBuilderPage({
                 ) : null}
 
                 <div className="lpb-topic-tools">
-                  <div className="lpb-priority-legend">
-                    {(["high", "medium", "low"] as const).map((priority) => (
-                      <span key={priority} className={priority}>
-                        <i />
-                        {PRIORITY_COPY[priority].label}
-                      </span>
-                    ))}
-                  </div>
-                  <div>
+                  <span className="lpb-topic-list-label">Teaching order</span>
+                  <div className="lpb-topic-actions">
+                    <button type="button" className="lpb-details-toggle" aria-pressed={showTopicDetails} onClick={() => setShowTopicDetails((current) => !current)}>
+                      {showTopicDetails ? "Hide details" : "Show details"}
+                    </button>
+                    <details className="lpb-topic-menu">
+                      <summary>Selection options</summary>
+                      <div className="lpb-topic-menu-items" onClick={(event) => {
+                        if ((event.target as HTMLElement).closest("button")) {
+                          event.currentTarget.closest("details")?.removeAttribute("open")
+                        }
+                      }}>
                     <button
                       type="button"
                       onClick={() => {
@@ -2519,18 +2475,17 @@ export default function LearningPlanBuilderPage({
                     >
                       Restore recommended
                     </button>
+                      </div>
+                    </details>
                   </div>
                 </div>
 
                 <p className="lpb-topic-order-hint">
                   <GripVertical size={15} />
-                  Drag topics into the teaching sequence. High priority runs
-                  first, then Medium and Low, except where a prerequisite has to
-                  come earlier. A prerequisite already scored 75% or more is
-                  kept but shortened to a refresher.
+                  Drag topics to change their order. Prerequisites stay before dependent topics.
                 </p>
 
-                <div className="lpb-topic-list">
+                <div className={`lpb-topic-list${showTopicDetails ? " show-details" : ""}`}>
                   {displayTopics.map((topic) => {
                       const completed = student.completedTopics.some(
                         (item) => item.topicId === topic.id
@@ -2616,6 +2571,7 @@ export default function LearningPlanBuilderPage({
                           disabled={completed}
                           draggable={!completed}
                           aria-disabled={completed}
+                          aria-pressed={selected}
                           className={`lpb-topic-option${selected ? " selected" : ""}${completed ? " completed" : ""}${draggedTopicId === topic.id ? " dragging" : ""}`}
                           onDragStart={(event) => {
                             event.dataTransfer.effectAllowed = "move"
@@ -2660,13 +2616,9 @@ export default function LearningPlanBuilderPage({
                                 ? previewAllocation.classes
                                 : topic.idealClasses}
                             </b>
-                            <small>
-                              {evidenceCompressed
-                                ? `of ${topic.idealClasses} · min ${topic.minimumClasses}`
-                                : `classes · min ${topic.minimumClasses}`}
-                            </small>
+                            <small>classes</small>
                           </span>
-                          <span className="lpb-topic-metrics">
+                          <span className="lpb-topic-metrics lpb-topic-activities">
                             <b>
                               {selected && previewAllocation
                                 ? previewAllocation.activities
@@ -2693,7 +2645,7 @@ export default function LearningPlanBuilderPage({
                               </span>
                             ) : null}
                             <span className={`lpb-status-pill ${statusTone}`}>
-                              {statusText}
+                              {statusText}{selected && previewAllocation ? ` (ideal ${topic.idealClasses}, min ${topic.minimumClasses})` : ""}
                             </span>
                           </span>
                         </button>
@@ -2727,12 +2679,8 @@ export default function LearningPlanBuilderPage({
               <>
                 <header className="lpb-section-head">
                   <div>
-                    <span className="lpb-section-no">04</span>
-                    <h2>Review before building</h2>
-                    <p>
-                      Check the selected scope, structural reserve and any
-                      capacity warnings.
-                    </p>
+                    <h2>Review your plan</h2>
+                    <p>Check the class allocation before building.</p>
                   </div>
                   <span className="lpb-count-chip">
                     {reviewPlan.capacity.difference > 0
@@ -2745,7 +2693,7 @@ export default function LearningPlanBuilderPage({
                   <section className="lpb-capacity-card">
                     <div className="lpb-capacity-top">
                       <div>
-                        <span className="lpb-kicker">Capacity check</span>
+                        <span className="lpb-review-label">Class capacity</span>
                         <h3>
                           {reviewPlan.capacity.difference > 0
                             ? `${reviewPlan.capacity.difference} classes over the package`
@@ -2767,10 +2715,50 @@ export default function LearningPlanBuilderPage({
                       <span
                         className={`lpb-capacity-orb${reviewPlan.capacity.difference > 0 ? " over" : ""}`}
                       >
-                        {reviewPlan.capacity.total}
-                        <small>planned</small>
+                        <strong>{reviewPlan.capacity.total} <span>/ {reviewPlan.capacity.available}</span></strong>
+                        <small>classes planned</small>
                       </span>
                     </div>
+                    <div className="lpb-capacity-bar">
+                      <span
+                        style={{
+                          width: `${Math.min(
+                            100,
+                            (reviewPlan.capacity.total /
+                              reviewPlan.capacity.available) *
+                              100
+                          )}%`,
+                        }}
+                        className={
+                          reviewPlan.capacity.difference > 0 ? "over" : ""
+                        }
+                      />
+                    </div>
+                    <div className="lpb-capacity-breakdown">
+                      <div>
+                        <span>In package</span>
+                        <b>{reviewPlan.capacity.available}</b>
+                      </div>
+                      <div>
+                        <span>Teaching</span>
+                        <b>{reviewPlan.capacity.teaching}</b>
+                      </div>
+                      <div>
+                        <span>Checkpoint &amp; RDP</span>
+                        <b>{reviewPlan.capacity.structural}</b>
+                      </div>
+                      <div title="Parent–teacher meetings. Reserved against the package, scheduled by ops.">
+                        <span>Ops reserve</span>
+                        <b>{reviewPlan.capacity.opsReserve}</b>
+                      </div>
+                      <div>
+                        <span>Planned</span>
+                        <b>{reviewPlan.capacity.total}</b>
+                      </div>
+                    </div>
+                    {(reviewPlan.capacity.compressedClasses > 0 || reviewPlan.capacity.surplusClasses > 0 || placementClassesSaved > 0) ? (
+                      <details className="lpb-review-adjustments">
+                        <summary>See allocation adjustments</summary>
                     {reviewPlan.capacity.compressedClasses > 0 ? (
                       <div className="lpb-placement-capacity-note">
                         <div className="lpb-placement-capacity-head">
@@ -2843,43 +2831,8 @@ export default function LearningPlanBuilderPage({
                         </p>
                       </div>
                     ) : null}
-                    <div className="lpb-capacity-bar">
-                      <span
-                        style={{
-                          width: `${Math.min(
-                            100,
-                            (reviewPlan.capacity.total /
-                              reviewPlan.capacity.available) *
-                              100
-                          )}%`,
-                        }}
-                        className={
-                          reviewPlan.capacity.difference > 0 ? "over" : ""
-                        }
-                      />
-                    </div>
-                    <div className="lpb-capacity-breakdown">
-                      <div>
-                        <span>In package</span>
-                        <b>{reviewPlan.capacity.available}</b>
-                      </div>
-                      <div>
-                        <span>Teaching</span>
-                        <b>{reviewPlan.capacity.teaching}</b>
-                      </div>
-                      <div>
-                        <span>Checkpoint &amp; RDP</span>
-                        <b>{reviewPlan.capacity.structural}</b>
-                      </div>
-                      <div title="Parent–teacher meetings. Reserved against the package, scheduled by ops.">
-                        <span>Ops reserve</span>
-                        <b>{reviewPlan.capacity.opsReserve}</b>
-                      </div>
-                      <div>
-                        <span>Planned</span>
-                        <b>{reviewPlan.capacity.total}</b>
-                      </div>
-                    </div>
+                      </details>
+                    ) : null}
                     {reviewPlan.capacity.difference > 0 ? (
                       <div className="lpb-inline-warning">
                         <AlertTriangle size={18} />
@@ -2897,17 +2850,12 @@ export default function LearningPlanBuilderPage({
                     ) : null}
                   </section>
 
-                  <section className="lpb-review-list-card">
-                    <div className="lpb-panel-title">
-                      <ListChecks size={18} />
-                      <div>
-                        <h3>Selected plan scope</h3>
-                        <p>
-                          {plural(reviewPlan.allocations.length, "topic")} in
-                          mentor-selected order
-                        </p>
-                      </div>
-                    </div>
+                  <details className="lpb-review-list-card">
+                    <summary className="lpb-review-list-summary">
+                      <span className="lpb-review-list-icon"><ListChecks size={18} /></span>
+                      <span><strong>Selected topics</strong><small>{plural(reviewPlan.allocations.length, "topic")} in teaching order</small></span>
+                      <span className="lpb-review-list-prompt">Review topics <span aria-hidden="true">?</span></span>
+                    </summary>
                     <div className="lpb-review-topic-list">
                       {reviewPlan.allocations.map((allocation, index) => {
                         const aiRecommendation = aiRecommendationById.get(
@@ -2961,7 +2909,7 @@ export default function LearningPlanBuilderPage({
                         )
                       })}
                     </div>
-                  </section>
+                  </details>
                 </div>
 
                 <footer className="lpb-setup-footer">
@@ -3031,20 +2979,6 @@ export default function LearningPlanBuilderPage({
             <div className="lpb-hero-actions">
               <button
                 type="button"
-                className="lpb-button lpb-button-secondary"
-                onClick={() => {
-                  if (savedPlanId) {
-                    router.push("/learning-plan-builder")
-                  } else {
-                    returnToSetup()
-                  }
-                }}
-              >
-                <ArrowLeft size={16} />
-                Back to setup
-              </button>
-              <button
-                type="button"
                 className="lpb-button lpb-button-ghost"
                 onClick={returnToSetup}
               >
@@ -3058,7 +2992,7 @@ export default function LearningPlanBuilderPage({
               */}
               <a
                 className="lpb-button lpb-button-primary lpb-journey-link"
-                href="/student-journey.html"
+                href="/mastery/sandbox"
                 target="_blank"
                 rel="noreferrer"
               >
@@ -3071,34 +3005,19 @@ export default function LearningPlanBuilderPage({
           {planStats ? (
             <div className="lpb-plan-stats" aria-label="Plan summary">
               <div>
-                <span>Total classes</span>
-                <b>{planStats.totalClasses}</b>
-                <small>
-                  {planStats.teachingClasses} teaching ·{" "}
-                  {planStats.structuralClasses} structural
-                </small>
+                <span>Classes taught</span>
+                <b>{planStats.completed}<small> / {planStats.totalClasses}</small></b>
+                <small>{planStats.upcoming} upcoming</small>
               </div>
               <div>
-                <span>Topics</span>
-                <b>{planStats.topics}</b>
-                <small>in the scheduled plan</small>
+                <span>Teaching plan</span>
+                <b>{planStats.topics} <small>topics</small></b>
+                <small>{planStats.teachingClasses} teaching classes</small>
               </div>
               <div>
-                <span>Activities</span>
-                <b>{planStats.activities}</b>
-                <small>starter + master</small>
-              </div>
-              <div>
-                <span>Completed</span>
-                <b>{planStats.completed}</b>
-                <small>classes taught</small>
-              </div>
-              <div>
-                <span>Upcoming</span>
-                <b>{planStats.upcoming}</b>
-                <small>
-                  of {planStats.availableClasses} in the package
-                </small>
+                <span>Practice</span>
+                <b>{planStats.activities} <small>activities</small></b>
+                <small>Starter and master</small>
               </div>
             </div>
           ) : null}
@@ -3171,8 +3090,13 @@ export default function LearningPlanBuilderPage({
               {persistenceState === "error" ? (
                 <span className="lpb-status-chip warning">
                   <CircleAlert size={13} />
-                  Could not save changes. Try again after editing or recording an outcome.
+                  Could not save changes. The current plan is only in this session.
                 </span>
+              ) : null}
+              {persistenceState === "error" && databasePlanId ? (
+                <button type="button" className="lpb-status-chip warning" disabled={contentGenerating || batchSaving} onClick={() => { setPersistenceState("saving"); void savePlanSnapshot(databasePlanId, plan, completedCount) }}>
+                  Retry saving
+                </button>
               ) : null}
               {contentGenerating ? (
                 <span className="lpb-status-chip generating">
@@ -3282,7 +3206,7 @@ export default function LearningPlanBuilderPage({
               <section className="lpb-plan-board lpb-plan-board-minimal">
                 <header className="lpb-plan-board-head">
                   <div>
-                    <h2>Sequence</h2>
+                    <h2>Teaching plan</h2>
                     <p className="lpb-board-meta">
                       {liveClassCount} classes
                       {skippedClassCount > 0
@@ -3297,6 +3221,7 @@ export default function LearningPlanBuilderPage({
                     <button
                       type="button"
                       className={planTab === "classes" ? "active" : ""}
+                      aria-pressed={planTab === "classes"}
                       onClick={() => setPlanTab("classes")}
                     >
                       Classes
@@ -3304,6 +3229,7 @@ export default function LearningPlanBuilderPage({
                     <button
                       type="button"
                       className={planTab === "topics" ? "active" : ""}
+                      aria-pressed={planTab === "topics"}
                       onClick={() => setPlanTab("topics")}
                     >
                       Topics
@@ -3311,6 +3237,7 @@ export default function LearningPlanBuilderPage({
                     <button
                       type="button"
                       className={planTab === "structure" ? "active" : ""}
+                      aria-pressed={planTab === "structure"}
                       onClick={() => setPlanTab("structure")}
                     >
                       Structure
@@ -3318,6 +3245,7 @@ export default function LearningPlanBuilderPage({
                     <button
                       type="button"
                       className={planTab === "next2weeks" ? "active" : ""}
+                      aria-pressed={planTab === "next2weeks"}
                       onClick={() => setPlanTab("next2weeks")}
                     >
                       2 weeks
@@ -3325,6 +3253,7 @@ export default function LearningPlanBuilderPage({
                     <button
                       type="button"
                       className={planTab === "mentor" ? "active" : ""}
+                      aria-pressed={planTab === "mentor"}
                       onClick={() => setPlanTab("mentor")}
                     >
                       Mentor view
@@ -3336,6 +3265,7 @@ export default function LearningPlanBuilderPage({
                           ? "active lpb-tab-accent"
                           : "lpb-tab-accent"
                       }
+                      aria-pressed={planTab === "mastery"}
                       onClick={() => setPlanTab("mastery")}
                     >
                       Personalisation
@@ -3346,19 +3276,22 @@ export default function LearningPlanBuilderPage({
                       topbar and from the "Why this" rail instead of sitting at
                       the end of the report.
                     */}
-                    <button
-                      type="button"
-                      className="lpb-plan-tab-method"
-                      onClick={() => setFullMethodologyOpen(true)}
-                    >
-                      <BookOpen size={13} />
-                      About this tool
-                    </button>
                   </div>
                 </header>
 
                 {planTab === "classes" ? (
                   <div className="lpb-class-list">
+                    {(() => {
+                      const teachingItems = plan.items.filter((item) => item.kind === "teaching" && item.status !== "skipped")
+                      const ready = teachingItems.filter((item) => item.teachingContent).length
+                      const remaining = teachingItems.length - ready
+                      return (
+                        <div className="lpb-guide-batch" role="status">
+                          <div><strong>Teaching guides</strong><span>{ready} of {teachingItems.length} ready{remaining > 0 ? ` - ${remaining} remaining` : ""}</span>{contentError ? <span className="lpb-guide-error">{contentError}</span> : null}</div>
+                          {remaining > 0 ? <button type="button" className="lpb-button lpb-button-secondary" disabled={contentGenerating || batchSaving || persistenceState === "saving"} onClick={() => void generateMoreGuides()}>{contentGenerating ? "Generating guides..." : `Generate next ${Math.min(GUIDE_BATCH_SIZE, remaining)} guides`}</button> : null}
+                        </div>
+                      )
+                    })()}
                     {plan.items.map((item) => {
                       const expanded = expandedItemId === item.id
                       const displayStatus =
@@ -3378,6 +3311,7 @@ export default function LearningPlanBuilderPage({
                           <button
                             type="button"
                             className="lpb-class-summary"
+                            aria-expanded={expanded}
                             onClick={() =>
                               setExpandedItemId(expanded ? null : item.id)
                             }
@@ -3412,6 +3346,9 @@ export default function LearningPlanBuilderPage({
                                   {KIND_COPY[item.kind].short}
                                 </span>
                               )}
+                              {item.kind === "teaching" && !item.teachingContent && item.status !== "skipped" ? (
+                                <span className="lpb-guide-pending">Guide pending</span>
+                              ) : null}
                               {item.status === "skipped" ? (
                                 <span className="lpb-diff-badge skipped">
                                   Skipped
@@ -3449,6 +3386,7 @@ export default function LearningPlanBuilderPage({
                             <button
                               type="button"
                               className="lpb-class-record"
+                              disabled={contentGenerating || batchSaving}
                               onClick={() => setOutcomeOpen(true)}
                               title={`Record how Class ${String(item.classNumber).padStart(2, "0")} went`}
                             >
@@ -3462,6 +3400,7 @@ export default function LearningPlanBuilderPage({
                             <button
                               type="button"
                               className="lpb-class-fastforward"
+                              disabled={contentGenerating || batchSaving}
                               onClick={() =>
                                 fastForwardTo(item.classNumber - 1)
                               }
@@ -3550,6 +3489,7 @@ export default function LearningPlanBuilderPage({
                           </button>
                           <button
                             type="button"
+                            disabled={contentGenerating || batchSaving}
                             onClick={() => startEdit(allocation.topicId)}
                           >
                             <Edit3 size={14} />
