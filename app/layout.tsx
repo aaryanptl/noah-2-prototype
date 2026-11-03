@@ -17,8 +17,9 @@ const spaceMono = Space_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Diagnostic Agent",
-  description: "Interactive diagnostic agent app for quiz-based assessment.",
+  title: "Noah Prototypes",
+  description:
+    "Noah prototypes: diagnostic and placement tests, learning plans and the mastery loop.",
   other: {
     "darkreader-lock": "",
   },
