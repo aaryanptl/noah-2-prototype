@@ -1,26 +1,31 @@
 "use client";
 
 import {
+  Award,
   BadgeCheck,
   BellRing,
-  Check,
   ClipboardList,
   Dumbbell,
-  Flag,
   GraduationCap,
   type LucideIcon,
   NotebookPen,
+  RefreshCw,
+  Target,
   Timer,
-  Users,
 } from "lucide-react";
 
 import { isGuess } from "@/lib/mastery/gap";
-import type {
-  Activity,
-  Decision,
-  LoRow,
-  MasteryObjective,
-  ReplayStep,
+import {
+  type Activity,
+  type Decision,
+  LO_FLOOR,
+  LOOP_GUARD,
+  type LoRow,
+  MASTERY_BAR,
+  type MasteryObjective,
+  RETEACH_LINE,
+  type ReplayStep,
+  SPEED_BAND,
 } from "@/lib/mastery/rules";
 import { PLAIN_STEP } from "@/lib/mastery/story";
 import { cn } from "@/lib/utils";
@@ -51,47 +56,47 @@ const ZONE_TILE: Record<Zone, string> = {
   unknown: "bg-[#eef0ef] text-[#8b9592]",
 };
 
-const zoneOfScore = (score: number | null): Zone =>
+/** Session dots: the §3 test bands — mastery bar, remediation band, re-teach line. */
+export const zoneOfScore = (score: number | null): Zone =>
   score === null
     ? "unknown"
-    : score >= 80
+    : score >= MASTERY_BAR
       ? "strong"
-      : score >= 60
+      : score >= RETEACH_LINE
         ? "middle"
         : "weak";
 
+/** Objective tiles: the map score against the per-LO floor. */
 const zoneOfRow = (row: LoRow): Zone =>
-  row.state === "ready" || row.state === "signed_off"
+  row.state === "secure" || row.state === "mastered"
     ? "strong"
     : row.state === "working"
       ? "middle"
-      : row.state === "needs_help" || row.state === "blocked"
+      : row.state === "needs_help"
         ? "weak"
         : "unknown";
 
 export const ACTIVITY_ICON: Record<Activity, LucideIcon> = {
-  close: Flag,
-  topic_class: Users,
+  close: Award,
   escalate: BellRing,
-  survey: ClipboardList,
-  class: GraduationCap,
-  check: BadgeCheck,
+  reteach: GraduationCap,
+  micro_homework: Target,
   practice: Dumbbell,
+  recurring_test: RefreshCw,
   topic_test: ClipboardList,
   homework: NotebookPen,
 };
 
 /** Short station names for the routes; PLAIN_STEP holds the full sentence. */
 export const STATION: Record<Activity, string> = {
-  close: "Topic done",
-  topic_class: "Mentor re-teaches the topic",
-  escalate: "Tell the teacher",
-  survey: "Short test",
-  class: "Mentor class",
-  check: "5-question check",
+  close: "Master badge",
+  escalate: "Flag at-risk",
+  reteach: "Teacher re-teaches",
+  micro_homework: "Micro-homework",
   practice: "Practice one objective",
-  topic_test: "Re-test",
-  homework: "Targeted homework",
+  recurring_test: "Recurring test",
+  topic_test: "Topic test",
+  homework: "Homework",
 };
 
 /* ------------------------------------------------------------------ */
@@ -124,13 +129,9 @@ export function ObjectiveTiles({
           <span className="absolute top-0.5 left-1 text-[9px] font-medium opacity-60">
             {index + 1}
           </span>
-          {row.signedOff ? (
-            <Check className={size === "sm" ? "size-4" : "size-5"} />
-          ) : (
-            <span className="font-semibold">
-              {row.score === null ? "?" : Math.round(row.score)}
-            </span>
-          )}
+          <span className="font-semibold">
+            {row.score === null ? "?" : Math.round(row.score)}
+          </span>
         </div>
       ))}
     </div>
@@ -157,7 +158,7 @@ export function ObjectiveKey({
 }
 
 /* ------------------------------------------------------------------ */
-/* How it decides: one score line, four places on it                    */
+/* How a test result decides: one line, three places on it             */
 /* ------------------------------------------------------------------ */
 
 const PLACES: Array<{
@@ -166,31 +167,32 @@ const PLACES: Array<{
   icon: LucideIcon;
   step: string;
   after: string;
-  grow: string;
+  /** Share of the 0–100 line. */
+  grow: number;
 }> = [
   {
     zone: "weak",
-    range: "0–59",
-    icon: Dumbbell,
-    step: "Practise that objective",
-    after: "Still stuck? A person steps in",
-    grow: "basis-[60%]",
+    range: `0–${RETEACH_LINE - 1}`,
+    icon: GraduationCap,
+    step: "The teacher re-teaches",
+    after: "The Plan Builder re-plans the topic",
+    grow: RETEACH_LINE,
   },
   {
     zone: "middle",
-    range: "60–79",
-    icon: NotebookPen,
-    step: "Homework on the weak spots",
-    after: "Stuck 4 sessions? Mentor class",
-    grow: "basis-[20%]",
+    range: `${RETEACH_LINE}–${MASTERY_BAR - 1}`,
+    icon: Target,
+    step: "Fix the gaps, then re-test",
+    after: `${LOOP_GUARD} rounds and no mastery? Flag at-risk`,
+    grow: MASTERY_BAR - RETEACH_LINE,
   },
   {
     zone: "strong",
-    range: "80–100",
+    range: `${MASTERY_BAR}–100`,
     icon: BadgeCheck,
-    step: "5-question check",
-    after: "Pass it and it's signed off",
-    grow: "basis-[20%]",
+    step: "Mastery check",
+    after: `Every objective ${LO_FLOOR}+, speed within ${SPEED_BAND}×: Master`,
+    grow: 100 - MASTERY_BAR,
   },
 ];
 
@@ -198,21 +200,29 @@ export function ScoreScale() {
   return (
     <div className="grid gap-6 md:grid-cols-[150px_minmax(0,1fr)]">
       <div className="rounded-xl bg-[#eef0ef] p-4">
-        <p className="text-2xl font-bold text-[#8b9592]">?</p>
-        <p className="mt-2 font-semibold text-[#15302f]">Not tested yet</p>
-        <p className="mt-1 flex items-center gap-1.5 text-sm text-[#4a5a58]">
-          <ClipboardList className="size-4" /> A short test
+        <NotebookPen className="size-5 text-[#4a5a58]" />
+        <p className="mt-2 font-semibold text-[#15302f]">Before the test</p>
+        <p className="mt-1 text-sm text-[#4a5a58]">
+          Homework every class, aimed at the weak spots
         </p>
       </div>
       <div>
         <div className="flex h-4 overflow-hidden rounded-full">
           {PLACES.map((p) => (
-            <div key={p.zone} className={cn(p.grow, ZONE_DOT[p.zone])} />
+            <div
+              key={p.zone}
+              className={ZONE_DOT[p.zone]}
+              style={{ flexBasis: `${p.grow}%` }}
+            />
           ))}
         </div>
         <div className="mt-1 flex text-xs font-medium text-[#4a5a58] tabular-nums">
           {PLACES.map((p) => (
-            <div key={p.zone} className={cn(p.grow, "px-1")}>
+            <div
+              key={p.zone}
+              className="px-1"
+              style={{ flexBasis: `${p.grow}%` }}
+            >
               {p.range}
             </div>
           ))}

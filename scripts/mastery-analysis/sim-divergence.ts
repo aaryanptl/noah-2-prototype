@@ -1,16 +1,15 @@
-import { buildScorecard, routeNext, type Measurement, type MasteryMode, type MasteryObjective, CHECK_QUESTIONS, SURVEY_PER_LO } from "../../lib/mastery/rules"
+import { buildScorecard, routeNext, type Measurement, type MasteryObjective, modeForActivity } from "../../lib/mastery/rules"
 const objectives: MasteryObjective[] = [1, 2, 3, 4, 5].map((id) => ({ id, name: `LO${id}`, sequence: id }))
 const binomial = (n: number, p: number) => { let k = 0; for (let i = 0; i < n; i++) if (Math.random() < p) k++; return k }
-const modeFor = (a: string): MasteryMode | null => a === "survey" || a === "topic_test" ? "diagnostic" : a === "homework" ? "homework" : a === "practice" ? "practice" : a === "check" ? "check" : a === "close" ? null : "class"
 function run(p: number, rounds: number) {
   const tilt: Record<number, number> = {}; for (const o of objectives) tilt[o.id] = (Math.random() - 0.5) * 0.3
   const ms: Measurement[] = []; const seq: string[] = []
   for (let r = 1; r <= rounds; r++) {
     const d = routeNext(buildScorecard(objectives, ms)); seq.push(d.activity)
     if (d.activity === "close") break
-    const mode = modeFor(d.activity)!; const at = new Date(Date.UTC(2026, 0, 1) + r * 864e5).toISOString()
+    const mode = modeForActivity(d.activity)!; const at = new Date(Date.UTC(2026, 0, 1) + r * 864e5).toISOString()
     if (mode === "class") { for (const lo of d.targetLoIds) { ms.push({ sessionId: r, mode, at, loId: lo, answered: 0, correct: 0 }); tilt[lo] = Math.min(0.95 - p, tilt[lo] + 0.15) } continue }
-    const plan = d.activity === "homework" ? d.homeworkPlan!.map((x) => [x.loId, x.questions]) : d.activity === "topic_test" ? d.testPlan!.map((x) => [x.loId, x.questions]) : d.targetLoIds.map((lo) => [lo, d.activity === "survey" ? SURVEY_PER_LO : d.activity === "check" ? CHECK_QUESTIONS : 5])
+    const plan = d.plan.map((x) => [x.loId, x.questions])
     for (const [lo, n] of plan as [number, number][]) ms.push({ sessionId: r, mode, at, loId: lo, answered: n, correct: binomial(n, Math.min(0.98, Math.max(0.02, p + tilt[lo]))) })
   }
   return seq

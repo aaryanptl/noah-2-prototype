@@ -4,8 +4,8 @@ import { useMemo, useState } from "react";
 
 import {
   type Decision,
-  NEEDS_HELP_SCORE,
-  READY_SCORE,
+  LO_FLOOR,
+  RETEACH_LINE,
   type Scorecard,
 } from "@/lib/mastery/rules";
 import { cn } from "@/lib/utils";
@@ -27,11 +27,7 @@ const H = 260;
 const PAD = { top: 16, right: 24, bottom: 34, left: 36 };
 
 function isHuman(activity: Decision["activity"] | undefined) {
-  return (
-    activity === "class" ||
-    activity === "topic_class" ||
-    activity === "escalate"
-  );
+  return activity === "reteach" || activity === "escalate";
 }
 
 /**
@@ -84,7 +80,9 @@ export function ScoreChart({
           return row?.score == null ? null : [x(p.round), y(row.score)];
         });
         const signedAt = points.findIndex((p) =>
-          p.card.rows.some((r) => r.id === objective.id && r.signedOff),
+          p.card.rows.some(
+            (r) => r.id === objective.id && r.state === "mastered",
+          ),
         );
         return {
           id: objective.id,
@@ -147,8 +145,8 @@ export function ScoreChart({
         ))}
         {/* decision lines */}
         {[
-          [READY_SCORE, "ready"],
-          [NEEDS_HELP_SCORE, "teaching line"],
+          [LO_FLOOR, "per-LO floor"],
+          [RETEACH_LINE, "re-teach line"],
         ].map(([value, label]) => (
           <g key={label}>
             <line
@@ -295,10 +293,13 @@ export function ScoreChart({
                   {row.name}
                 </span>
                 <span
-                  className={cn("font-mono", row.signedOff && "text-[#1c7a3a]")}
+                  className={cn(
+                    "font-mono",
+                    row.state === "mastered" && "text-[#1c7a3a]",
+                  )}
                 >
                   {row.score === null ? "—" : Math.round(row.score)}
-                  {row.signedOff ? " ✓" : ""}
+                  {row.state === "mastered" ? " ✓" : ""}
                 </span>
               </li>
             ))}

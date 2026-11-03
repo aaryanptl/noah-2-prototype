@@ -12,7 +12,12 @@ import {
   Sparkles,
 } from "lucide-react";
 
-import type { Activity } from "@/lib/mastery/rules";
+import {
+  type Activity,
+  EVIDENCE_WEIGHT,
+  LOOP_GUARD,
+  TOPIC_TEST_AFTER,
+} from "@/lib/mastery/rules";
 import { cn } from "@/lib/utils";
 
 import { ACTIVITY_ICON, STATION } from "./parts";
@@ -31,7 +36,7 @@ const CYCLE: Array<{
   {
     icon: NotebookPen,
     title: "Student does an activity",
-    detail: "a test, homework, practice or a check",
+    detail: "homework, practice, or a topic or recurring test",
     at: "top-0 left-1/2 -translate-x-1/2",
   },
   {
@@ -42,8 +47,8 @@ const CYCLE: Array<{
   },
   {
     icon: LayoutGrid,
-    title: "Scorecard updates",
-    detail: "each objective: weak, getting there or strong",
+    title: "Mastery Map updates",
+    detail: "each objective's score moves, tests most, practice least",
     at: "bottom-0 left-1/2 -translate-x-1/2",
   },
   {
@@ -127,7 +132,7 @@ export function LoopCycle() {
             The loop
           </p>
           <p className="mt-1 max-w-[170px] text-sm leading-snug text-[#4a5a58]">
-            Goes round once per session, until every objective is signed off
+            Goes round once per session, until a test passes the mastery check
           </p>
         </div>
         {CYCLE.map((step, index) => (
@@ -159,7 +164,7 @@ export function LoopCycle() {
         <Around
           icon={Flag}
           title="Out of the loop"
-          body="When every objective passes its 5-question check, the topic is done and the student moves on."
+          body="A test at 85%+, every objective at 75+, at a normal speed: Master badge. The topic closes and its spare classes go back to the plan."
         />
         <Around
           icon={Sparkles}
@@ -223,49 +228,45 @@ const AUTOMATIC: Array<{
   counts: number;
 }> = [
   {
-    activity: "survey",
-    when: "Start of a topic",
-    what: "3 questions on each objective",
-    counts: 1,
-  },
-  {
     activity: "homework",
-    when: "Most sessions",
-    what: "12 questions, mostly on the weakest objectives",
-    counts: 0.8,
-  },
-  {
-    activity: "practice",
-    when: "An objective is under 60",
-    what: "5 questions on just that one, with hints",
-    counts: 0.5,
+    when: "Every class, before the topic test",
+    what: "12 questions: 60% weakest, 25% next up, 15% review",
+    counts: EVIDENCE_WEIGHT.homework,
   },
   {
     activity: "topic_test",
-    when: "After 2 homework or practice sessions",
-    what: "15 timed questions, no hints",
-    counts: 1,
+    when: `After ${TOPIC_TEST_AFTER} homeworks, or early if the map is already there`,
+    what: "the same questions on every objective, timed",
+    counts: EVIDENCE_WEIGHT.diagnostic,
   },
   {
-    activity: "check",
-    when: "An objective holds 80+",
-    what: "5 new questions, 4 right signs it off",
-    counts: 1,
+    activity: "micro_homework",
+    when: "A test at 60–84%",
+    what: "6 questions on the weak objectives only",
+    counts: EVIDENCE_WEIGHT.homework,
+  },
+  {
+    activity: "practice",
+    when: "Second round of fixing the gaps",
+    what: "5 questions on the weakest objective, with hints",
+    counts: EVIDENCE_WEIGHT.practice,
+  },
+  {
+    activity: "recurring_test",
+    when: "After the gaps have had their work",
+    what: "15 AI-written questions, mostly on the weak objectives",
+    counts: EVIDENCE_WEIGHT.diagnostic,
   },
 ];
 
 const PERSON: Array<{ activity: Activity; when: string }> = [
   {
-    activity: "class",
-    when: "One objective stuck at 60–79 for 4 sessions, or its check failed twice",
-  },
-  {
-    activity: "topic_class",
-    when: "Every objective under 60 — the topic never landed",
+    activity: "reteach",
+    when: "A test under 60%: the concept never landed. The Plan Builder re-plans the topic.",
   },
   {
     activity: "escalate",
-    when: "3 sessions in a row under 60 and nothing moving",
+    when: `${LOOP_GUARD} rounds of fixing the gaps and still no mastery`,
   },
 ];
 
@@ -340,8 +341,8 @@ export function InsideTheLoop() {
           })}
         </ul>
         <p className="mt-3 text-sm text-[#4a5a58]">
-          A class doesn't score. After one, the loop measures 3 more sessions
-          before it can ask for another.
+          A class writes no score. After one, the learn loop starts again and
+          ends in a fresh topic test.
         </p>
       </div>
     </div>

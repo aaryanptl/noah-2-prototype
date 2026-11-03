@@ -34,9 +34,11 @@ export async function GET(request: NextRequest) {
         status: 404,
       });
     }
+    // Decay (§2) runs to the freeze date, or to today.
     const { steps, now, card } = replay(
       evidence.objectives,
       evidence.measurements,
+      until ?? new Date().toISOString(),
     );
     return apiSuccess({
       student,

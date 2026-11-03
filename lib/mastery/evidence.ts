@@ -1,6 +1,8 @@
 /**
  * Reads a real student's evidence on one topic from the production read-only
- * replica (`MAIN_DATABASE_READ_ONLY_URL`) and shapes it for `rules.ts`.
+ * replica (`MAIN_DATABASE_READ_ONLY_URL`) and shapes it for `rules.ts`:
+ * per-objective first responses, plus time against the cohort median for the
+ * speed band. Placement is kept per objective — it initialises the map.
  *
  * Only first responses count. Non-attempts are excluded. Practice is included
  * (first response only) because hints never fire before the first answer.
@@ -186,24 +188,57 @@ export async function loadTopicEvidence(
     sequence: Number(r.sequence ?? 0),
   }));
 
+  // Speed band (§3): the student's time on each answered question next to
+  // the cohort's median first-attempt time on the same question (questions
+  // with 20+ timed answers).
   const { rows } = await pool.query(
     `
-    with first_attempt as (
-      select a.test_session_question_id tsq,
-        (array_agg(a.verdict order by a.attempt_number, a.submitted_at, a.id))[1] verdict
-      from attempts a where a.student_id = $1 group by 1
+    with mine as (
+      select ts.id sid, tc.mode, tc.scope, ts.started_at at, sq.id tsq,
+        sq.question_id qid, sq.learning_objective_id lo
+      from test_sessions ts
+      join test_configs tc on tc.id = ts.test_id
+      join test_session_questions sq on sq.test_session_id = ts.id
+      where ts.student_id = $1 and sq.topic_id = $2 and ts.completed_at is not null
+        and ($3::timestamptz is null or ts.started_at <= $3)
+    ),
+    first_attempt as (
+      select distinct on (a.test_session_question_id)
+        a.test_session_question_id tsq, a.verdict, a.time_taken_ms
+      from attempts a
+      join test_session_questions sq on sq.id = a.test_session_question_id
+      where sq.question_id in (select qid from mine)
+      order by a.test_session_question_id, a.attempt_number, a.submitted_at, a.id
+    ),
+    cohort as (
+      select sq.question_id qid,
+        percentile_cont(0.5) within group (order by fa.time_taken_ms) median_ms
+      from first_attempt fa
+      join test_session_questions sq on sq.id = fa.tsq
+      where fa.verdict <> 'non_attempt' and fa.time_taken_ms > 0
+      group by 1
+      having count(*) >= 20
+    ),
+    -- The student's typical question against the cohort's typical time on it.
+    -- A median of ratios, not total time over total median: one question left
+    -- open for ten minutes should not fail a whole test.
+    speed as (
+      select m.sid,
+        percentile_cont(0.5) within group (order by fa.time_taken_ms / c.median_ms) ratio
+      from mine m
+      join first_attempt fa on fa.tsq = m.tsq
+      join cohort c on c.qid = m.qid
+      where fa.verdict <> 'non_attempt' and fa.time_taken_ms > 0
+      group by 1
     )
-    select ts.id sid, tc.mode, tc.scope, ts.started_at at, sq.learning_objective_id lo,
+    select m.sid, m.mode, m.scope, m.at, m.lo, sp.ratio speed,
       count(*) filter (where fa.verdict is not null and fa.verdict <> 'non_attempt') answered,
       count(*) filter (where fa.verdict = 'correct') correct
-    from test_sessions ts
-    join test_configs tc on tc.id = ts.test_id
-    join test_session_questions sq on sq.test_session_id = ts.id
-    left join first_attempt fa on fa.tsq = sq.id
-    where ts.student_id = $1 and sq.topic_id = $2 and ts.completed_at is not null
-      and ($3::timestamptz is null or ts.started_at <= $3)
-    group by 1, 2, 3, 4, 5
-    order by ts.started_at, ts.id
+    from mine m
+    left join first_attempt fa on fa.tsq = m.tsq
+    left join speed sp on sp.sid = m.sid
+    group by 1, 2, 3, 4, 5, 6
+    order by m.at, m.sid
     `,
     [studentId, topicId, until ?? null],
   );
@@ -211,13 +246,16 @@ export async function loadTopicEvidence(
   const measurements: Measurement[] = [];
   let placement: TopicEvidence["placement"] = null;
   for (const r of rows) {
-    const mode = String(r.mode) as MasteryMode;
+    const recorded = String(r.mode) as MasteryMode;
+    // A grade-level test (placement or grade test) seeds and updates the map
+    // at test weight but is never the topic's mastery check.
+    const mode: MasteryMode =
+      recorded === "diagnostic" && r.scope === "grade" ? "placement" : recorded;
     const at = new Date(r.at).toISOString();
     if (mode === "placement") {
       placement = placement ?? { answered: 0, correct: 0, at };
       placement.answered += Number(r.answered);
       placement.correct += Number(r.correct);
-      continue;
     }
     if (!r.lo) continue;
     measurements.push({
@@ -227,6 +265,7 @@ export async function loadTopicEvidence(
       loId: Number(r.lo),
       answered: Number(r.answered),
       correct: Number(r.correct),
+      speedRatio: r.speed === null ? null : Number(r.speed),
     });
   }
   return { studentId, topic, objectives, measurements, placement };

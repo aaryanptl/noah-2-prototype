@@ -37,6 +37,7 @@ import {
   MODE_LABEL,
   RuleLadder,
   ScorecardTable,
+  TestResults,
 } from "./shared";
 
 interface DecideResponse {
@@ -251,6 +252,7 @@ export default function MasteryPage() {
                   card={data.scorecard}
                   placement={data.placement}
                 />
+                <TestResults tests={data.scorecard.tests} />
                 <ErrorRead
                   student={data.student}
                   topicId={data.topic.id}
@@ -462,14 +464,14 @@ function Timeline({
 }) {
   const byId = useMemo(() => new Map(rows.map((row) => [row.id, row])), [rows]);
   const isHuman = (activity: Decision["activity"]) =>
-    activity === "escalate" ||
-    activity === "topic_class" ||
-    activity === "class";
+    activity === "escalate" || activity === "reteach";
+  const isTest = (activity: Decision["activity"]) =>
+    activity === "topic_test" || activity === "recurring_test";
   const firstHuman = steps.findIndex((s) => isHuman(s.prescribed.activity));
-  // The first session from which the loop has kept asking for a check ever since.
+  // The first session from which the loop has kept asking for a test ever since.
   let firstCheck = -1;
   for (let index = steps.length - 1; index >= 0; index -= 1) {
-    if (steps[index].prescribed.activity !== "check") break;
+    if (!isTest(steps[index].prescribed.activity)) break;
     firstCheck = index;
   }
   const matched = steps.filter((s) => s.matched).length;
@@ -504,16 +506,16 @@ function Timeline({
         </>
       ),
     };
-  } else if (decision.activity === "check" && firstCheck >= 0) {
+  } else if (isTest(decision.activity) && firstCheck >= 0) {
     const after = steps.length - firstCheck;
-    const ready = rows.filter((row) => row.state === "ready").length;
     callout = {
       tone: "info",
       index: firstCheck,
       text: (
         <>
-          {ready} objective{ready === 1 ? " has" : "s have"} been ready to
-          certify since{" "}
+          The loop has wanted a{" "}
+          {decision.activity === "topic_test" ? "topic test" : "recurring test"}{" "}
+          since{" "}
           <span className="font-semibold">
             {fmtDate(steps[firstCheck].session.at)}
           </span>
@@ -525,7 +527,7 @@ function Timeline({
               <span className="font-semibold">
                 {after} more session{after === 1 ? "" : "s"}
               </span>{" "}
-              on skills already proven — the platform has no LO check yet.
+              of homework instead, with no mastery check to end the topic.
             </>
           )}
         </>

@@ -67,7 +67,14 @@ export function RiyaDemo({ objectives }: { objectives: MasteryObjective[] }) {
       {
         decision,
         day,
-        measurements: playSession(decision, chance, session, at),
+        // Rushed answers come in at a third of the usual time.
+        measurements: playSession(
+          decision,
+          chance,
+          session,
+          at,
+          day === "rushed" ? 0.3 : 1,
+        ),
       },
     ]);
   };
@@ -131,7 +138,7 @@ export function RiyaDemo({ objectives }: { objectives: MasteryObjective[] }) {
             >
               {decision.activity === "escalate"
                 ? "The teacher steps in"
-                : "The mentor class happens"}
+                : "The teacher re-teaches"}
             </Button>
           ) : (
             <>
@@ -174,8 +181,9 @@ export function RiyaDemo({ objectives }: { objectives: MasteryObjective[] }) {
 
         {lastRushed && !done && (
           <p className="mt-5 max-w-2xl rounded-xl bg-[#ece8f6] px-5 py-4 leading-relaxed text-[#2e2560]">
-            She answered each question in about 3 seconds. The loop only sees
-            the score, so it reads this as "doesn't know it".{" "}
+            She answered each question in about 3 seconds. The score reads this
+            as "doesn't know it", and the speed band only stops slow answers,
+            not fast ones.{" "}
             <span className="font-semibold">
               The AI would tell the mentor: too fast to be real attempts.
             </span>
@@ -185,9 +193,10 @@ export function RiyaDemo({ objectives }: { objectives: MasteryObjective[] }) {
           <p className="mt-5 flex max-w-2xl items-start gap-3 rounded-xl bg-[#dcf2ee] px-5 py-4 leading-relaxed text-[#0f6b62]">
             <PartyPopper className="mt-0.5 size-5 shrink-0" />
             <span>
-              Done in {played.length} sessions. The loop found objective{" "}
-              {WEAK_INDEX}, got her help on it, and signed the rest off with
-              short checks instead of more homework.
+              Master badge in {played.length} sessions. The loop kept aiming her
+              work at objective {WEAK_INDEX}, got a person to teach it when the
+              work alone did not move it, and closed the topic as soon as a test
+              passed the mastery check.
             </span>
           </p>
         )}

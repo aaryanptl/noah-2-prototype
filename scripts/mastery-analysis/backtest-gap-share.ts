@@ -17,6 +17,10 @@
  * under 4 seconds, which needs no AI.
  *
  * Writes output/analysis/gap-backtest.json.
+ *
+ * Written against the data-backed engine that preceded the Mastery Learning
+ * Workflow doc rules (window score, stall and plateau rules). To re-run it,
+ * check out lib/mastery/rules.ts from commit 25a8224.
  */
 import fs from "node:fs";
 

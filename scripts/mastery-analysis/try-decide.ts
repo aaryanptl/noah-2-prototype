@@ -16,9 +16,9 @@ for (const c of pick) {
   const { steps, now, card } = replay(ev.objectives, ev.measurements)
   console.log("\n==", c.studentId, ev.topic.name, "| LOs", ev.objectives.length, "| measurements", ev.measurements.length, "| placement", JSON.stringify(ev.placement), "|", Date.now() - t1, "ms")
   for (const s of steps) console.log("  ", s.session.at.slice(0, 10), s.session.mode.padEnd(10), `${s.session.correct}/${s.session.answered}`.padEnd(6), "| loop said:", s.prescribed.rule, s.prescribed.activity.padEnd(11), s.matched ? "✓" : "✗")
-  console.log("  NOW:", now.rule, now.activity, "—", now.because, JSON.stringify(now.homeworkPlan ?? ""))
+  console.log("  NOW:", now.rule, now.activity, "—", now.because, JSON.stringify(now.plan))
   for (const r of card.rows) console.log("   ", r.name.slice(0, 50).padEnd(52), "score", String(r.score).padStart(5), "ev", String(r.evidence).padStart(5), r.state.padEnd(10), "hist", r.history.map(h => h.accuracy).join(","))
-  console.log("   topic", card.topicScore, "ev", card.topicEvidence, "badge", card.badge, "surveyDone", card.surveyDone)
+  console.log("   topic", card.topicScore, "ev", card.topicEvidence, "badge", card.badge, "phase", card.phase, "tests", JSON.stringify(card.tests))
 }
 }
 main().then(() => process.exit(0), (e) => { console.error(e); process.exit(1) })

@@ -1,16 +1,20 @@
 "use client";
 
-import { ArrowLeft, Scale } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
-import type {
-  Decision,
-  LoRow,
-  MasteryObjective,
-  ReplayStep,
-  Scorecard,
+import {
+  type Decision,
+  LO_FLOOR,
+  type LoRow,
+  MASTERY_BAR,
+  type MasteryObjective,
+  RETEACH_LINE,
+  type ReplayStep,
+  type Scorecard,
 } from "@/lib/mastery/rules";
+import { progressNotes } from "@/lib/mastery/story";
 
 import {
   type AnswerExample,
@@ -30,6 +34,7 @@ import {
   stopsFromSteps,
 } from "./parts";
 import { RiyaDemo } from "./riya";
+import { ScoreLogic } from "./score";
 
 /**
  * The presenter's page: what personalisation means, shown on three real
@@ -52,7 +57,7 @@ const EXAMPLES = [
 ];
 const UNTIL = "2026-10-15T23:59:59Z";
 const CAST = [
-  { id: "maALlSSBdo", label: "Student A", headline: "Already knows it" },
+  { id: "maALlSSBdo", label: "Student A", headline: "Knows it, but slowly" },
   {
     id: "ctBuuxn0XzcSpU",
     label: "Student B",
@@ -70,6 +75,7 @@ interface DecideData {
 }
 
 interface Journey {
+  card: Scorecard;
   rows: LoRow[];
   decision: Decision;
   steps: ReplayStep[];
@@ -114,6 +120,7 @@ export default function MasteryStoryPage() {
             setObjectives(data.objectives);
           }
           const journey: Journey = {
+            card: data.scorecard,
             rows: data.scorecard.rows,
             decision: data.decision,
             steps: data.steps,
@@ -174,9 +181,9 @@ export default function MasteryStoryPage() {
               Different next step.
             </h1>
             <p className="mt-6 max-w-md text-lg leading-relaxed text-[#4a5a58]">
-              The loop reads every answer, objective by objective, and picks
-              what this student needs next. AI reads every wrong answer to find
-              out why.
+              Every answer moves a score on each objective. The loop reads those
+              scores and picks what this student needs next. AI reads every
+              wrong answer to find out why.
             </p>
           </div>
           <div className="hidden sm:block">
@@ -215,27 +222,36 @@ export default function MasteryStoryPage() {
           </h2>
           <p className="mt-2 max-w-2xl text-[#4a5a58]">
             Everything step 4 can pick. Most of it the platform runs on its own;
-            three need a person.
+            two need a person.
           </p>
           <div className="mt-8">
             <InsideTheLoop />
           </div>
         </section>
 
-        {/* How it decides */}
+        {/* How the score is worked out */}
         <section className="border-t-2 border-[#15302f] pt-8 pb-20">
           <h2 className="max-w-2xl text-3xl font-bold tracking-tight">
-            Each objective sits somewhere on one line. Where it sits picks the
+            How the score is worked out
+          </h2>
+          <p className="mt-2 max-w-2xl text-[#4a5a58]">
+            Every objective has a score from 0 to 100. Every answer moves it.
+            Tests move it most, practice least.
+          </p>
+          <div className="mt-8">
+            <ScoreLogic />
+          </div>
+        </section>
+
+        {/* How a test decides */}
+        <section className="border-t-2 border-[#15302f] pt-8 pb-20">
+          <h2 className="max-w-2xl text-3xl font-bold tracking-tight">
+            A test result lands somewhere on one line. Where it lands picks the
             next step.
           </h2>
           <div className="mt-8">
             <ScoreScale />
           </div>
-          <p className="mt-4 flex items-center gap-2 text-sm text-[#4a5a58]">
-            <Scale className="size-4 shrink-0" />A score only counts once at
-            least 9 questions back it, so one lucky test can't move a student
-            on.
-          </p>
         </section>
 
         {/* Three real students */}
@@ -310,15 +326,16 @@ export default function MasteryStoryPage() {
               <p className="text-xl font-bold">Rules choose the next step</p>
               <p className="mt-2 text-[#4a5a58]">
                 Same answers in, same step out. Every step has a one-line
-                reason, and the numbers were set on 12,500 real sessions.
+                reason, and every number is in the Mastery Learning Workflow
+                doc, ready for the curriculum team to change.
               </p>
               <div className="mt-5 flex flex-wrap items-center gap-3 text-sm">
-                <span className="rounded-md bg-[#fbe3e6] px-2.5 py-1 font-semibold text-[#a8283c] tabular-nums">
-                  Objective 2 · 47
+                <span className="rounded-md bg-[#fbefd5] px-2.5 py-1 font-semibold text-[#8a5a00] tabular-nums">
+                  Topic test · 64%
                 </span>
                 <span className="text-[#8b9592]">becomes</span>
                 <span className="rounded-full border-2 border-[#15302f] px-3 py-1 font-semibold">
-                  Practise that objective
+                  Micro-homework on the weak spots
                 </span>
               </div>
             </div>
@@ -352,10 +369,10 @@ function RouteLegend() {
   return (
     <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-[#4a5a58]">
       <span className="flex items-center gap-1.5">
-        <span className="size-3 rounded-full bg-[#1f9d8b]" /> 80%+
+        <span className="size-3 rounded-full bg-[#1f9d8b]" /> 85%+
       </span>
       <span className="flex items-center gap-1.5">
-        <span className="size-3 rounded-full bg-[#e3a23b]" /> 60–79%
+        <span className="size-3 rounded-full bg-[#e3a23b]" /> 60–84%
       </span>
       <span className="flex items-center gap-1.5">
         <span className="size-3 rounded-full bg-[#d0485e]" /> under 60%
@@ -366,6 +383,12 @@ function RouteLegend() {
       <span className="flex items-center gap-1.5">
         <span className="w-6 border-t-[3px] border-dashed border-[#b9c2bf]" />
         what happened after the loop would have switched
+      </span>
+      <span className="basis-full text-[#8b9592]">
+        Dots are a session's % right, against the {MASTERY_BAR}% test bar. Tiles
+        are each objective's score, against the {LO_FLOOR} floor: green{" "}
+        {LO_FLOOR}+, amber {RETEACH_LINE}–{LO_FLOOR - 1}, red under{" "}
+        {RETEACH_LINE}.
       </span>
     </div>
   );
@@ -411,8 +434,9 @@ function StudentJourney({
 }
 
 function JourneyBody({ journey }: { journey: Journey }) {
-  const { steps, decision, rows } = journey;
+  const { steps, decision, rows, card } = journey;
   const since = sinceAdvice(steps, decision);
+  const notes = progressNotes(card);
   return (
     <>
       <Route
@@ -434,6 +458,14 @@ function JourneyBody({ journey }: { journey: Journey }) {
             {since.accuracy !== null && `, ${since.accuracy}% right`}.
           </span>
         </p>
+      )}
+      <p className="mt-3 text-[15px] text-[#4a5a58]">{decision.because}</p>
+      {notes.length > 0 && (
+        <ul className="mt-3 space-y-1 text-sm text-[#4a5a58]">
+          {notes.map((note) => (
+            <li key={note}>· {note}</li>
+          ))}
+        </ul>
       )}
       <div className="mt-3">
         <JevChip answers={journey.answers} error={journey.answersError} />

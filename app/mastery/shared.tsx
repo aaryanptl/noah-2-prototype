@@ -4,12 +4,16 @@ import { useMemo } from "react";
 
 import { Card, CardContent } from "@/components/ui/card";
 import {
+  CONFIDENCE_FULL,
   type Decision,
-  LOCK_EVIDENCE,
+  LO_FLOOR,
   type LoRow,
+  MASTERY_BAR,
   type MasteryMode,
+  RETEACH_LINE,
   RULES,
   type Scorecard,
+  type TestResult,
 } from "@/lib/mastery/rules";
 import { cn } from "@/lib/utils";
 
@@ -18,38 +22,48 @@ export const MODE_LABEL: Record<MasteryMode, string> = {
   diagnostic: "Topic test",
   homework: "Homework",
   practice: "Practice",
-  check: "LO check",
   class: "Mentor class",
 };
 
 export const STATE_LABEL: Record<LoRow["state"], string> = {
   untested: "Untested",
-  needs_help: "Needs teaching",
-  working: "Working",
-  ready: "Ready to certify",
-  blocked: "Blocked",
-  signed_off: "Signed off",
+  needs_help: `Under ${RETEACH_LINE}`,
+  working: `Under the ${LO_FLOOR} floor`,
+  secure: `At the floor`,
+  mastered: "Mastered",
 };
 
 export const STATE_CLASS: Record<LoRow["state"], string> = {
   untested: "bg-neutral-100 text-neutral-600",
   needs_help: "bg-[#fdebe7] text-[#b8432c]",
   working: "bg-[#fff3d6] text-[#9a6200]",
-  ready: "bg-[#dff5f2] text-[#0f6b62]",
-  blocked: "bg-[#fdebe7] text-[#b8432c]",
-  signed_off: "bg-[#e3f6e8] text-[#1c7a3a]",
+  secure: "bg-[#dff5f2] text-[#0f6b62]",
+  mastered: "bg-[#e3f6e8] text-[#1c7a3a]",
 };
 
 export const ACTIVITY_LABEL: Record<Decision["activity"], string> = {
-  close: "Close the topic",
-  topic_class: "Whole-topic class",
-  escalate: "Flag to the teacher",
-  survey: "Topic survey",
-  class: "Class on one objective",
-  check: "LO check",
+  close: "Master badge · close the topic",
+  escalate: "Flag at-risk to the teacher",
+  reteach: "Teacher re-teaches",
+  micro_homework: "Micro-homework",
   practice: "Practice",
-  topic_test: "Topic re-test",
+  recurring_test: "Recurring test",
+  topic_test: "Topic test",
   homework: "Homework",
+};
+
+export const PHASE_LABEL: Record<Scorecard["phase"], string> = {
+  learn: "Learn loop",
+  remediate: "Remediation loop",
+  reteach: "Waiting for a re-teach",
+  at_risk: "At risk",
+  mastered: "Mastered",
+};
+
+export const OUTCOME_LABEL: Record<TestResult["outcome"], string> = {
+  mastered: "Mastered",
+  remediate: "Fix the gaps",
+  reteach: "Re-teach",
 };
 
 export function fmtDate(iso: string) {
@@ -77,9 +91,7 @@ export function DecisionCard({
     .map((id) => byId.get(id))
     .filter(Boolean) as LoRow[];
   const urgent =
-    decision.activity === "escalate" ||
-    decision.activity === "topic_class" ||
-    decision.activity === "class";
+    decision.activity === "escalate" || decision.activity === "reteach";
   return (
     <Card className="bg-white py-0">
       <CardContent className="p-6">
@@ -109,9 +121,9 @@ export function DecisionCard({
         </p>
         <p className="mt-2 text-sm text-[var(--text-dim)]">{decision.effect}</p>
 
-        {decision.homeworkPlan && decision.homeworkPlan.length > 0 && (
+        {decision.plan.length > 0 && (
           <div className="mt-5 space-y-1.5">
-            {decision.homeworkPlan.map((item) => {
+            {decision.plan.map((item) => {
               const row = byId.get(item.loId);
               return (
                 <div
@@ -126,7 +138,12 @@ export function DecisionCard({
                   </span>
                   <span className="truncate">{row?.name ?? item.loId}</span>
                   <span className="ml-auto shrink-0 font-mono text-xs text-[var(--text-dim)]">
-                    {row?.score ?? "—"}
+                    {item.difficulty &&
+                      `${item.difficulty} · expect ${item.expected}% · `}
+                    {item.probe && "probe · "}
+                    {row?.score === null || row?.score === undefined
+                      ? "—"
+                      : Math.round(row.score)}
                   </span>
                 </div>
               );
@@ -134,7 +151,7 @@ export function DecisionCard({
           </div>
         )}
 
-        {!decision.homeworkPlan &&
+        {decision.plan.length === 0 &&
           targets.length > 0 &&
           targets.length < rows.length && (
             <div className="mt-5 flex flex-wrap gap-2">
@@ -215,7 +232,10 @@ export function ScorecardTable({
             Scorecard
           </p>
           <p className="text-sm text-[var(--text-dim)]">
-            Topic{" "}
+            {PHASE_LABEL[card.phase]}
+            {card.phase === "remediate" &&
+              ` · ${card.remediationLoops} loop${card.remediationLoops === 1 ? "" : "s"} done`}
+            {" · "}Topic{" "}
             <span className="font-mono font-semibold text-[var(--text)]">
               {card.topicScore ?? "—"}
             </span>{" "}
@@ -237,7 +257,7 @@ export function ScorecardTable({
             <tr className="border-y border-[var(--border)] text-left text-[11px] uppercase tracking-wide text-[var(--text-dim)]">
               <th className="px-6 py-2 font-medium">Objective</th>
               <th className="w-20 px-3 py-2 text-right font-medium">Score</th>
-              <th className="w-44 px-3 py-2 font-medium">Evidence</th>
+              <th className="w-44 px-3 py-2 font-medium">Confidence</th>
               <th className="w-36 px-3 py-2 font-medium">State</th>
               <th className="w-40 px-3 py-2 font-medium">
                 Accuracy per session
@@ -262,9 +282,20 @@ export function ScorecardTable({
                   ) : (
                     Math.round(row.score)
                   )}
+                  {row.decay > 0 && (
+                    <span
+                      className="block text-[10px] font-normal text-[var(--text-dim)]"
+                      title="Points taken off for no recent answers"
+                    >
+                      −{Math.round(row.decay)} decay
+                    </span>
+                  )}
                 </td>
                 <td className="px-3 py-3">
-                  <EvidenceBar evidence={row.evidence} locked={row.locked} />
+                  <EvidenceBar
+                    evidence={row.evidence}
+                    confidence={row.confidence}
+                  />
                 </td>
                 <td className="px-3 py-3">
                   <span
@@ -291,28 +322,30 @@ export function ScorecardTable({
   );
 }
 
+/** §2 confidence: weighted questions against the 20 that make a signal. */
 export function EvidenceBar({
   evidence,
-  locked,
+  confidence,
 }: {
   evidence: number;
-  locked: boolean;
+  confidence: number;
 }) {
-  const width = Math.min(100, (evidence / LOCK_EVIDENCE) * 100);
+  const full = confidence >= 1;
+  const width = confidence * 100;
   return (
     <div className="flex items-center gap-2">
       <div className="h-1.5 w-24 overflow-hidden rounded-full bg-neutral-100">
         <div
           className={cn(
             "h-full rounded-full",
-            locked ? "bg-[var(--heading)]" : "bg-neutral-400",
+            full ? "bg-[var(--heading)]" : "bg-neutral-400",
           )}
           style={{ width: `${width}%` }}
         />
       </div>
       <span className="font-mono text-xs text-[var(--text-dim)]">
         {evidence}
-        {locked ? "" : ` / ${LOCK_EVIDENCE}`}
+        {full ? "" : ` / ${CONFIDENCE_FULL}`}
       </span>
     </div>
   );
@@ -338,9 +371,9 @@ export function Sparkline({ history }: { history: LoRow["history"] }) {
           className={cn(
             "w-[5px] rounded-sm",
             h.answered < 2 && "opacity-40",
-            h.accuracy < 60
+            h.accuracy < RETEACH_LINE
               ? "bg-[#f0a596]"
-              : h.accuracy < 80
+              : h.accuracy < LO_FLOOR
                 ? "bg-[#f3cd7a]"
                 : "bg-[#7fcdc3]",
           )}
@@ -348,5 +381,66 @@ export function Sparkline({ history }: { history: LoRow["history"] }) {
         />
       ))}
     </div>
+  );
+}
+
+/** §4 stage 4 — every topic / recurring test as the Mastery Verifier read it. */
+export function TestResults({ tests }: { tests: TestResult[] }) {
+  if (tests.length === 0) return null;
+  const mark = (ok: boolean | null) => (ok === null ? "—" : ok ? "✓" : "✗");
+  return (
+    <Card className="bg-white py-0">
+      <CardContent className="p-0">
+        <p className="px-6 pt-5 pb-3 font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--text-dim)]">
+          Mastery check on every test
+        </p>
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-y border-[var(--border)] text-left text-[11px] uppercase tracking-wide text-[var(--text-dim)]">
+              <th className="px-6 py-2 font-medium">Test</th>
+              <th className="px-3 py-2 text-right font-medium">
+                Score ≥ {MASTERY_BAR}
+              </th>
+              <th className="px-3 py-2 text-right font-medium">
+                Objectives ≥ {LO_FLOOR}
+              </th>
+              <th className="px-3 py-2 text-right font-medium">Speed</th>
+              <th className="px-6 py-2 font-medium">Outcome</th>
+            </tr>
+          </thead>
+          <tbody>
+            {tests.map((test) => (
+              <tr
+                key={test.sessionId}
+                className="border-b border-[var(--border)] last:border-b-0"
+              >
+                <td className="px-6 py-2.5">
+                  {test.kind === "topic_test" ? "Topic test" : "Recurring test"}
+                  <span className="ml-2 font-mono text-xs text-[var(--text-dim)]">
+                    {fmtDate(test.at)}
+                  </span>
+                </td>
+                <td className="px-3 py-2.5 text-right font-mono">
+                  {Math.round(test.accuracy)}% {mark(test.gate.overall)}
+                </td>
+                <td className="px-3 py-2.5 text-right font-mono">
+                  {test.belowFloor.length === 0
+                    ? "all"
+                    : `${test.belowFloor.length} short`}{" "}
+                  {mark(test.gate.floor)}
+                </td>
+                <td className="px-3 py-2.5 text-right font-mono">
+                  {test.speedRatio === null ? "untimed" : `${test.speedRatio}×`}{" "}
+                  {mark(test.gate.speed)}
+                </td>
+                <td className="px-6 py-2.5 font-medium">
+                  {OUTCOME_LABEL[test.outcome]}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </CardContent>
+    </Card>
   );
 }

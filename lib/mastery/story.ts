@@ -8,12 +8,13 @@
  */
 import {
   type Activity,
-  CHECK_QUESTIONS,
   type Decision,
-  type MasteryMode,
+  LO_FLOOR,
+  type LoRow,
+  MASTERY_BAR,
   type Measurement,
-  SURVEY_CAP,
-  SURVEY_PER_LO,
+  modeForActivity,
+  type Scorecard,
 } from "./rules";
 
 export const PLAIN_STEP: Record<
@@ -21,108 +22,50 @@ export const PLAIN_STEP: Record<
   { title: string; why: string; human: boolean }
 > = {
   close: {
-    title: "Topic done — move on",
-    why: "Every objective has been proven with a check.",
+    title: "Master badge — topic closed",
+    why: `A test at ${MASTERY_BAR}%+, every objective at ${LO_FLOOR}+, at a normal speed. The classes left on this topic go back to the plan.`,
     human: false,
-  },
-  topic_class: {
-    title: "A mentor re-teaches the whole topic",
-    why: "Every objective is weak, on plenty of questions. More homework will not fix a topic that never landed.",
-    human: true,
   },
   escalate: {
-    title: "Tell the teacher",
-    why: "Several sessions in a row and nothing is improving. Working alone is not helping.",
+    title: "Flag to the teacher: at risk",
+    why: "Three rounds of fixing the gaps and still no mastery. The loop stops rather than cycling silently.",
     human: true,
   },
-  survey: {
-    title: "A short test on each objective",
-    why: "We do not know enough yet to decide anything.",
-    human: false,
-  },
-  class: {
-    title: "A mentor class",
-    why: "One objective has been stuck in the middle for several sessions. Homework is not moving it; a person will.",
+  reteach: {
+    title: "The teacher re-teaches the topic",
+    why: "The last test was under 60%. That usually means the concept never landed in class, so more practice will not fix it.",
     human: true,
   },
-  check: {
-    title: "Prove it: a 5-question check",
-    why: "Strong on enough questions. A short check signs it off, so the student stops repeating what they know.",
+  micro_homework: {
+    title: "Micro-homework on the weak objectives",
+    why: `Close to mastery but not there. Six questions aimed at exactly what the test exposed.`,
     human: false,
   },
   practice: {
-    title: "Practice with hints, on the weak objective only",
-    why: "One objective is clearly weak. Practice the method there, not the whole topic again.",
+    title: "Practice with hints, on the weakest objective",
+    why: "One round of micro-homework did not move it. Practise the method before the next re-test.",
+    human: false,
+  },
+  recurring_test: {
+    title: "Recurring test, weighted to the weak spots",
+    why: "The gaps have had their work. Re-test, mostly on the objectives that were short.",
     human: false,
   },
   topic_test: {
-    title: "Measure again: a short re-test",
-    why: "Two sessions of homework since the last test. Time to see what changed.",
+    title: "The topic test",
+    why: "Enough homework since the start. Time to measure the whole topic under test conditions.",
     human: false,
   },
   homework: {
-    title: "Homework, aimed at the weak spots",
-    why: "Mostly the weakest objectives, one we know little about, and one strong one to keep fresh.",
+    title: "Homework: weak spots, the next objective, a review",
+    why: "60% on the weakest objectives, 25% on the next one to learn, 15% to keep strong ones fresh.",
     human: false,
   },
 };
 
-/** Which recorded session an activity produces, or null for "close". */
-export function modeFor(activity: Activity): MasteryMode | null {
-  switch (activity) {
-    case "survey":
-    case "topic_test":
-      return "diagnostic";
-    case "homework":
-      return "homework";
-    case "practice":
-      return "practice";
-    case "check":
-      return "check";
-    case "class":
-    case "topic_class":
-    case "escalate":
-      return "class";
-    default:
-      return null;
-  }
-}
-
-const PRACTICE_QUESTIONS = 5;
-
 /** Questions per objective the activity would serve. */
 export function questionsFor(decision: Decision): Map<number, number> {
-  const out = new Map<number, number>();
-  switch (decision.activity) {
-    case "survey": {
-      const per = Math.max(
-        1,
-        Math.min(
-          SURVEY_PER_LO,
-          Math.floor(SURVEY_CAP / Math.max(1, decision.targetLoIds.length)),
-        ),
-      );
-      for (const id of decision.targetLoIds) out.set(id, per);
-      break;
-    }
-    case "topic_test":
-      for (const item of decision.testPlan ?? [])
-        out.set(item.loId, item.questions);
-      break;
-    case "homework":
-      for (const item of decision.homeworkPlan ?? [])
-        out.set(item.loId, item.questions);
-      break;
-    case "practice":
-      for (const id of decision.targetLoIds) out.set(id, PRACTICE_QUESTIONS);
-      break;
-    case "check":
-      for (const id of decision.targetLoIds) out.set(id, CHECK_QUESTIONS);
-      break;
-    default:
-      break;
-  }
-  return out;
+  return new Map(decision.plan.map((item) => [item.loId, item.questions]));
 }
 
 /**
@@ -135,8 +78,10 @@ export function playSession(
   chance: (loId: number) => number,
   sessionId: number,
   at: string,
+  /** Her typical time ÷ the cohort median. */
+  speedRatio = 1,
 ): Measurement[] {
-  const mode = modeFor(decision.activity);
+  const mode = modeForActivity(decision.activity);
   if (!mode) return [];
   if (mode === "class")
     return decision.targetLoIds.map((loId) => ({
@@ -154,5 +99,53 @@ export function playSession(
     loId,
     answered: n,
     correct: Math.round(n * chance(loId)),
+    speedRatio,
   }));
+}
+
+/**
+ * §4 Progress Narration — the result page in deltas, not just a score.
+ * Plain lines from the map: the biggest gain since point A, the objective
+ * holding the student back, and the distance to the Master badge.
+ */
+export function progressNotes(card: Scorecard): string[] {
+  const notes: string[] = [];
+  const rows = card.rows.filter((row) => row.score !== null);
+  if (rows.length === 0) return notes;
+  const gain = (row: LoRow) => (row.score ?? 0) - (row.firstScore ?? 0);
+  const best = [...rows]
+    .filter((row) => row.firstScore !== null && row.history.length > 1)
+    .sort((a, b) => gain(b) - gain(a))[0];
+  if (best && gain(best) >= 5)
+    notes.push(
+      `${best.name}: ${Math.round(best.firstScore ?? 0)} → ${Math.round(best.score ?? 0)} since the first session, the biggest jump.`,
+    );
+  if (card.phase === "mastered") {
+    notes.push("Master badge earned. The topic is closed.");
+    return notes;
+  }
+  const short = card.rows
+    .filter((row) => row.score === null || row.score < LO_FLOOR)
+    .sort((a, b) => (a.score ?? -1) - (b.score ?? -1));
+  if (short.length > 0) {
+    const worst = short[0];
+    const test = card.lastTest;
+    notes.push(
+      worst.score === null
+        ? `${worst.name} has no answers yet.`
+        : `Holding the student back: ${worst.name} at ${Math.round(worst.score)}${test && worst.lastMode === "diagnostic" ? " under test conditions" : ""}.`,
+    );
+    notes.push(
+      `${short.length} objective${short.length === 1 ? "" : "s"} away from the ${LO_FLOOR} floor every objective needs for the Master badge.`,
+    );
+  } else if (card.lastTest && card.lastTest.gate.speed === false) {
+    notes.push(
+      `Every objective is at ${LO_FLOOR}+, but the last test took ${card.lastTest.speedRatio}× the usual time.`,
+    );
+  } else {
+    notes.push(
+      `Every objective is at ${LO_FLOOR}+. A test at ${MASTERY_BAR}%+ earns the Master badge.`,
+    );
+  }
+  return notes;
 }

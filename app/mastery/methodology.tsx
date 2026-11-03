@@ -5,24 +5,28 @@ import { BookOpen, Check, X } from "lucide-react";
 import type { ReactNode } from "react";
 
 import {
-  CHECK_PASS,
-  CHECK_QUESTIONS,
-  CLASS_DISCOUNT,
+  CHALLENGE_ZONE,
+  CONFIDENCE_FULL,
+  CONFIDENCE_GUESS,
+  DECAY_GRACE_DAYS,
+  DECAY_MAX,
+  DECAY_PER_WEEK,
+  DIFFICULTY_OFFSET,
   EVIDENCE_WEIGHT,
   HOMEWORK_MIX,
   HOMEWORK_QUESTIONS,
-  LOCK_EVIDENCE,
-  MASTER_SCORE,
-  NEEDS_HELP_SCORE,
-  PLATEAU_RUNS,
-  READY_EVIDENCE,
-  READY_SCORE,
-  RETEST_AFTER_SESSIONS,
-  RETEST_QUESTIONS,
-  SCORE_WINDOW,
-  SESSIONS_AFTER_CLASS,
-  STALL_RUNS,
-  SURVEY_PER_LO,
+  K_FLOOR,
+  LO_FLOOR,
+  LOOP_GUARD,
+  learningRate,
+  MASTERY_BAR,
+  MICRO_HOMEWORK_QUESTIONS,
+  PRO_COVERAGE,
+  RECURRING_TEST_QUESTIONS,
+  RETEACH_LINE,
+  RULES,
+  SPEED_BAND,
+  TOPIC_TEST_AFTER,
 } from "@/lib/mastery/rules";
 import { cn } from "@/lib/utils";
 
@@ -118,16 +122,20 @@ function Num({ children }: { children: ReactNode }) {
 
 const pct = (v: number) => `${Math.round(v * 100)}%`;
 const w = EVIDENCE_WEIGHT;
+/** One answer's move from `old` toward `result`, with `n` questions already behind the score. */
+const step = (old: number, weight: number, n: number, result: number) =>
+  old + weight * learningRate(n) * (result - old);
 
 /* ------------------------------------------------------------------ */
 
 function Body() {
+  const k20 = learningRate(20);
   return (
     <>
       <Section
         n="01"
-        title="One student, one topic, one next step"
-        lead="The loop reads what the student has answered so far, and hands back exactly one thing to do next. The student does it, the numbers move, and it reads again — until every objective in the topic is signed off."
+        title="One student, one topic, one Mastery Map"
+        lead="Every activity reads the student's Mastery Map before it starts and writes back to it after. The map holds a score and a confidence for each objective in the topic. The loop reads it and hands back exactly one thing to do next, until a test passes the mastery check."
       >
         <LoopDiagram />
       </Section>
@@ -135,237 +143,203 @@ function Body() {
       <Section
         n="02"
         title="Only the first answer counts"
-        lead="If a student retries a question, the retry is ignored. On the platform, practice always ends at 100% because of hints and retries — so the final answer says nothing. The first one does."
+        lead="If a student retries a question, the retry is ignored. On the platform, practice always ends at 100% because of hints and retries, so the final answer says nothing. The first one does."
       >
         <div className="flex flex-wrap items-center gap-3 text-sm">
           <AttemptStrip attempts={["wrong", "hint", "wrong", "right"]} />
           <span className="text-[var(--text-dim)]">
-            counts as <Num>0 of 1</Num> — the first answer was wrong.
+            counts as <Num>0 of 1</Num>: the first answer was wrong.
           </span>
         </div>
-        <Example>
-          Practice, 5 questions: right first time on 2, needed hints on 3, all 5
-          eventually correct. The loop records <Num>2 / 5</Num>, not 5 / 5.
-        </Example>
       </Section>
 
       <Section
         n="03"
-        title="Weights — how much is an answer worth?"
-        lead="A correct answer in a timed test is stronger proof than one in relaxed homework or in practice. Each answer is scaled by where it came from. Question difficulty plays no part — in the real data, “hard” questions were answered right 76% of the time and “easy” ones 71%; the labels don't measure difficulty."
+        title="Weights: how much is an answer worth?"
+        lead="A test answer under time pressure says more than a practice answer with hints available. Each answer is scaled by where it came from: the weight w."
       >
         <WeightBars />
-        <Example>
-          10 correct answers in a topic test = <Num>10</Num>. In homework ={" "}
-          <Num>{10 * w.homework}</Num>. In practice (first try) ={" "}
-          <Num>{10 * w.practice}</Num>. A test moves the score; practice nudges
-          it.
-        </Example>
       </Section>
 
       <Section
         n="04"
-        title={`Score — the last ${SCORE_WINDOW} questions`}
-        lead={`Correct ÷ answered, weighted, over the student's most recent ${SCORE_WINDOW} weighted questions on that objective. Older answers fall out, so the score follows the student as they improve instead of being anchored by how they started.`}
+        title="The score: a moving average"
+        lead={`After every answered question: new score = old score + w × k × (result − old score). The result is the share right in that session on that objective. k, the learning rate, is 1 ÷ (1 + questions so far) and never drops below ${K_FLOOR}: early answers move the score a lot, later ones nudge it. The first answer an objective ever gets sets its score.`}
       >
-        <WindowStrip />
         <Example>
-          A student is weak at first — 8 of 20 right — then a mentor teaches it
-          and they get the next 10 right. Over the whole history the score would
-          read <Num>60</Num> and the loop would keep handing out homework. Over
-          the last {SCORE_WINDOW} it reads <Num>92</Num>: ready for a check. On
-          9,200 real histories the window predicted the next session as well as
-          the full history did — it costs nothing in accuracy.
+          An objective at <Num>50</Num> with {CONFIDENCE_FULL} questions behind
+          it, so k = {k20.toFixed(2)}. One right answer in a test: 50 +{" "}
+          {w.diagnostic} × {k20.toFixed(2)} × (100 − 50) ={" "}
+          <Num>{Math.round(step(50, w.diagnostic, 20, 100))}</Num>. The same
+          right answer in homework:{" "}
+          <Num>{Math.round(step(50, w.homework, 20, 100))}</Num>; in practice:{" "}
+          <Num>{Math.round(step(50, w.practice, 20, 100))}</Num>.
         </Example>
       </Section>
 
       <Section
         n="05"
-        title="Evidence — how sure are we?"
-        lead={`A score of 100 on three questions and a score of 100 on twenty are not the same claim. Evidence counts every weighted question the student has ever answered on the objective. At ${LOCK_EVIDENCE} the score is trusted: only then can the loop sign off, flag, or re-teach.`}
+        title="Confidence: how sure are we?"
+        lead={`Two questions on an objective is a guess; ${CONFIDENCE_FULL} is a signal. Confidence is the weighted question count against ${CONFIDENCE_FULL}. Under ${CONFIDENCE_GUESS} the objective is probed with unhinted homework questions before anything is done about it.`}
       >
         <EvidenceBarDemo />
-        <Example>
-          Survey 3 questions (3) + homework 4 questions (4 × {w.homework} ={" "}
-          {(4 * w.homework).toFixed(1)}) ={" "}
-          <Num>{(3 + 4 * w.homework).toFixed(1)}</Num> — not yet trusted. A
-          5-question re-test adds 5 →{" "}
-          <Num>{(3 + 4 * w.homework + 5).toFixed(1)}</Num>: trusted. Practice
-          alone can't get there — 18 practice questions would be needed.
-        </Example>
       </Section>
 
       <Section
         n="06"
-        title="What the score means"
-        lead="The router reads one objective's score against three lines."
+        title="Decay: mastery has to be kept"
+        lead={`No answers on an objective for ${DECAY_GRACE_DAYS} days and its score drops ${DECAY_PER_WEEK} points a week, at most ${DECAY_MAX}. The next answer starts from the decayed score.`}
+      >
+        <Example>
+          An objective at <Num>88</Num>, untouched for 5 weeks: 3 weeks past the
+          grace period, so{" "}
+          <Num>{88 - Math.min(DECAY_MAX, 3 * DECAY_PER_WEEK)}</Num>.
+        </Example>
+      </Section>
+
+      <Section
+        n="07"
+        title="What an objective's score means"
+        lead="Each objective sits somewhere on one line."
       >
         <StateScale />
         <ul className="grid gap-2 text-sm sm:grid-cols-2">
           <li className="flex gap-2">
-            <Chip className="bg-[#fdebe7] text-[#b8432c]">Needs teaching</Chip>
+            <Chip className="bg-[#fdebe7] text-[#b8432c]">
+              Under {RETEACH_LINE}
+            </Chip>
             <span className="text-[var(--text-dim)]">
-              under {NEEDS_HELP_SCORE}. Only 1 in 5 reaches 80 next time —
-              measure less, teach more.
+              the weakest; it gets the biggest share of homework.
             </span>
           </li>
           <li className="flex gap-2">
-            <Chip className="bg-[#fff3d6] text-[#9a6200]">Working</Chip>
+            <Chip className="bg-[#fff3d6] text-[#9a6200]">
+              Under the {LO_FLOOR} floor
+            </Chip>
             <span className="text-[var(--text-dim)]">
-              {NEEDS_HELP_SCORE}–{READY_SCORE - 1}, or a high score on too
-              little evidence.
+              {RETEACH_LINE}–{LO_FLOOR - 1}: keeps the topic from Master.
             </span>
           </li>
           <li className="flex gap-2">
-            <Chip className="bg-[#dff5f2] text-[#0f6b62]">Ready</Chip>
+            <Chip className="bg-[#dff5f2] text-[#0f6b62]">At the floor</Chip>
             <span className="text-[var(--text-dim)]">
-              {READY_SCORE}+ on {READY_EVIDENCE}+ questions. Sent to an LO
-              check.
+              {LO_FLOOR}+. Spaced review keeps it warm.
             </span>
           </li>
           <li className="flex gap-2">
-            <Chip className="bg-[#e3f6e8] text-[#1c7a3a]">Signed off</Chip>
+            <Chip className="bg-[#e3f6e8] text-[#1c7a3a]">Mastered</Chip>
             <span className="text-[var(--text-dim)]">
-              passed the check. Permanent — it never comes back.
+              the topic passed its mastery check.
             </span>
           </li>
         </ul>
       </Section>
 
       <Section
-        n="07"
-        title="Three tests, three jobs"
-        lead="Inside a topic there are only three tests. Grade tests and multi-topic tests are not in the loop — they decide which topic to study, and that is the Plan Builder's job."
-      >
-        <TestTimeline />
-        <Example>
-          The LO check is the only thing that can sign an objective off:{" "}
-          <Num>
-            {CHECK_PASS} of {CHECK_QUESTIONS}
-          </Num>{" "}
-          unseen questions right, no hints, on a score of {READY_SCORE}+ with{" "}
-          {LOCK_EVIDENCE}+ evidence. A single topic test at 80–89 holds on
-          re-test only 58% of the time — that is why one test is never enough.
-        </Example>
-      </Section>
-
-      <Section
         n="08"
-        title="How it picks the next activity"
-        lead="Nine rules, read top to bottom. The first that matches decides. Safety first, then certification, then teaching, then measuring, then the default."
+        title="The mastery check: the one gate"
+        lead="Mastery is decided only on a topic test or a recurring test, never on homework. Three things must all hold."
       >
-        <RuleList />
+        <ol className="grid gap-3 sm:grid-cols-3">
+          <GateCard
+            n="1"
+            title={`Test at ${MASTERY_BAR}%+`}
+            body="All objectives together, first answers."
+          />
+          <GateCard
+            n="2"
+            title={`Every objective ${LO_FLOOR}+`}
+            body="On the map, once the test is in. No mastering on average while one objective stays broken."
+          />
+          <GateCard
+            n="3"
+            title={`Speed within ${SPEED_BAND}×`}
+            body="The student's typical time per question against the median of everyone who answered the same question."
+          />
+        </ol>
+        <TestBands />
         <Example>
-          A topic re-test is {RETEST_QUESTIONS} questions across every open
-          objective, more where the score is low. An LO check is{" "}
-          {CHECK_QUESTIONS} questions on one objective only.
+          Rohan: topic test <Num>64%</Num> with one objective at 44. Not
+          mastery, and over {RETEACH_LINE}, so micro-homework on that objective,
+          then a recurring test: <Num>71%</Num>. Second loop: micro-homework,
+          practice, recurring test: <Num>86%</Num>, every objective over{" "}
+          {LO_FLOOR}, speed in band. Master badge, and the classes left on
+          Fractions move to Decimals.
         </Example>
       </Section>
 
       <Section
         n="09"
-        title="How homework is built"
-        lead={`Homework is ${HOMEWORK_QUESTIONS} questions, and it always covers a mix: most go to the weakest objectives, a few probe what is least measured, and a couple keep a strong objective warm. Strong objectives are never dropped — skills fade when they are never touched.`}
+        title="How it picks the next activity"
+        lead="Eight rules, read top to bottom. The first that matches decides."
       >
-        <HomeworkSplit />
-        <ul className="grid gap-2 text-sm sm:grid-cols-2">
-          <li className="rounded-lg border border-[var(--border)] p-3">
-            <p className="font-semibold">Gap · {pct(HOMEWORK_MIX.gap)}</p>
-            <p className="mt-1 text-[var(--text-dim)]">
-              The two lowest-scoring objectives share these.
-            </p>
-          </li>
-          <li className="rounded-lg border border-[var(--border)] p-3">
-            <p className="font-semibold">Probe · {pct(HOMEWORK_MIX.probe)}</p>
-            <p className="mt-1 text-[var(--text-dim)]">
-              The objective with the least evidence — find out where it stands.
-            </p>
-          </li>
-          <li className="rounded-lg border border-[var(--border)] p-3">
-            <p className="font-semibold">
-              Maintain · {pct(HOMEWORK_MIX.maintain)}
-            </p>
-            <p className="mt-1 text-[var(--text-dim)]">
-              The strongest open objective, to keep it fresh.
-            </p>
-          </li>
-          <li className="rounded-lg border border-[var(--border)] p-3">
-            <p className="font-semibold">Signed off = out</p>
-            <p className="mt-1 text-[var(--text-dim)]">
-              Only open objectives are split. With 3 of 4 signed off, all{" "}
-              {HOMEWORK_QUESTIONS} go to the last one.
-            </p>
-          </li>
-        </ul>
-        <Example>
-          Because a strong objective only gets ~
-          {Math.round(HOMEWORK_QUESTIONS * HOMEWORK_MIX.maintain)} homework
-          questions, homework alone builds its evidence slowly. The topic
-          re-test every {RETEST_AFTER_SESSIONS} sessions is what carries strong
-          objectives to “ready” — it measures all of them at full weight.
-        </Example>
+        <RuleList />
       </Section>
 
       <Section
         n="10"
-        title="Same start, then every student's own path"
-        lead="The first three sessions are a fixed on-ramp. From the fourth, the student's own numbers drive it, and by the fifth no two students are likely to be on the same path. Measured on 2,000 simulated students of mixed ability on a 5-objective topic."
+        title="How homework is built"
+        lead={`Homework is ${HOMEWORK_QUESTIONS} questions: most go to the weakest objectives, some move the student forward, and a few keep strong objectives warm. Each slice is set at a difficulty that keeps expected success in the ${CHALLENGE_ZONE.low}–${CHALLENGE_ZONE.high}% challenge zone.`}
       >
-        <PathDivergence />
+        <HomeworkSplit />
         <ul className="grid gap-2 text-sm sm:grid-cols-3">
           <li className="rounded-lg border border-[var(--border)] p-3">
-            <p className="font-semibold">Strong student</p>
+            <p className="font-semibold">Weakest · {pct(HOMEWORK_MIX.gap)}</p>
             <p className="mt-1 text-[var(--text-dim)]">
-              survey → homework → homework → LO check → … Closes a 5-objective
-              topic in about 9 rounds.
+              The two lowest-scoring objectives under the floor.
             </p>
           </li>
           <li className="rounded-lg border border-[var(--border)] p-3">
-            <p className="font-semibold">Average student</p>
+            <p className="font-semibold">
+              Frontier · {pct(HOMEWORK_MIX.frontier)}
+            </p>
             <p className="mt-1 text-[var(--text-dim)]">
-              survey → practice → homework → practice → re-test → … About 18
-              rounds, usually one mentor class.
+              The next objective in teaching order that is not yet secure.
             </p>
           </li>
           <li className="rounded-lg border border-[var(--border)] p-3">
-            <p className="font-semibold">Weak student</p>
+            <p className="font-semibold">
+              Spaced review · {pct(HOMEWORK_MIX.review)}
+            </p>
             <p className="mt-1 text-[var(--text-dim)]">
-              survey → practice → homework → flag to teacher → class → … 25+
-              rounds, several classes; never certified without teaching.
+              The strongest objective, so it does not fade.
             </p>
           </li>
         </ul>
         <Example>
-          “How many tests will my child take?” has no single answer — only a
-          range. The number of sessions is an <Num>output</Num> of the loop,
-          never an input.
+          Challenge zone, v1: expected success = the objective's score, +
+          {DIFFICULTY_OFFSET.easy} on easy questions, {DIFFICULTY_OFFSET.hard}{" "}
+          on hard ones. At <Num>55</Num> the homework is easy (expect 70%); at{" "}
+          <Num>90</Num> it is hard (expect 75%). The Difficulty Calibrator will
+          replace the offsets with each question's real accuracy.
         </Example>
       </Section>
 
       <Section
         n="11"
-        title="What a mentor class does"
-        lead="A class writes no score — teaching is not measurement. But it changes the student, so the loop treats it as a fresh start."
+        title="The remediation loop, and its guard"
+        lead={`A test at ${RETEACH_LINE}–${MASTERY_BAR - 1}% means close the specific gaps and re-check; there is no need to re-teach the topic. One loop is micro-homework (${MICRO_HOMEWORK_QUESTIONS} questions on the weak objectives), then a ${RECURRING_TEST_QUESTIONS}-question recurring test weighted to them. From the second loop a practice session comes before the re-test.`}
       >
         <ul className="grid gap-2 text-sm sm:grid-cols-3">
           <li className="rounded-lg border border-[var(--border)] p-3">
-            <p className="font-semibold">Evidence from before counts half</p>
+            <p className="font-semibold">Under {RETEACH_LINE}%: re-teach</p>
             <p className="mt-1 text-[var(--text-dim)]">
-              × {CLASS_DISCOUNT}. The results that caused the class stop
-              anchoring the score.
+              An instruction problem, not a practice problem. The teacher
+              re-teaches and the Plan Builder re-plans.
             </p>
           </li>
           <li className="rounded-lg border border-[var(--border)] p-3">
-            <p className="font-semibold">Stall and block counts reset</p>
+            <p className="font-semibold">{LOOP_GUARD} loops: at risk</p>
             <p className="mt-1 text-[var(--text-dim)]">
-              The loop gives the teaching a chance to land.
+              The loop stops cycling and flags the student to the teacher,
+              naming the objectives that will not move.
             </p>
           </li>
           <li className="rounded-lg border border-[var(--border)] p-3">
-            <p className="font-semibold">Measure before teaching again</p>
+            <p className="font-semibold">After a class</p>
             <p className="mt-1 text-[var(--text-dim)]">
-              {SESSIONS_AFTER_CLASS} sessions before another class; never a
-              check straight after one.
+              A class writes no score. The learn loop starts again:{" "}
+              {TOPIC_TEST_AFTER} homeworks, then a fresh topic test.
             </p>
           </li>
         </ul>
@@ -373,10 +347,32 @@ function Body() {
 
       <Section
         n="12"
-        title="When a topic is mastered"
-        lead={`Every objective signed off, and the topic score at ${MASTER_SCORE} or more. The topic score is the objectives' scores averaged by evidence — same recent window, so it never lags behind them.`}
+        title="Badges"
+        lead="Novice → Pro → Master. Pro rewards coverage; Master can only be earned by performance."
       >
-        <MasteryDemo />
+        <ul className="grid gap-2 text-sm sm:grid-cols-3">
+          <li className="rounded-lg border border-[var(--border)] p-3">
+            <p className="font-semibold">Novice</p>
+            <p className="mt-1 text-[var(--text-dim)]">
+              Where everyone starts, from placement.
+            </p>
+          </li>
+          <li className="rounded-lg border border-[var(--border)] p-3">
+            <p className="font-semibold">Pro</p>
+            <p className="mt-1 text-[var(--text-dim)]">
+              {pct(PRO_COVERAGE)} of the topic's objectives have{" "}
+              {CONFIDENCE_GUESS}+ weighted questions. Homework and practice get
+              a student here.
+            </p>
+          </li>
+          <li className="rounded-lg border border-[var(--border)] p-3">
+            <p className="font-semibold">Master</p>
+            <p className="mt-1 text-[var(--text-dim)]">
+              Passed the mastery check. The topic closes early and its spare
+              classes go back to the plan.
+            </p>
+          </li>
+        </ul>
       </Section>
 
       <Section
@@ -390,38 +386,37 @@ function Body() {
             loop would have asked for
           </li>
           <li className="flex items-center gap-2">
-            <X className="size-4 text-[#b8432c]" /> they did something else —
-            not a judgement on the student; they did what the platform offered
+            <X className="size-4 text-[#b8432c]" /> they did something else. Not
+            a judgement on the student; they did what the platform offered
           </li>
         </ul>
         <p className="text-sm text-[var(--text-dim)]">
-          The first row is always a cross: the loop starts every topic with a
-          survey, and no student has taken one. The LO check does not exist on
-          the platform yet either, so nothing on real data is signed off — the
-          page shows where the loop would have asked for one.
+          A student's first topic test is read as the topic test; later ones,
+          after a failed check, as recurring tests. Placement and grade tests
+          seed the map at test weight but never decide mastery.
         </p>
       </Section>
 
       <Section
         n="14"
         title="Where the numbers come from"
-        lead="A back-test on the production replica (21 Sep 2026): 12,564 completed sessions, 5,953 students, 175,636 answered questions — then a simulation of the loop on thousands of made-up students to check it converges. Full record in docs/mastery-analysis/decisions.md."
+        lead="“Noah Mastery Learning Workflow”, draft v1 (7 Aug 2026): the update rule, the weights and every threshold. The doc marks them as proposals for the curriculum team to confirm; changing one is a config change in lib/mastery/rules.ts. The learning-rate floor, decay speed and question counts are not in the doc and are set here."
       >
         <div className="grid gap-3 sm:grid-cols-3">
           <Stat
-            value="58%"
-            label="of students scoring 80–89 on a topic test score 80+ again"
-            note="one test is not proof"
+            value={`${MASTERY_BAR} · ${LO_FLOOR} · ${SPEED_BAND}×`}
+            label="mastery bar · per-objective floor · speed band"
+            note="the gate, from the doc"
           />
           <Stat
-            value="71 · 71 · 76"
-            label="% correct on easy · medium · hard questions"
-            note="difficulty labels don't measure difficulty"
+            value="38%"
+            label="of real topic tests at 85%+ fail the speed band"
+            note="production replica, 3 Nov 2026"
           />
           <Stat
-            value="88% vs 75%"
-            label="later accuracy with 9+ evidence and 90+ score, vs everyone"
-            note="evidence volume is what predicts"
+            value="9 · 15 · 26"
+            label="rounds to Master at 95% · 85% · 75% ability"
+            note="simulation, scripts/mastery-analysis/sim-loop.ts"
           />
         </div>
       </Section>
@@ -454,18 +449,18 @@ function Chip({
 
 function LoopDiagram() {
   const steps = [
-    { label: "Scorecard", sub: "score + evidence per objective" },
-    { label: "Router", sub: "9 rules, first match wins" },
+    { label: "Mastery Map", sub: "score + confidence per objective" },
+    { label: "Router", sub: `${RULES.length} rules, first match wins` },
     {
       label: "One activity",
-      sub: "survey · practice · homework · re-test · check · class",
+      sub: "homework · test · micro-homework · practice · class",
     },
     { label: "Student does it", sub: "first answers are recorded" },
   ];
   return (
     <div className="flex flex-wrap items-stretch gap-2">
-      {steps.map((step, index) => (
-        <div key={step.label} className="flex items-center gap-2">
+      {steps.map((item, index) => (
+        <div key={item.label} className="flex items-center gap-2">
           <div
             className={cn(
               "min-w-40 rounded-lg border px-3 py-2",
@@ -474,14 +469,14 @@ function LoopDiagram() {
                 : "border-[var(--border)] bg-white",
             )}
           >
-            <p className="text-sm font-semibold">{step.label}</p>
+            <p className="text-sm font-semibold">{item.label}</p>
             <p
               className={cn(
                 "mt-0.5 text-[11px]",
                 index === 1 ? "text-white/80" : "text-[var(--text-dim)]",
               )}
             >
-              {step.sub}
+              {item.sub}
             </p>
           </div>
           <span className="text-neutral-300">
@@ -524,24 +519,24 @@ function AttemptStrip({
 function WeightBars() {
   const rows: Array<{ name: string; weight: number; why: string }> = [
     {
-      name: "Topic test · re-test · LO check",
+      name: "Topic test · recurring test",
       weight: w.diagnostic,
-      why: "timed, no hints, one attempt",
-    },
-    {
-      name: "Homework",
-      weight: w.homework,
-      why: "no hints, but untimed and relaxed — reads ~2 points high",
-    },
-    {
-      name: "Practice — first answer",
-      weight: w.practice,
-      why: "a learning format; the first answer is real, retries are not",
+      why: "timed, no hints",
     },
     {
       name: "Placement",
       weight: w.placement,
-      why: "20 questions across a whole grade — too thin per objective",
+      why: "a test; its answers set point A on the map",
+    },
+    {
+      name: "Homework",
+      weight: w.homework,
+      why: "no hints, but untimed",
+    },
+    {
+      name: "Practice, first answer",
+      weight: w.practice,
+      why: "hints available after the first answer",
     },
   ];
   return (
@@ -570,69 +565,44 @@ function WeightBars() {
   );
 }
 
-function WindowStrip() {
-  // 20 weak answers then 10 strong ones; the bracket sits over the last N.
-  const cells: Array<"r" | "w"> = [
-    ..."wrwwrwwwrwwrwwwrwrww"
-      .split("")
-      .map((c): "r" | "w" => (c === "r" ? "r" : "w")),
-    ...Array<"r">(10).fill("r"),
-  ];
-  const windowStart = cells.length - SCORE_WINDOW;
-  return (
-    <div>
-      <div className="flex flex-wrap gap-1">
-        {cells.map((c, index) => (
-          <span
-            key={`q-${index + 1}-${c}`}
-            className={cn(
-              "size-4 rounded-sm",
-              c === "r" ? "bg-[#7fcdc3]" : "bg-[#f0a596]",
-              index < windowStart && "opacity-35",
-            )}
-          />
-        ))}
-      </div>
-      <div className="mt-1.5 flex items-center gap-2 text-[11px] text-[var(--text-dim)]">
-        <span className="opacity-50">← older answers fade out</span>
-        <span className="ml-auto rounded border border-[var(--heading)] px-1.5 py-0.5 font-mono text-[var(--heading)]">
-          last {SCORE_WINDOW} = the score
-        </span>
-      </div>
-    </div>
-  );
-}
-
 function EvidenceBarDemo() {
   const steps = [
-    { label: "after survey", value: 3 },
-    { label: "+ homework", value: 3 + 4 * w.homework },
-    { label: "+ re-test", value: 3 + 4 * w.homework + 5 },
+    { label: "placement", value: 3 * w.placement },
+    { label: "+ homework", value: 3 * w.placement + 4 * w.homework },
+    { label: "+ topic test", value: 3 * w.placement + 4 * w.homework + 3 },
+    {
+      label: "+ 3 homeworks",
+      value: 3 * w.placement + 4 * w.homework + 3 + 12 * w.homework,
+    },
   ];
   return (
     <div className="space-y-2">
-      {steps.map((step) => {
-        const locked = step.value >= LOCK_EVIDENCE;
+      {steps.map((item) => {
+        const full = item.value >= CONFIDENCE_FULL;
         return (
           <div
-            key={step.label}
+            key={item.label}
             className="grid grid-cols-[110px_1fr_auto] items-center gap-3 text-sm"
           >
-            <span className="text-[var(--text-dim)]">{step.label}</span>
+            <span className="text-[var(--text-dim)]">{item.label}</span>
             <div className="h-2 w-full max-w-64 overflow-hidden rounded-full bg-neutral-100">
               <div
                 className={cn(
                   "h-full rounded-full",
-                  locked ? "bg-[var(--heading)]" : "bg-neutral-400",
+                  full ? "bg-[var(--heading)]" : "bg-neutral-400",
                 )}
                 style={{
-                  width: `${Math.min(100, (step.value / LOCK_EVIDENCE) * 100)}%`,
+                  width: `${Math.min(100, (item.value / CONFIDENCE_FULL) * 100)}%`,
                 }}
               />
             </div>
             <span className="font-mono text-xs">
-              {step.value.toFixed(1)} / {LOCK_EVIDENCE}
-              {locked ? " · trusted" : ""}
+              {item.value.toFixed(1)} / {CONFIDENCE_FULL}
+              {item.value < CONFIDENCE_GUESS
+                ? " · a guess"
+                : full
+                  ? " · a signal"
+                  : ""}
             </span>
           </div>
         );
@@ -641,135 +611,30 @@ function EvidenceBarDemo() {
   );
 }
 
-function PathDivergence() {
-  // Share of students receiving each activity, by round (sim-divergence.ts).
-  const rounds: Array<{ round: number; top: Array<[string, number]> }> = [
-    { round: 1, top: [["Survey", 100]] },
-    {
-      round: 2,
-      top: [
-        ["Practice", 67],
-        ["Homework", 27],
-        ["Topic class", 7],
-      ],
-    },
-    {
-      round: 3,
-      top: [
-        ["Homework", 93],
-        ["Practice", 7],
-      ],
-    },
-    {
-      round: 4,
-      top: [
-        ["Practice", 42],
-        ["Flag", 22],
-        ["Re-test", 16],
-        ["Check", 16],
-      ],
-    },
-    {
-      round: 5,
-      top: [
-        ["Re-test", 34],
-        ["Practice", 29],
-        ["Homework", 14],
-        ["Check", 12],
-      ],
-    },
-    {
-      round: 6,
-      top: [
-        ["Practice", 26],
-        ["Check", 25],
-        ["Re-test", 21],
-        ["Homework", 11],
-      ],
-    },
-  ];
-  const tone: Record<string, string> = {
-    Survey: "bg-[var(--heading)]",
-    Homework: "bg-[#7fcdc3]",
-    Practice: "bg-[#f3cd7a]",
-    "Re-test": "bg-[#9fb3d9]",
-    Check: "bg-[#1c7a3a]",
-    Flag: "bg-[#b8432c]",
-    "Topic class": "bg-[#9a6200]",
-  };
-  return (
-    <div className="space-y-1.5">
-      {rounds.map((r) => (
-        <div
-          key={r.round}
-          className="grid grid-cols-[64px_1fr] items-center gap-3 text-xs"
-        >
-          <span className="font-mono text-[var(--text-dim)]">
-            round {r.round}
-          </span>
-          <div className="flex h-6 w-full overflow-hidden rounded-md bg-neutral-100">
-            {r.top.map(([name, share]) => (
-              <span
-                key={name}
-                className={cn(
-                  "flex items-center overflow-hidden whitespace-nowrap px-2 text-white",
-                  tone[name] ?? "bg-neutral-400",
-                )}
-                style={{ width: `${share}%` }}
-                title={`${name} ${share}%`}
-              >
-                {share >= 14 ? `${name} ${share}%` : ""}
-              </span>
-            ))}
-          </div>
-        </div>
-      ))}
-      <p className="pt-1 text-[11px] text-[var(--text-dim)]">
-        Each bar is one round; the segments are the share of students handed
-        each activity. Round 1 is one colour; by round 4 it is four.
-      </p>
-    </div>
-  );
-}
-
 function HomeworkSplit() {
   const gap = Math.round(HOMEWORK_QUESTIONS * HOMEWORK_MIX.gap);
-  const probe = Math.round(HOMEWORK_QUESTIONS * HOMEWORK_MIX.probe);
-  const maintain = HOMEWORK_QUESTIONS - gap - probe;
+  const frontier = Math.round(HOMEWORK_QUESTIONS * HOMEWORK_MIX.frontier);
+  const review = HOMEWORK_QUESTIONS - gap - frontier;
   const sample = [
     {
-      name: "Use brackets",
-      score: 42,
-      evidence: 11,
-      role: "gap",
+      name: "Word problems",
+      score: 44,
+      role: "weakest",
       n: Math.ceil(gap / 2),
     },
     {
-      name: "Order of operations",
-      score: 55,
-      evidence: 9,
-      role: "gap",
+      name: "Equivalent fractions",
+      score: 62,
+      role: "weakest",
       n: Math.floor(gap / 2),
     },
-    {
-      name: "Estimate to check",
-      score: 70,
-      evidence: 4,
-      role: "probe",
-      n: probe,
-    },
-    {
-      name: "Read & write numbers",
-      score: 91,
-      evidence: 14,
-      role: "maintain",
-      n: maintain,
-    },
+    { name: "Compare fractions", score: null, role: "frontier", n: frontier },
+    { name: "Represent fractions", score: 88, role: "review", n: review },
   ];
   const tone: Record<string, string> = {
-    gap: "bg-[#f0a596]",
-    probe: "bg-[#f3cd7a]",
-    maintain: "bg-[#7fcdc3]",
+    weakest: "bg-[#f0a596]",
+    frontier: "bg-[#f3cd7a]",
+    review: "bg-[#7fcdc3]",
   };
   return (
     <div className="space-y-1.5">
@@ -780,7 +645,7 @@ function HomeworkSplit() {
         >
           <span className="truncate">{row.name}</span>
           <span className="font-mono text-xs text-[var(--text-dim)]">
-            {row.score}
+            {row.score ?? "—"}
           </span>
           <span className="flex items-center gap-1">
             {Array.from({ length: row.n }, (_, i) => (
@@ -803,32 +668,26 @@ function StateScale() {
   return (
     <div>
       <div className="flex h-3 w-full overflow-hidden rounded-full">
-        <div
-          className="bg-[#f0a596]"
-          style={{ width: `${NEEDS_HELP_SCORE}%` }}
-        />
+        <div className="bg-[#f0a596]" style={{ width: `${RETEACH_LINE}%` }} />
         <div
           className="bg-[#f3cd7a]"
-          style={{ width: `${READY_SCORE - NEEDS_HELP_SCORE}%` }}
+          style={{ width: `${LO_FLOOR - RETEACH_LINE}%` }}
         />
-        <div
-          className="bg-[#7fcdc3]"
-          style={{ width: `${100 - READY_SCORE}%` }}
-        />
+        <div className="bg-[#7fcdc3]" style={{ width: `${100 - LO_FLOOR}%` }} />
       </div>
       <div className="relative mt-1 h-4 font-mono text-[11px] text-[var(--text-dim)]">
         <span className="absolute left-0">0</span>
         <span
           className="absolute -translate-x-1/2"
-          style={{ left: `${NEEDS_HELP_SCORE}%` }}
+          style={{ left: `${RETEACH_LINE}%` }}
         >
-          {NEEDS_HELP_SCORE}
+          {RETEACH_LINE}
         </span>
         <span
           className="absolute -translate-x-1/2"
-          style={{ left: `${READY_SCORE}%` }}
+          style={{ left: `${LO_FLOOR}%` }}
         >
-          {READY_SCORE}
+          {LO_FLOOR}
         </span>
         <span className="absolute right-0">100</span>
       </div>
@@ -836,125 +695,80 @@ function StateScale() {
   );
 }
 
-function TestTimeline() {
-  const tests = [
+/** §3 — what a test result decides. */
+function TestBands() {
+  const bands = [
     {
-      name: "Topic survey",
-      when: "once, at the start",
-      what: `${SURVEY_PER_LO} questions per objective. Fills an empty scorecard. Can never sign off.`,
+      range: `0–${RETEACH_LINE - 1}%`,
+      what: "Re-teach",
+      tone: "bg-[#fdebe7] text-[#b8432c]",
+      width: RETEACH_LINE,
     },
     {
-      name: "Topic re-test",
-      when: `after every ${RETEST_AFTER_SESSIONS} homework / practice sessions`,
-      what: `${RETEST_QUESTIONS} timed questions across all open objectives, more on the weak ones. Shows whether the teaching landed. Can never sign off.`,
+      range: `${RETEACH_LINE}–${MASTERY_BAR - 1}%`,
+      what: "Fix the gaps, re-test",
+      tone: "bg-[#fff3d6] text-[#9a6200]",
+      width: MASTERY_BAR - RETEACH_LINE,
     },
     {
-      name: "LO check",
-      when: "when one objective looks ready",
-      what: `${CHECK_QUESTIONS} unseen questions on that objective only. The only test that signs off.`,
+      range: `${MASTERY_BAR}%+`,
+      what: "Master, if 2 and 3 hold",
+      tone: "bg-[#e3f6e8] text-[#1c7a3a]",
+      width: 100 - MASTERY_BAR,
     },
   ];
   return (
-    <ol className="grid gap-3 sm:grid-cols-3">
-      {tests.map((test, index) => (
-        <li
-          key={test.name}
-          className="rounded-lg border border-[var(--border)] p-3"
+    <div className="flex w-full overflow-hidden rounded-lg text-xs">
+      {bands.map((band) => (
+        <div
+          key={band.range}
+          className={cn("min-w-0 px-2 py-2", band.tone)}
+          style={{ flexBasis: `${band.width}%` }}
         >
-          <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-[var(--text-dim)]">
-            {index === 0 ? "start" : index === 1 ? "middle" : "end"}
-          </p>
-          <p className="mt-1 font-semibold">{test.name}</p>
-          <p className="text-xs text-[var(--heading)]">{test.when}</p>
-          <p className="mt-1.5 text-sm text-[var(--text-dim)]">{test.what}</p>
-        </li>
+          <p className="font-mono font-semibold">{band.range}</p>
+          <p className="mt-0.5 truncate">{band.what}</p>
+        </div>
       ))}
-    </ol>
+    </div>
+  );
+}
+
+function GateCard({
+  n,
+  title,
+  body,
+}: {
+  n: string;
+  title: string;
+  body: string;
+}) {
+  return (
+    <li className="rounded-lg border border-[var(--border)] p-3">
+      <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-[var(--text-dim)]">
+        {n}
+      </p>
+      <p className="mt-1 font-semibold">{title}</p>
+      <p className="mt-1.5 text-sm text-[var(--text-dim)]">{body}</p>
+    </li>
   );
 }
 
 function RuleList() {
-  const rules: Array<{ id: string; when: string; gives: string }> = [
-    {
-      id: "R0",
-      when: "every objective is signed off",
-      gives: "Close the topic",
-    },
-    {
-      id: "R1",
-      when: `whole topic under ${NEEDS_HELP_SCORE} on trusted evidence`,
-      gives: "Whole-topic class",
-    },
-    {
-      id: "R2",
-      when: `${STALL_RUNS} sessions in a row under ${NEEDS_HELP_SCORE}, or 3 failed checks`,
-      gives: "Flag to the teacher",
-    },
-    { id: "R3", when: "no survey yet", gives: "Topic survey" },
-    {
-      id: "R4",
-      when: `2 failed checks, or stuck at ${NEEDS_HELP_SCORE}–${READY_SCORE - 1} for ${PLATEAU_RUNS} sessions`,
-      gives: "Class on that objective",
-    },
-    {
-      id: "R5",
-      when: `objectives at ${READY_SCORE}+ with enough evidence`,
-      gives: "LO check",
-    },
-    {
-      id: "R6",
-      when: `an objective under ${NEEDS_HELP_SCORE}`,
-      gives: "Practice on it",
-    },
-    {
-      id: "R7",
-      when: `${RETEST_AFTER_SESSIONS} sessions since the last test`,
-      gives: "Topic re-test",
-    },
-    { id: "R8", when: "nothing above matched", gives: "Homework" },
-  ];
   return (
     <ol className="divide-y divide-[var(--border)] rounded-lg border border-[var(--border)]">
-      {rules.map((rule) => (
+      {RULES.map((rule) => (
         <li
           key={rule.id}
-          className="grid grid-cols-[36px_1fr_170px] items-baseline gap-3 px-3 py-2 text-sm"
+          className="grid grid-cols-[36px_1fr_200px] items-baseline gap-3 px-3 py-2 text-sm"
         >
           <span className="font-mono text-xs text-[var(--text-dim)]">
             {rule.id}
           </span>
-          <span className="text-[var(--text-dim)]">{rule.when}</span>
-          <span className="font-medium">{rule.gives}</span>
+          <span className="text-[var(--text-dim)]">{rule.condition}</span>
+          <span className="font-medium">{rule.activity}</span>
         </li>
       ))}
     </ol>
-  );
-}
-
-function MasteryDemo() {
-  const los = [
-    { name: "Read & write numbers", score: 92 },
-    { name: "Estimate to check", score: 94 },
-    { name: "Order of operations", score: 95 },
-    { name: "Use brackets", score: 100 },
-  ];
-  const topic = Math.round(los.reduce((s, lo) => s + lo.score, 0) / los.length);
-  return (
-    <div className="flex flex-wrap items-center gap-3 text-sm">
-      {los.map((lo) => (
-        <span
-          key={lo.name}
-          className="inline-flex items-center gap-1.5 rounded-md bg-[#e3f6e8] px-2.5 py-1 text-[#1c7a3a]"
-        >
-          <Check className="size-3.5" />
-          {lo.name} <span className="font-mono">{lo.score}</span>
-        </span>
-      ))}
-      <span className="text-neutral-300">→</span>
-      <span className="rounded-md bg-[var(--heading)] px-2.5 py-1 font-semibold text-white">
-        Topic {topic} · Master
-      </span>
-    </div>
   );
 }
 

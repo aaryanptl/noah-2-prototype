@@ -9,14 +9,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import type { CatalogTopic } from "@/lib/mastery/evidence";
 import {
   buildScorecard,
-  CHECK_QUESTIONS,
   type Decision,
   type MasteryMode,
   type MasteryObjective,
   type Measurement,
+  modeForActivity,
   routeNext,
-  SURVEY_CAP,
-  SURVEY_PER_LO,
 } from "@/lib/mastery/rules";
 import { cn } from "@/lib/utils";
 
@@ -41,7 +39,6 @@ const PRESET_LABEL: Record<Preset, string> = {
   average: "Average",
   strong: "Strong",
 };
-const PRACTICE_QUESTIONS = 5;
 /** Auto-run stops here even if the topic never closes. */
 const AUTO_MAX_ROUNDS = 80;
 const AUTO_STEP_MS = 400;
@@ -63,69 +60,14 @@ interface LogEntry {
 }
 
 /** Which session type an activity produces, or null when nothing is recorded. */
-function modeFor(activity: Decision["activity"]): MasteryMode | null {
-  switch (activity) {
-    case "survey":
-    case "topic_test":
-      return "diagnostic";
-    case "homework":
-      return "homework";
-    case "practice":
-      return "practice";
-    case "check":
-      return "check";
-    case "class":
-    case "topic_class":
-    case "escalate":
-      return "class";
-    default:
-      return null;
-  }
-}
+const modeFor = modeForActivity;
 
 function draftsFor(decision: Decision): Draft[] {
-  switch (decision.activity) {
-    case "survey": {
-      const per = Math.max(
-        1,
-        Math.min(
-          SURVEY_PER_LO,
-          Math.floor(SURVEY_CAP / Math.max(1, decision.targetLoIds.length)),
-        ),
-      );
-      return decision.targetLoIds.map((loId) => ({
-        loId,
-        questions: per,
-        correct: 0,
-      }));
-    }
-    case "topic_test":
-      return (decision.testPlan ?? []).map((item) => ({
-        loId: item.loId,
-        questions: item.questions,
-        correct: 0,
-      }));
-    case "homework":
-      return (decision.homeworkPlan ?? []).map((item) => ({
-        loId: item.loId,
-        questions: item.questions,
-        correct: 0,
-      }));
-    case "practice":
-      return decision.targetLoIds.map((loId) => ({
-        loId,
-        questions: PRACTICE_QUESTIONS,
-        correct: 0,
-      }));
-    case "check":
-      return decision.targetLoIds.map((loId) => ({
-        loId,
-        questions: CHECK_QUESTIONS,
-        correct: 0,
-      }));
-    default:
-      return [];
-  }
+  return decision.plan.map((item) => ({
+    loId: item.loId,
+    questions: item.questions,
+    correct: 0,
+  }));
 }
 
 function binomial(n: number, p: number) {
@@ -262,13 +204,11 @@ export default function SandboxPage() {
       });
     }
     const next = [...measurements, ...own];
-    const before = new Set(
-      card.rows.filter((r) => r.signedOff).map((r) => r.id),
-    );
     const after = buildScorecard(objectives, next);
-    const certified = after.rows
-      .filter((r) => r.signedOff && !before.has(r.id))
-      .map((r) => r.name);
+    const certified =
+      after.phase === "mastered" && card.phase !== "mastered"
+        ? after.rows.map((r) => r.name)
+        : [];
     setMeasurements(next);
     setLog([
       ...log,
@@ -447,7 +387,7 @@ export default function SandboxPage() {
                     </p>
                     <p className="mt-1 text-sm text-[var(--text-dim)]">
                       {finished
-                        ? `Every objective signed off after ${log.length} rounds.`
+                        ? `Master badge after ${log.length} rounds.`
                         : autoRun
                           ? `Rolling as a ${PRESET_LABEL[preset].toLowerCase()} student, one round every ${AUTO_STEP_MS / 1000}s…`
                           : `Run the loop to mastery as a ${PRESET_LABEL[preset].toLowerCase()} student, or record rounds by hand below.`}
@@ -511,17 +451,17 @@ export default function SandboxPage() {
 
                     {finished && (
                       <p className="mt-3 text-sm">
-                        Every objective is signed off after {log.length} rounds.
-                        Reset to run another student, or undo to change the
-                        ending.
+                        Master badge: the topic passed its mastery check after{" "}
+                        {log.length} rounds. Reset to run another student, or
+                        undo to change the ending.
                       </p>
                     )}
 
                     {isClass && (
                       <p className="mt-3 text-sm text-[var(--text-dim)]">
                         {decision.activity === "escalate"
-                          ? "The loop has stopped and named the objective. Recording a mentor class restarts the stall count and lets the loop continue."
-                          : "A class writes no score. Recording it tells the loop the objective was taught, so it measures next instead of teaching again. In the sandbox it also lifts the student's hidden ability on what was taught."}
+                          ? "The loop has stopped and named the objectives. Recording a mentor class resets the loop guard and starts the learn loop again."
+                          : "A class writes no score. Recording it sends the student back to the learn loop, which ends in a fresh topic test. In the sandbox it also lifts the student's hidden ability on what was taught."}
                       </p>
                     )}
 
@@ -529,8 +469,9 @@ export default function SandboxPage() {
                       <p className="mt-3 text-sm text-[var(--text-dim)]">
                         {decision.activity === "practice"
                           ? "Correct on the first try, out of the questions served. Practice ends at 5/5 anyway (hints and retries), so only the first answer carries information."
-                          : decision.activity === "check"
-                            ? "Correct out of 5 unseen questions, no hints. 4 of 5 passes."
+                          : decision.activity === "topic_test" ||
+                              decision.activity === "recurring_test"
+                            ? "Correct on the first response. The sandbox does not time answers, so the speed band is not checked here."
                             : "Correct on the first response, out of the questions served."}
                       </p>
                     )}
@@ -664,7 +605,7 @@ function RoundLog({
                 <span className="min-w-0 truncate text-[var(--text-dim)]">
                   {entry.certified.length > 0 ? (
                     <span className="rounded-md bg-[#e3f6e8] px-2 py-0.5 text-xs font-medium text-[#1c7a3a]">
-                      Signed off: {entry.certified.join(", ")}
+                      Master badge: all {entry.certified.length} objectives
                     </span>
                   ) : (
                     entry.results

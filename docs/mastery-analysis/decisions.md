@@ -1,5 +1,44 @@
 # Mastery loop — decisions from production data
 
+> **Superseded on 3 Nov 2026 by D17.** The live engine now runs the rules of the
+> "Noah Mastery Learning Workflow" doc (draft v1, 7 Aug 2026). D1–D16 below are
+> the record of the data-backed engine that preceded it (last in commit 25a8224).
+
+## D17. The engine follows the Mastery Learning Workflow doc (3 Nov 2026)
+Decided by Aaryan: replace the data-backed rules with the doc's algorithm, as written.
+
+| Doc § | Rule | In `lib/mastery/rules.ts` |
+|---|---|---|
+| §2 | new = old + w × k × (result − old), per answered question | `applyAttempt`; first answer sets the score |
+| §2 | w: test 1.0 · homework 0.6 · practice 0.4 | `EVIDENCE_WEIGHT`; placement and grade tests 1.0, seed the map, never the gate |
+| §2 | k shrinks as confidence grows | `k = max(0.1, 1/(1+n))` — floor not in the doc |
+| §2 | confidence: 2 a guess, 20 a signal | `min(1, n/20)`; under 5 = low, probed by homework |
+| §2 | recency decay | −2/week after 14 idle days, max −10 — speeds not in the doc |
+| §3 | mastery bar ≥ 85% on a topic/recurring test | `MASTERY_BAR` |
+| §3 | every LO ≥ 75 | `LO_FLOOR`, read on the map after the test |
+| §3 | speed ≤ 1.25× cohort median | `SPEED_BAND`; median of per-question ratios (see below) |
+| §3 | challenge zone 70–80% | difficulty per plan item: score + (easy +15 / medium 0 / hard −15) nearest 75 |
+| §3 | remediation 60–84 · re-teach < 60 · loop guard 3 | phases `remediate` / `reteach` / `at_risk` |
+| §3 | homework 60 / 25 / 15 (weakest / frontier / spaced review) | `planHomework` |
+| §4 | learn loop → topic test → gate → micro-homework → recurring test | router R0–R7; topic test after 3 learn sessions or early when the map is already there |
+| §5 | micro-homework 6 Q; practice before the re-test from loop 2 | R3, R4 |
+| §3 badge | Novice → Pro (coverage) → Master (performance) | Pro = every objective 5+ weighted Q |
+
+**Speed band, as measured (production replica, 3 Nov 2026, 5,319 topic tests with 8+ timed questions).**
+Read literally (student's average time ÷ cohort median), the band fails 48% of all topic tests and
+52% of those at 85%+ — one question left open drags an average up. The engine uses the student's
+median per-question ratio instead: 34% of all tests and 38% of 85%+ tests fail. Accurate students
+are slower, not faster. The curriculum team should confirm 1.25× with this number in hand.
+
+**Simulation (`sim-loop.ts`, 400 students per ability, 5 objectives, class gain 0.15).**
+Rounds to Master: 95% ability ≈ 9, 85% ≈ 15, 75% ≈ 26. With the speed band on, about 12–21% of students
+at every ability never master in 60 rounds because their speed factor is outside the band; with it
+off, 95–100% do.
+
+**What D1–D16 found that this reverses:** the back-test preferred a plain window over any moving
+average (D1/D14), saw no decay inside 45 days, and found a single topic test at 80–89 holds only 58%
+of the time on re-test. Those findings still stand as data; the doc's rules are the product decision.
+
 Decided 21 Sep 2026 from the read-only production replica (`MAIN_DATABASE_READ_ONLY_URL`).
 Dataset: every completed maths session 15 Jun – 21 Sep 2026 — 12,564 sessions, 5,953 students,
 175,636 served questions, 9,200 student×LO series with two or more measurements.
