@@ -2,7 +2,7 @@
 
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
 
 import {
   type Decision,
@@ -10,8 +10,10 @@ import {
   type LoRow,
   MASTERY_BAR,
   type MasteryObjective,
+  type Measurement,
   RETEACH_LINE,
   type ReplayStep,
+  replay,
   type Scorecard,
 } from "@/lib/mastery/rules";
 import { progressNotes } from "@/lib/mastery/story";
@@ -21,6 +23,7 @@ import {
   AnswerReading,
   type StoryAnswer,
 } from "./answer-read";
+import { CAST, EXAMPLES, UNTIL } from "./cast";
 import { RouteFork } from "./hero";
 import { InsideTheLoop, LoopCycle } from "./loop";
 import {
@@ -35,44 +38,27 @@ import {
 } from "./parts";
 import { RiyaDemo } from "./riya";
 import { ScoreLogic } from "./score";
+import storyData from "./story-data.json";
 
 /**
  * The presenter's page: what personalisation means, shown on three real
  * students on the same topic and one made-up student you drive.
  *
- * The students are picked to get three different next steps from the same
- * rules. Their evidence is frozen at UNTIL so the story does not change as
- * new sessions arrive. IDs are the platform's pseudonymous student IDs.
+ * The students' sessions and Jev's reads of their wrong answers are saved in
+ * `story-data.json` (scripts/mastery-analysis/build-story-snapshot.mts), so
+ * the page needs no database or API key. The engine runs here on the saved
+ * sessions, so a rule change shows without a new snapshot.
  */
-const TOPIC_ID = 49;
-/**
- * Wrong answers shown being read by Jev, by served-question id: one each that
- * Jev judged a guess, a missing idea, a misread question and a slip.
- */
-const EXAMPLES = [
-  { tsq: 144887, student: "Student C" },
-  { tsq: 144914, student: "Student C" },
-  { tsq: 209819, student: "Student B" },
-  { tsq: 144878, student: "Student C" },
-];
-const UNTIL = "2026-10-15T23:59:59Z";
-const CAST = [
-  { id: "maALlSSBdo", label: "Student A", headline: "Knows it, but slowly" },
-  {
-    id: "ctBuuxn0XzcSpU",
-    label: "Student B",
-    headline: "Good, except one spot",
-  },
-  { id: "DL5z7dnm7w", label: "Student C", headline: "Rushing, not learning" },
-];
+interface SavedStudent {
+  measurements: Measurement[];
+  answers: StoryAnswer[];
+}
 
-interface DecideData {
+const SAVED = storyData as unknown as {
   topic: { id: number; name: string; grade: string };
   objectives: MasteryObjective[];
-  scorecard: Scorecard;
-  decision: Decision;
-  steps: ReplayStep[];
-}
+  students: Record<string, SavedStudent>;
+};
 
 interface Journey {
   card: Scorecard;
@@ -85,69 +71,34 @@ interface Journey {
 
 type Slot = Journey | { error: string } | null;
 
-async function getJson<T>(url: string): Promise<T> {
-  const res = await fetch(url);
-  // A dev server that has lost its API routes answers with an HTML 404 page.
-  const json = await res.json().catch(() => null);
-  if (!json)
-    throw new Error(
-      `the server answered ${res.status} with no data. Restart the dev server and reload.`,
-    );
-  if (!json.success) throw new Error(json.error?.message ?? "Request failed");
-  return json.data as T;
-}
-
 const shortDate = (iso: string) =>
   new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 
 export default function MasteryStoryPage() {
-  const [slots, setSlots] = useState<Slot[]>(CAST.map(() => null));
-  const [topic, setTopic] = useState<DecideData["topic"] | null>(null);
-  const [objectives, setObjectives] = useState<MasteryObjective[]>([]);
-
-  useEffect(() => {
-    let cancelled = false;
-    CAST.forEach((cast, index) => {
-      const query = `student=${encodeURIComponent(cast.id)}&topic=${TOPIC_ID}&until=${encodeURIComponent(UNTIL)}`;
-      const put = (slot: Slot) =>
-        !cancelled &&
-        setSlots((current) => current.map((s, i) => (i === index ? slot : s)));
-      getJson<DecideData>(`/api/mastery/decide?${query}`)
-        .then((data) => {
-          if (cancelled) return;
-          if (index === 0) {
-            setTopic(data.topic);
-            setObjectives(data.objectives);
-          }
-          const journey: Journey = {
-            card: data.scorecard,
-            rows: data.scorecard.rows,
-            decision: data.decision,
-            steps: data.steps,
-            answers: null,
-            answersError: null,
-          };
-          put(journey);
-          getJson<{ answers: StoryAnswer[] }>(`/api/mastery/errors?${query}`)
-            .then((errors) => put({ ...journey, answers: errors.answers }))
-            .catch((err) =>
-              put({
-                ...journey,
-                answersError:
-                  err instanceof Error ? err.message : "Unavailable",
-              }),
-            );
-        })
-        .catch((err) =>
-          put({ error: err instanceof Error ? err.message : "Could not load" }),
+  const { topic, objectives } = SAVED;
+  const slots = useMemo<Slot[]>(
+    () =>
+      CAST.map((cast) => {
+        const saved = SAVED.students[cast.id];
+        if (!saved) return { error: "no saved sessions for this student" };
+        const { steps, now, card } = replay(
+          objectives,
+          saved.measurements,
+          UNTIL,
         );
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+        return {
+          card,
+          rows: card.rows,
+          decision: now,
+          steps,
+          answers: saved.answers,
+          answersError: null,
+        };
+      }),
+    [objectives],
+  );
 
-  const topicName = topic?.name ?? "Factors, Multiples & Primes";
+  const topicName = topic.name;
   const examples: AnswerExample[] = EXAMPLES.flatMap(({ tsq, student }) => {
     for (const slot of slots) {
       const answer =

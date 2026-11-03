@@ -1,0 +1,6146 @@
+{
+ "savedAt": "2026-11-03T11:04:07.713Z",
+ "until": "2026-10-15T23:59:59Z",
+ "topic": {
+  "id": 49,
+  "name": "Factors, Multiples & Primes",
+  "grade": "grade 4"
+ },
+ "objectives": [
+  {
+   "id": 278,
+   "name": "Find all factor pairs of a number up to 100",
+   "sequence": 1
+  },
+  {
+   "id": 279,
+   "name": "Identify multiples of a given number",
+   "sequence": 2
+  },
+  {
+   "id": 280,
+   "name": "Decide if a number is a factor or multiple",
+   "sequence": 3
+  },
+  {
+   "id": 281,
+   "name": "Identify prime numbers to 100",
+   "sequence": 4
+  },
+  {
+   "id": 282,
+   "name": "Explain why a number is prime or composite",
+   "sequence": 5
+  },
+  {
+   "id": 283,
+   "name": "Use a factor tree to find prime factors",
+   "sequence": 6
+  }
+ ],
+ "students": {
+  "maALlSSBdo": {
+   "measurements": [
+    {
+     "sessionId": 1448,
+     "mode": "homework",
+     "at": "2026-07-24T01:54:35.292Z",
+     "loId": 278,
+     "answered": 5,
+     "correct": 5,
+     "speedRatio": 1.4177406211330095
+    },
+    {
+     "sessionId": 1448,
+     "mode": "homework",
+     "at": "2026-07-24T01:54:35.292Z",
+     "loId": 279,
+     "answered": 4,
+     "correct": 4,
+     "speedRatio": 1.4177406211330095
+    },
+    {
+     "sessionId": 1448,
+     "mode": "homework",
+     "at": "2026-07-24T01:54:35.292Z",
+     "loId": 280,
+     "answered": 4,
+     "correct": 4,
+     "speedRatio": 1.4177406211330095
+    },
+    {
+     "sessionId": 1448,
+     "mode": "homework",
+     "at": "2026-07-24T01:54:35.292Z",
+     "loId": 281,
+     "answered": 4,
+     "correct": 4,
+     "speedRatio": 1.4177406211330095
+    },
+    {
+     "sessionId": 1448,
+     "mode": "homework",
+     "at": "2026-07-24T01:54:35.292Z",
+     "loId": 282,
+     "answered": 4,
+     "correct": 4,
+     "speedRatio": 1.4177406211330095
+    },
+    {
+     "sessionId": 1448,
+     "mode": "homework",
+     "at": "2026-07-24T01:54:35.292Z",
+     "loId": 283,
+     "answered": 4,
+     "correct": 2,
+     "speedRatio": 1.4177406211330095
+    },
+    {
+     "sessionId": 9404,
+     "mode": "homework",
+     "at": "2026-09-02T01:21:03.850Z",
+     "loId": 278,
+     "answered": 5,
+     "correct": 5,
+     "speedRatio": 0.9177816651694956
+    },
+    {
+     "sessionId": 9404,
+     "mode": "homework",
+     "at": "2026-09-02T01:21:03.850Z",
+     "loId": 279,
+     "answered": 4,
+     "correct": 4,
+     "speedRatio": 0.9177816651694956
+    },
+    {
+     "sessionId": 9404,
+     "mode": "homework",
+     "at": "2026-09-02T01:21:03.850Z",
+     "loId": 280,
+     "answered": 4,
+     "correct": 4,
+     "speedRatio": 0.9177816651694956
+    },
+    {
+     "sessionId": 9404,
+     "mode": "homework",
+     "at": "2026-09-02T01:21:03.850Z",
+     "loId": 281,
+     "answered": 4,
+     "correct": 4,
+     "speedRatio": 0.9177816651694956
+    },
+    {
+     "sessionId": 9404,
+     "mode": "homework",
+     "at": "2026-09-02T01:21:03.850Z",
+     "loId": 282,
+     "answered": 4,
+     "correct": 4,
+     "speedRatio": 0.9177816651694956
+    },
+    {
+     "sessionId": 9404,
+     "mode": "homework",
+     "at": "2026-09-02T01:21:03.850Z",
+     "loId": 283,
+     "answered": 4,
+     "correct": 4,
+     "speedRatio": 0.9177816651694956
+    },
+    {
+     "sessionId": 9410,
+     "mode": "homework",
+     "at": "2026-09-02T01:36:37.793Z",
+     "loId": 278,
+     "answered": 5,
+     "correct": 4,
+     "speedRatio": 1.7563082304311093
+    },
+    {
+     "sessionId": 9410,
+     "mode": "homework",
+     "at": "2026-09-02T01:36:37.793Z",
+     "loId": 279,
+     "answered": 4,
+     "correct": 4,
+     "speedRatio": 1.7563082304311093
+    },
+    {
+     "sessionId": 9410,
+     "mode": "homework",
+     "at": "2026-09-02T01:36:37.793Z",
+     "loId": 280,
+     "answered": 4,
+     "correct": 4,
+     "speedRatio": 1.7563082304311093
+    },
+    {
+     "sessionId": 9410,
+     "mode": "homework",
+     "at": "2026-09-02T01:36:37.793Z",
+     "loId": 281,
+     "answered": 4,
+     "correct": 4,
+     "speedRatio": 1.7563082304311093
+    },
+    {
+     "sessionId": 9410,
+     "mode": "homework",
+     "at": "2026-09-02T01:36:37.793Z",
+     "loId": 282,
+     "answered": 4,
+     "correct": 4,
+     "speedRatio": 1.7563082304311093
+    },
+    {
+     "sessionId": 9410,
+     "mode": "homework",
+     "at": "2026-09-02T01:36:37.793Z",
+     "loId": 283,
+     "answered": 4,
+     "correct": 4,
+     "speedRatio": 1.7563082304311093
+    },
+    {
+     "sessionId": 10317,
+     "mode": "homework",
+     "at": "2026-09-03T23:58:17.007Z",
+     "loId": 278,
+     "answered": 4,
+     "correct": 4,
+     "speedRatio": 0.7902857492723994
+    },
+    {
+     "sessionId": 10317,
+     "mode": "homework",
+     "at": "2026-09-03T23:58:17.007Z",
+     "loId": 279,
+     "answered": 3,
+     "correct": 3,
+     "speedRatio": 0.7902857492723994
+    },
+    {
+     "sessionId": 10317,
+     "mode": "homework",
+     "at": "2026-09-03T23:58:17.007Z",
+     "loId": 280,
+     "answered": 3,
+     "correct": 3,
+     "speedRatio": 0.7902857492723994
+    },
+    {
+     "sessionId": 10321,
+     "mode": "homework",
+     "at": "2026-09-04T00:02:16.474Z",
+     "loId": 278,
+     "answered": 5,
+     "correct": 4,
+     "speedRatio": 0.8256682644556721
+    },
+    {
+     "sessionId": 10321,
+     "mode": "homework",
+     "at": "2026-09-04T00:02:16.474Z",
+     "loId": 279,
+     "answered": 4,
+     "correct": 4,
+     "speedRatio": 0.8256682644556721
+    },
+    {
+     "sessionId": 10321,
+     "mode": "homework",
+     "at": "2026-09-04T00:02:16.474Z",
+     "loId": 280,
+     "answered": 4,
+     "correct": 4,
+     "speedRatio": 0.8256682644556721
+    },
+    {
+     "sessionId": 10321,
+     "mode": "homework",
+     "at": "2026-09-04T00:02:16.474Z",
+     "loId": 281,
+     "answered": 4,
+     "correct": 4,
+     "speedRatio": 0.8256682644556721
+    },
+    {
+     "sessionId": 10321,
+     "mode": "homework",
+     "at": "2026-09-04T00:02:16.474Z",
+     "loId": 282,
+     "answered": 4,
+     "correct": 4,
+     "speedRatio": 0.8256682644556721
+    },
+    {
+     "sessionId": 10321,
+     "mode": "homework",
+     "at": "2026-09-04T00:02:16.474Z",
+     "loId": 283,
+     "answered": 4,
+     "correct": 4,
+     "speedRatio": 0.8256682644556721
+    },
+    {
+     "sessionId": 11128,
+     "mode": "homework",
+     "at": "2026-09-05T20:19:52.483Z",
+     "loId": 279,
+     "answered": 2,
+     "correct": 2,
+     "speedRatio": 0.9463418862690708
+    },
+    {
+     "sessionId": 11128,
+     "mode": "homework",
+     "at": "2026-09-05T20:19:52.483Z",
+     "loId": 280,
+     "answered": 2,
+     "correct": 2,
+     "speedRatio": 0.9463418862690708
+    },
+    {
+     "sessionId": 11128,
+     "mode": "homework",
+     "at": "2026-09-05T20:19:52.483Z",
+     "loId": 281,
+     "answered": 2,
+     "correct": 2,
+     "speedRatio": 0.9463418862690708
+    },
+    {
+     "sessionId": 11128,
+     "mode": "homework",
+     "at": "2026-09-05T20:19:52.483Z",
+     "loId": 282,
+     "answered": 2,
+     "correct": 2,
+     "speedRatio": 0.9463418862690708
+    },
+    {
+     "sessionId": 11128,
+     "mode": "homework",
+     "at": "2026-09-05T20:19:52.483Z",
+     "loId": 283,
+     "answered": 2,
+     "correct": 2,
+     "speedRatio": 0.9463418862690708
+    },
+    {
+     "sessionId": 19041,
+     "mode": "homework",
+     "at": "2026-09-17T22:55:36.608Z",
+     "loId": 281,
+     "answered": 2,
+     "correct": 2,
+     "speedRatio": null
+    },
+    {
+     "sessionId": 19041,
+     "mode": "homework",
+     "at": "2026-09-17T22:55:36.608Z",
+     "loId": 282,
+     "answered": 2,
+     "correct": 2,
+     "speedRatio": null
+    },
+    {
+     "sessionId": 19041,
+     "mode": "homework",
+     "at": "2026-09-17T22:55:36.608Z",
+     "loId": 283,
+     "answered": 2,
+     "correct": 2,
+     "speedRatio": null
+    },
+    {
+     "sessionId": 23266,
+     "mode": "diagnostic",
+     "at": "2026-09-23T01:05:41.528Z",
+     "loId": 278,
+     "answered": 3,
+     "correct": 2,
+     "speedRatio": 1.3313663954296882
+    },
+    {
+     "sessionId": 23266,
+     "mode": "diagnostic",
+     "at": "2026-09-23T01:05:41.528Z",
+     "loId": 279,
+     "answered": 3,
+     "correct": 3,
+     "speedRatio": 1.3313663954296882
+    },
+    {
+     "sessionId": 23266,
+     "mode": "diagnostic",
+     "at": "2026-09-23T01:05:41.528Z",
+     "loId": 280,
+     "answered": 3,
+     "correct": 3,
+     "speedRatio": 1.3313663954296882
+    },
+    {
+     "sessionId": 23266,
+     "mode": "diagnostic",
+     "at": "2026-09-23T01:05:41.528Z",
+     "loId": 281,
+     "answered": 3,
+     "correct": 3,
+     "speedRatio": 1.3313663954296882
+    },
+    {
+     "sessionId": 23266,
+     "mode": "diagnostic",
+     "at": "2026-09-23T01:05:41.528Z",
+     "loId": 282,
+     "answered": 3,
+     "correct": 3,
+     "speedRatio": 1.3313663954296882
+    }
+   ],
+   "placement": null,
+   "answers": [
+    {
+     "tsq": 28282,
+     "loId": 283,
+     "at": "2026-07-24T01:54:35.292Z",
+     "mode": "homework",
+     "prompt": "Choose the factor tree that correctly breaks 36 all the way into prime factors.",
+     "studentAnswer": "36 = 18 × 2, 18 = 9 × 2, so 36 = 9 × 2 × 2",
+     "correctAnswer": "36 = 6 × 6, 6 = 2 × 3, 6 = 2 × 3, so 36 = 2 × 2 × 3 × 3",
+     "options": [
+      {
+       "text": "36 = 6 × 6, 6 = 2 × 3, 6 = 2 × 3, so 36 = 2 × 2 × 3 × 3",
+       "correct": true
+      },
+      {
+       "text": "36 = 4 × 9, 4 = 2 × 2, 9 = 9, so 36 = 2 × 2 × 9",
+       "correct": false
+      },
+      {
+       "text": "36 = 12 × 3, 12 = 6 × 2, so 36 = 6 × 2 × 3",
+       "correct": false
+      },
+      {
+       "text": "36 = 18 × 2, 18 = 9 × 2, so 36 = 9 × 2 × 2",
+       "correct": false
+      }
+     ],
+     "explanation": "Nice job thinking about all the branches! A factor tree must end with only prime numbers, so 2 × 2 × 3 × 3 is correct. The other choices stop too soon with 6 or 9, and those are not prime.",
+     "timeTakenMs": 110538,
+     "typicalSeconds": 55,
+     "judgement": {
+      "realGap": 0.37,
+      "reason": "conceptual_gap",
+      "reasonConfidence": 0.77,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.82,
+       "procedural_slip": 0.16,
+       "misread_prompt": 0.01,
+       "likely_guess": 0,
+       "careless": 0.01
+      },
+      "severity": 1.98,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.07,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 28285,
+     "loId": 283,
+     "at": "2026-07-24T01:54:35.292Z",
+     "mode": "homework",
+     "prompt": "Look at the two factor trees for 30. Tree A ends with 2, 3, and 5. Tree B ends with 6 and 5. Decide which judgment is correct.",
+     "studentAnswer": "Both trees are correct because they both make 30.",
+     "correctAnswer": "Tree A is correct because all the end numbers are prime.",
+     "options": [
+      {
+       "text": "Tree A is correct because all the end numbers are prime.",
+       "correct": true
+      },
+      {
+       "text": "Tree B is correct because 6 × 5 = 30.",
+       "correct": false
+      },
+      {
+       "text": "Both trees are correct because they both make 30.",
+       "correct": false
+      },
+      {
+       "text": "Neither tree is correct because 30 has only two factors.",
+       "correct": false
+      }
+     ],
+     "explanation": "Excellent checking! Tree A is correct because factor trees must end with prime numbers only. Tree B stops at 6, and 6 is composite.",
+     "timeTakenMs": 43715,
+     "typicalSeconds": 55,
+     "judgement": {
+      "realGap": 0.64,
+      "reason": "conceptual_gap",
+      "reasonConfidence": 0.92,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.94,
+       "procedural_slip": 0,
+       "misread_prompt": 0.06,
+       "likely_guess": 0,
+       "careless": 0
+      },
+      "severity": 2.43,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.14,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 138379,
+     "loId": 278,
+     "at": "2026-09-02T01:36:37.793Z",
+     "mode": "homework",
+     "prompt": "Choose the equation that matches this clue about a sticker number: it is less than 50, it has 6 as a factor, and one of its factor pairs is made of two numbers that are 2 apart.",
+     "studentAnswer": "4 × 6 = 24",
+     "correctAnswer": "6 × 8 = 48",
+     "options": [
+      {
+       "text": "4 × 6 = 24",
+       "correct": false
+      },
+      {
+       "text": "5 × 7 = 35",
+       "correct": false
+      },
+      {
+       "text": "6 × 8 = 48",
+       "correct": true
+      },
+      {
+       "text": "6 × 10 = 60",
+       "correct": false
+      }
+     ],
+     "explanation": "Super work! 6 × 8 = 48, and 6 and 8 are 2 apart. Also, 48 is less than 50 and has 6 as a factor.",
+     "timeTakenMs": 20908,
+     "typicalSeconds": 55,
+     "judgement": {
+      "realGap": 0.37,
+      "reason": "misread_prompt",
+      "reasonConfidence": 0.35,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.28,
+       "procedural_slip": 0.02,
+       "misread_prompt": 0.48,
+       "likely_guess": 0.08,
+       "careless": 0.14
+      },
+      "severity": 1.41,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.31,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 149502,
+     "loId": 278,
+     "at": "2026-09-04T00:02:16.474Z",
+     "mode": "homework",
+     "prompt": "Choose the equation that matches this number riddle: the number is under 40, it has 5 as a factor, and its factor pair with the greatest difference is 1 and the number itself. One other factor pair is shown in the correct option.",
+     "studentAnswer": "5 × 6 = 30",
+     "correctAnswer": "5 × 7 = 35",
+     "options": [
+      {
+       "text": "5 × 6 = 30",
+       "correct": false
+      },
+      {
+       "text": "5 × 7 = 35",
+       "correct": true
+      },
+      {
+       "text": "5 × 8 = 40",
+       "correct": false
+      },
+      {
+       "text": "5 × 9 = 45",
+       "correct": false
+      }
+     ],
+     "explanation": "You did it! The number must be under 40 and have 5 as a factor. 35 fits, and 5 × 7 = 35 is a correct factor pair.",
+     "timeTakenMs": 37524,
+     "typicalSeconds": 55,
+     "judgement": {
+      "realGap": 0.34,
+      "reason": "misread_prompt",
+      "reasonConfidence": 0.34,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.36,
+       "procedural_slip": 0.03,
+       "misread_prompt": 0.47,
+       "likely_guess": 0.03,
+       "careless": 0.11
+      },
+      "severity": 1.34,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.18,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 295261,
+     "loId": 278,
+     "at": "2026-09-23T01:05:41.528Z",
+     "mode": "diagnostic",
+     "prompt": "A zoo packs 48 carrot sticks into equal bags. One helper wrote these factor pairs for 48: 1×48, 2×24, 3×16, 4×12, 6×8, 8×6. Choose the best reason this list is not correct.",
+     "studentAnswer": "It is wrong because 3×16 is not 48.",
+     "correctAnswer": "It is wrong because 6×8 and 8×6 are the same factor pair, so one was repeated.",
+     "options": [
+      {
+       "text": "It is wrong because 6×8 and 8×6 are the same factor pair, so one was repeated.",
+       "correct": true
+      },
+      {
+       "text": "It is wrong because 3×16 is not 48.",
+       "correct": false
+      },
+      {
+       "text": "It is wrong because 4×12 should be 5×11.",
+       "correct": false
+      },
+      {
+       "text": "It is wrong because 1×48 cannot be a factor pair.",
+       "correct": false
+      }
+     ],
+     "explanation": "Excellent checking! A factor pair does not need to be written twice. 6×8 and 8×6 are the same pair, so the list repeats one pair.",
+     "timeTakenMs": 49135,
+     "typicalSeconds": 70,
+     "judgement": {
+      "realGap": 0.32,
+      "reason": "conceptual_gap",
+      "reasonConfidence": 0.51,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.61,
+       "procedural_slip": 0.16,
+       "misread_prompt": 0.01,
+       "likely_guess": 0.05,
+       "careless": 0.17
+      },
+      "severity": 1.67,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.15,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    }
+   ]
+  },
+  "ctBuuxn0XzcSpU": {
+   "measurements": [
+    {
+     "sessionId": 15576,
+     "mode": "homework",
+     "at": "2026-09-13T02:22:36.664Z",
+     "loId": 278,
+     "answered": 5,
+     "correct": 4,
+     "speedRatio": 0.8850060251334136
+    },
+    {
+     "sessionId": 15576,
+     "mode": "homework",
+     "at": "2026-09-13T02:22:36.664Z",
+     "loId": 279,
+     "answered": 4,
+     "correct": 4,
+     "speedRatio": 0.8850060251334136
+    },
+    {
+     "sessionId": 15576,
+     "mode": "homework",
+     "at": "2026-09-13T02:22:36.664Z",
+     "loId": 280,
+     "answered": 4,
+     "correct": 4,
+     "speedRatio": 0.8850060251334136
+    },
+    {
+     "sessionId": 15576,
+     "mode": "homework",
+     "at": "2026-09-13T02:22:36.664Z",
+     "loId": 281,
+     "answered": 4,
+     "correct": 3,
+     "speedRatio": 0.8850060251334136
+    },
+    {
+     "sessionId": 15576,
+     "mode": "homework",
+     "at": "2026-09-13T02:22:36.664Z",
+     "loId": 282,
+     "answered": 4,
+     "correct": 3,
+     "speedRatio": 0.8850060251334136
+    },
+    {
+     "sessionId": 15576,
+     "mode": "homework",
+     "at": "2026-09-13T02:22:36.664Z",
+     "loId": 283,
+     "answered": 4,
+     "correct": 4,
+     "speedRatio": 0.8850060251334136
+    },
+    {
+     "sessionId": 15582,
+     "mode": "homework",
+     "at": "2026-09-13T02:44:55.990Z",
+     "loId": 278,
+     "answered": 5,
+     "correct": 4,
+     "speedRatio": 0.39255921845028324
+    },
+    {
+     "sessionId": 15582,
+     "mode": "homework",
+     "at": "2026-09-13T02:44:55.990Z",
+     "loId": 279,
+     "answered": 4,
+     "correct": 4,
+     "speedRatio": 0.39255921845028324
+    },
+    {
+     "sessionId": 15582,
+     "mode": "homework",
+     "at": "2026-09-13T02:44:55.990Z",
+     "loId": 280,
+     "answered": 4,
+     "correct": 1,
+     "speedRatio": 0.39255921845028324
+    },
+    {
+     "sessionId": 15582,
+     "mode": "homework",
+     "at": "2026-09-13T02:44:55.990Z",
+     "loId": 281,
+     "answered": 4,
+     "correct": 1,
+     "speedRatio": 0.39255921845028324
+    },
+    {
+     "sessionId": 15582,
+     "mode": "homework",
+     "at": "2026-09-13T02:44:55.990Z",
+     "loId": 282,
+     "answered": 4,
+     "correct": 1,
+     "speedRatio": 0.39255921845028324
+    },
+    {
+     "sessionId": 15582,
+     "mode": "homework",
+     "at": "2026-09-13T02:44:55.990Z",
+     "loId": 283,
+     "answered": 4,
+     "correct": 2,
+     "speedRatio": 0.39255921845028324
+    },
+    {
+     "sessionId": 16125,
+     "mode": "homework",
+     "at": "2026-09-13T20:16:23.605Z",
+     "loId": 278,
+     "answered": 3,
+     "correct": 3,
+     "speedRatio": 0.586393213360205
+    },
+    {
+     "sessionId": 16125,
+     "mode": "homework",
+     "at": "2026-09-13T20:16:23.605Z",
+     "loId": 279,
+     "answered": 4,
+     "correct": 4,
+     "speedRatio": 0.586393213360205
+    },
+    {
+     "sessionId": 16125,
+     "mode": "homework",
+     "at": "2026-09-13T20:16:23.605Z",
+     "loId": 280,
+     "answered": 4,
+     "correct": 3,
+     "speedRatio": 0.586393213360205
+    },
+    {
+     "sessionId": 16125,
+     "mode": "homework",
+     "at": "2026-09-13T20:16:23.605Z",
+     "loId": 281,
+     "answered": 4,
+     "correct": 3,
+     "speedRatio": 0.586393213360205
+    },
+    {
+     "sessionId": 16125,
+     "mode": "homework",
+     "at": "2026-09-13T20:16:23.605Z",
+     "loId": 282,
+     "answered": 4,
+     "correct": 3,
+     "speedRatio": 0.586393213360205
+    },
+    {
+     "sessionId": 16125,
+     "mode": "homework",
+     "at": "2026-09-13T20:16:23.605Z",
+     "loId": 283,
+     "answered": 4,
+     "correct": 3,
+     "speedRatio": 0.586393213360205
+    },
+    {
+     "sessionId": 16145,
+     "mode": "homework",
+     "at": "2026-09-13T20:25:23.736Z",
+     "loId": 278,
+     "answered": 5,
+     "correct": 5,
+     "speedRatio": 0.4830419841625579
+    },
+    {
+     "sessionId": 16145,
+     "mode": "homework",
+     "at": "2026-09-13T20:25:23.736Z",
+     "loId": 279,
+     "answered": 4,
+     "correct": 4,
+     "speedRatio": 0.4830419841625579
+    },
+    {
+     "sessionId": 16145,
+     "mode": "homework",
+     "at": "2026-09-13T20:25:23.736Z",
+     "loId": 280,
+     "answered": 4,
+     "correct": 3,
+     "speedRatio": 0.4830419841625579
+    },
+    {
+     "sessionId": 16145,
+     "mode": "homework",
+     "at": "2026-09-13T20:25:23.736Z",
+     "loId": 281,
+     "answered": 4,
+     "correct": 4,
+     "speedRatio": 0.4830419841625579
+    },
+    {
+     "sessionId": 16145,
+     "mode": "homework",
+     "at": "2026-09-13T20:25:23.736Z",
+     "loId": 282,
+     "answered": 4,
+     "correct": 2,
+     "speedRatio": 0.4830419841625579
+    },
+    {
+     "sessionId": 16145,
+     "mode": "homework",
+     "at": "2026-09-13T20:25:23.736Z",
+     "loId": 283,
+     "answered": 4,
+     "correct": 3,
+     "speedRatio": 0.4830419841625579
+    },
+    {
+     "sessionId": 16169,
+     "mode": "homework",
+     "at": "2026-09-13T20:55:34.613Z",
+     "loId": 278,
+     "answered": 5,
+     "correct": 3,
+     "speedRatio": 0.408975192063801
+    },
+    {
+     "sessionId": 16169,
+     "mode": "homework",
+     "at": "2026-09-13T20:55:34.613Z",
+     "loId": 279,
+     "answered": 4,
+     "correct": 4,
+     "speedRatio": 0.408975192063801
+    },
+    {
+     "sessionId": 16169,
+     "mode": "homework",
+     "at": "2026-09-13T20:55:34.613Z",
+     "loId": 280,
+     "answered": 4,
+     "correct": 4,
+     "speedRatio": 0.408975192063801
+    },
+    {
+     "sessionId": 16169,
+     "mode": "homework",
+     "at": "2026-09-13T20:55:34.613Z",
+     "loId": 281,
+     "answered": 4,
+     "correct": 3,
+     "speedRatio": 0.408975192063801
+    },
+    {
+     "sessionId": 16169,
+     "mode": "homework",
+     "at": "2026-09-13T20:55:34.613Z",
+     "loId": 282,
+     "answered": 4,
+     "correct": 3,
+     "speedRatio": 0.408975192063801
+    },
+    {
+     "sessionId": 16169,
+     "mode": "homework",
+     "at": "2026-09-13T20:55:34.613Z",
+     "loId": 283,
+     "answered": 4,
+     "correct": 4,
+     "speedRatio": 0.408975192063801
+    },
+    {
+     "sessionId": 16176,
+     "mode": "homework",
+     "at": "2026-09-13T21:16:00.393Z",
+     "loId": 278,
+     "answered": 5,
+     "correct": 4,
+     "speedRatio": 0.4843966712898752
+    },
+    {
+     "sessionId": 16176,
+     "mode": "homework",
+     "at": "2026-09-13T21:16:00.393Z",
+     "loId": 279,
+     "answered": 4,
+     "correct": 4,
+     "speedRatio": 0.4843966712898752
+    },
+    {
+     "sessionId": 16176,
+     "mode": "homework",
+     "at": "2026-09-13T21:16:00.393Z",
+     "loId": 280,
+     "answered": 4,
+     "correct": 3,
+     "speedRatio": 0.4843966712898752
+    },
+    {
+     "sessionId": 16176,
+     "mode": "homework",
+     "at": "2026-09-13T21:16:00.393Z",
+     "loId": 281,
+     "answered": 4,
+     "correct": 4,
+     "speedRatio": 0.4843966712898752
+    },
+    {
+     "sessionId": 16176,
+     "mode": "homework",
+     "at": "2026-09-13T21:16:00.393Z",
+     "loId": 282,
+     "answered": 4,
+     "correct": 2,
+     "speedRatio": 0.4843966712898752
+    },
+    {
+     "sessionId": 16176,
+     "mode": "homework",
+     "at": "2026-09-13T21:16:00.393Z",
+     "loId": 283,
+     "answered": 4,
+     "correct": 3,
+     "speedRatio": 0.4843966712898752
+    },
+    {
+     "sessionId": 16372,
+     "mode": "homework",
+     "at": "2026-09-14T01:47:21.268Z",
+     "loId": 278,
+     "answered": 5,
+     "correct": 3,
+     "speedRatio": 0.9216799583911235
+    },
+    {
+     "sessionId": 16372,
+     "mode": "homework",
+     "at": "2026-09-14T01:47:21.268Z",
+     "loId": 279,
+     "answered": 4,
+     "correct": 3,
+     "speedRatio": 0.9216799583911235
+    },
+    {
+     "sessionId": 16372,
+     "mode": "homework",
+     "at": "2026-09-14T01:47:21.268Z",
+     "loId": 280,
+     "answered": 4,
+     "correct": 3,
+     "speedRatio": 0.9216799583911235
+    },
+    {
+     "sessionId": 16372,
+     "mode": "homework",
+     "at": "2026-09-14T01:47:21.268Z",
+     "loId": 281,
+     "answered": 4,
+     "correct": 4,
+     "speedRatio": 0.9216799583911235
+    },
+    {
+     "sessionId": 16372,
+     "mode": "homework",
+     "at": "2026-09-14T01:47:21.268Z",
+     "loId": 282,
+     "answered": 4,
+     "correct": 3,
+     "speedRatio": 0.9216799583911235
+    },
+    {
+     "sessionId": 16372,
+     "mode": "homework",
+     "at": "2026-09-14T01:47:21.268Z",
+     "loId": 283,
+     "answered": 4,
+     "correct": 3,
+     "speedRatio": 0.9216799583911235
+    },
+    {
+     "sessionId": 16375,
+     "mode": "homework",
+     "at": "2026-09-14T01:53:15.347Z",
+     "loId": 278,
+     "answered": 4,
+     "correct": 4,
+     "speedRatio": 0.4590293043828573
+    },
+    {
+     "sessionId": 16375,
+     "mode": "homework",
+     "at": "2026-09-14T01:53:15.347Z",
+     "loId": 279,
+     "answered": 3,
+     "correct": 2,
+     "speedRatio": 0.4590293043828573
+    },
+    {
+     "sessionId": 16375,
+     "mode": "homework",
+     "at": "2026-09-14T01:53:15.347Z",
+     "loId": 280,
+     "answered": 3,
+     "correct": 2,
+     "speedRatio": 0.4590293043828573
+    },
+    {
+     "sessionId": 16376,
+     "mode": "homework",
+     "at": "2026-09-14T01:55:04.529Z",
+     "loId": 278,
+     "answered": 3,
+     "correct": 2,
+     "speedRatio": null
+    },
+    {
+     "sessionId": 16376,
+     "mode": "homework",
+     "at": "2026-09-14T01:55:04.529Z",
+     "loId": 279,
+     "answered": 5,
+     "correct": 5,
+     "speedRatio": null
+    },
+    {
+     "sessionId": 16376,
+     "mode": "homework",
+     "at": "2026-09-14T01:55:04.529Z",
+     "loId": 280,
+     "answered": 5,
+     "correct": 2,
+     "speedRatio": null
+    },
+    {
+     "sessionId": 16376,
+     "mode": "homework",
+     "at": "2026-09-14T01:55:04.529Z",
+     "loId": 281,
+     "answered": 4,
+     "correct": 2,
+     "speedRatio": null
+    },
+    {
+     "sessionId": 16376,
+     "mode": "homework",
+     "at": "2026-09-14T01:55:04.529Z",
+     "loId": 282,
+     "answered": 4,
+     "correct": 3,
+     "speedRatio": null
+    },
+    {
+     "sessionId": 16376,
+     "mode": "homework",
+     "at": "2026-09-14T01:55:04.529Z",
+     "loId": 283,
+     "answered": 4,
+     "correct": 1,
+     "speedRatio": null
+    }
+   ],
+   "placement": null,
+   "answers": [
+    {
+     "tsq": 209819,
+     "loId": 278,
+     "at": "2026-09-13T02:22:36.664Z",
+     "mode": "homework",
+     "prompt": "A number sentence must show a factor pair of 36, use two different numbers, and be part of a complete factor-pair list for 36. Which choice fits all the clues?",
+     "studentAnswer": "6 × 6 = 36",
+     "correctAnswer": "4 × 9 = 36",
+     "options": [
+      {
+       "text": "3 × 11 = 33",
+       "correct": false
+      },
+      {
+       "text": "4 × 9 = 36",
+       "correct": true
+      },
+      {
+       "text": "5 × 7 = 35",
+       "correct": false
+      },
+      {
+       "text": "6 × 6 = 36",
+       "correct": false
+      }
+     ],
+     "explanation": "The factor pairs of 36 are 1×36, 2×18, 3×12, 4×9, and 6×6. The question says the pair must make 36 and use two different numbers. 4×9 works because it equals 36 and 4 and 9 are different. 6×6 equals 36, but the numbers are the same. 3×11 and 5×7 do not make 36, so they are not factor pairs of 36.",
+     "timeTakenMs": 19313,
+     "typicalSeconds": 55,
+     "judgement": {
+      "realGap": 0.22,
+      "reason": "misread_prompt",
+      "reasonConfidence": 0.85,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.05,
+       "procedural_slip": 0,
+       "misread_prompt": 0.88,
+       "likely_guess": 0.01,
+       "careless": 0.06
+      },
+      "severity": 0.88,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.3,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 209926,
+     "loId": 278,
+     "at": "2026-09-13T02:44:55.990Z",
+     "mode": "homework",
+     "prompt": "A treasure box number is less than 30. Its full factor-pair list includes 3 × 8, and it has exactly 4 factor pairs in all. Which number is it?",
+     "studentAnswer": "32",
+     "correctAnswer": "24",
+     "options": [
+      {
+       "text": "24",
+       "correct": true
+      },
+      {
+       "text": "18",
+       "correct": false
+      },
+      {
+       "text": "28",
+       "correct": false
+      },
+      {
+       "text": "32",
+       "correct": false
+      }
+     ],
+     "explanation": "If 3 and 8 are a factor pair, the number must be 24 because 3 × 8 = 24. Then check the second clue: 24 has exactly 4 factor pairs: 1×24, 2×12, 3×8, and 4×6. So 24 fits both clues. 18 does not include 3×8, 28 does not include 3×8, and 32 is not less than 30.",
+     "timeTakenMs": 15328,
+     "typicalSeconds": 55,
+     "judgement": {
+      "realGap": 0.29,
+      "reason": "misread_prompt",
+      "reasonConfidence": 0.49,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.16,
+       "procedural_slip": 0.01,
+       "misread_prompt": 0.59,
+       "likely_guess": 0.16,
+       "careless": 0.08
+      },
+      "severity": 1.36,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.43,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 216151,
+     "loId": 278,
+     "at": "2026-09-13T20:55:34.613Z",
+     "mode": "homework",
+     "prompt": "Choose the equation that matches this clue about a sticker number: it is less than 50, it has 6 as a factor, and one of its factor pairs is made of two numbers that are 2 apart.",
+     "studentAnswer": "6 × 10 = 60",
+     "correctAnswer": "6 × 8 = 48",
+     "options": [
+      {
+       "text": "4 × 6 = 24",
+       "correct": false
+      },
+      {
+       "text": "5 × 7 = 35",
+       "correct": false
+      },
+      {
+       "text": "6 × 8 = 48",
+       "correct": true
+      },
+      {
+       "text": "6 × 10 = 60",
+       "correct": false
+      }
+     ],
+     "explanation": "Super work! 6 × 8 = 48, and 6 and 8 are 2 apart. Also, 48 is less than 50 and has 6 as a factor.",
+     "timeTakenMs": 4995,
+     "typicalSeconds": 55,
+     "judgement": {
+      "realGap": 0.33,
+      "reason": "misread_prompt",
+      "reasonConfidence": 0.47,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.09,
+       "procedural_slip": 0.02,
+       "misread_prompt": 0.58,
+       "likely_guess": 0.22,
+       "careless": 0.09
+      },
+      "severity": 1.54,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.71,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 216155,
+     "loId": 278,
+     "at": "2026-09-13T20:55:34.613Z",
+     "mode": "homework",
+     "prompt": "Compare these two ideas about 27: one list says 1×27 and 3×9, and another list says 1×27, 3×9, and 6×4. Decide which judgment is correct.",
+     "studentAnswer": "Both lists are correct because 27 is odd.",
+     "correctAnswer": "The first list is correct because 6 × 4 = 24, not 27.",
+     "options": [
+      {
+       "text": "The second list is correct because 6 + 4 = 10.",
+       "correct": false
+      },
+      {
+       "text": "The first list is correct because 6 × 4 = 24, not 27.",
+       "correct": true
+      },
+      {
+       "text": "Both lists are correct because 27 is odd.",
+       "correct": false
+      },
+      {
+       "text": "The second list is correct because 27 has three factor pairs.",
+       "correct": false
+      }
+     ],
+     "explanation": "Brilliant checking! The first list is correct. 6 × 4 makes 24, so it cannot be a factor pair of 27.",
+     "timeTakenMs": 9293,
+     "typicalSeconds": 55,
+     "judgement": {
+      "realGap": 0.55,
+      "reason": "conceptual_gap",
+      "reasonConfidence": 0.81,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.85,
+       "procedural_slip": 0,
+       "misread_prompt": 0,
+       "likely_guess": 0.14,
+       "careless": 0.01
+      },
+      "severity": 2.39,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.48,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 216226,
+     "loId": 278,
+     "at": "2026-09-13T21:16:00.393Z",
+     "mode": "homework",
+     "prompt": "Choose the equation that matches this number riddle: the number is under 40, it has 5 as a factor, and its factor pair with the greatest difference is 1 and the number itself. One other factor pair is shown in the correct option.",
+     "studentAnswer": "5 × 8 = 40",
+     "correctAnswer": "5 × 7 = 35",
+     "options": [
+      {
+       "text": "5 × 6 = 30",
+       "correct": false
+      },
+      {
+       "text": "5 × 7 = 35",
+       "correct": true
+      },
+      {
+       "text": "5 × 8 = 40",
+       "correct": false
+      },
+      {
+       "text": "5 × 9 = 45",
+       "correct": false
+      }
+     ],
+     "explanation": "You did it! The number must be under 40 and have 5 as a factor. 35 fits, and 5 × 7 = 35 is a correct factor pair.",
+     "timeTakenMs": 5140,
+     "typicalSeconds": 55,
+     "judgement": {
+      "realGap": 0.28,
+      "reason": "misread_prompt",
+      "reasonConfidence": 0.69,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.04,
+       "procedural_slip": 0.01,
+       "misread_prompt": 0.75,
+       "likely_guess": 0.14,
+       "careless": 0.06
+      },
+      "severity": 1.35,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.72,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 218457,
+     "loId": 278,
+     "at": "2026-09-14T01:47:21.268Z",
+     "mode": "homework",
+     "prompt": "Choose the equation that matches this number riddle: the number is under 40, it has 5 as a factor, and its factor pair with the greatest difference is 1 and the number itself. One other factor pair is shown in the correct option.",
+     "studentAnswer": "5 × 9 = 45",
+     "correctAnswer": "5 × 7 = 35",
+     "options": [
+      {
+       "text": "5 × 6 = 30",
+       "correct": false
+      },
+      {
+       "text": "5 × 7 = 35",
+       "correct": true
+      },
+      {
+       "text": "5 × 8 = 40",
+       "correct": false
+      },
+      {
+       "text": "5 × 9 = 45",
+       "correct": false
+      }
+     ],
+     "explanation": "You did it! The number must be under 40 and have 5 as a factor. 35 fits, and 5 × 7 = 35 is a correct factor pair.",
+     "timeTakenMs": 27736,
+     "typicalSeconds": 55,
+     "judgement": {
+      "realGap": 0.31,
+      "reason": "misread_prompt",
+      "reasonConfidence": 0.65,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.11,
+       "procedural_slip": 0.02,
+       "misread_prompt": 0.72,
+       "likely_guess": 0.08,
+       "careless": 0.07
+      },
+      "severity": 1.35,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.23,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 218460,
+     "loId": 278,
+     "at": "2026-09-14T01:47:21.268Z",
+     "mode": "homework",
+     "prompt": "A cupcake tray holds 40 mini cakes. They are arranged in equal rows and columns to make a rectangle. One side has 5 cakes. Choose the matching number on the other side and the correct factor pair.",
+     "studentAnswer": "9 cakes; 5 × 9",
+     "correctAnswer": "8 cakes; 5 × 8",
+     "options": [
+      {
+       "text": "6 cakes; 5 × 6",
+       "correct": false
+      },
+      {
+       "text": "7 cakes; 5 × 7",
+       "correct": false
+      },
+      {
+       "text": "8 cakes; 5 × 8",
+       "correct": true
+      },
+      {
+       "text": "9 cakes; 5 × 9",
+       "correct": false
+      }
+     ],
+     "explanation": "Awesome job! If one side has 5 cakes, the other side must have 8 because 5 × 8 = 40. That makes the rectangle work perfectly.",
+     "timeTakenMs": 5268,
+     "typicalSeconds": 55,
+     "judgement": {
+      "realGap": 0.33,
+      "reason": "likely_guess",
+      "reasonConfidence": 0.46,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.08,
+       "procedural_slip": 0.22,
+       "misread_prompt": 0.01,
+       "likely_guess": 0.57,
+       "careless": 0.12
+      },
+      "severity": 1.24,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.62,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 218523,
+     "loId": 278,
+     "at": "2026-09-14T01:55:04.529Z",
+     "mode": "homework",
+     "prompt": "In the factor pair 5 and 12 for 60, the larger factor is ____.",
+     "studentAnswer": "60",
+     "correctAnswer": "",
+     "options": [],
+     "explanation": "The pair is 5 and 12, and 12 is greater than 5.",
+     "timeTakenMs": 11967,
+     "typicalSeconds": 55,
+     "judgement": {
+      "realGap": 0.27,
+      "reason": "misread_prompt",
+      "reasonConfidence": 0.42,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.35,
+       "procedural_slip": 0,
+       "misread_prompt": 0.54,
+       "likely_guess": 0.09,
+       "careless": 0.02
+      },
+      "severity": 1.36,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.48,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 209835,
+     "loId": 281,
+     "at": "2026-09-13T02:22:36.664Z",
+     "mode": "homework",
+     "prompt": "Look at this idea: \"91 is prime because it is odd and does not end in 0, 2, 4, 6, or 8.\" Choose the best judgment.",
+     "studentAnswer": "The idea is correct because all odd numbers are prime.",
+     "correctAnswer": "The idea is not correct because 91 = 7 × 13.",
+     "options": [
+      {
+       "text": "The idea is correct because all odd numbers are prime.",
+       "correct": false
+      },
+      {
+       "text": "The idea is not correct because 91 = 7 × 13.",
+       "correct": true
+      },
+      {
+       "text": "The idea is correct because 91 is not in the 10 times table.",
+       "correct": false
+      },
+      {
+       "text": "The idea is not correct because prime numbers must be even.",
+       "correct": false
+      }
+     ],
+     "explanation": "Good thinking! 91 is composite because 7 × 13 = 91. An odd number can still be composite.",
+     "timeTakenMs": 15745,
+     "typicalSeconds": 55,
+     "judgement": {
+      "realGap": 0.74,
+      "reason": "conceptual_gap",
+      "reasonConfidence": 0.92,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.9400000000000001,
+       "procedural_slip": 0,
+       "misread_prompt": 0,
+       "likely_guess": 0.06,
+       "careless": 0
+      },
+      "severity": 2.86,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.42,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 209938,
+     "loId": 281,
+     "at": "2026-09-13T02:44:55.990Z",
+     "mode": "homework",
+     "prompt": "A school is choosing a locker number between 40 and 50 for a special prize. The number must be prime. Which locker number should they choose?",
+     "studentAnswer": "45",
+     "correctAnswer": "47",
+     "options": [
+      {
+       "text": "42",
+       "correct": false
+      },
+      {
+       "text": "45",
+       "correct": false
+      },
+      {
+       "text": "47",
+       "correct": true
+      },
+      {
+       "text": "49",
+       "correct": false
+      }
+     ],
+     "explanation": "47 is the correct choice because it is between 40 and 50 and has exactly 2 factors, 1 and 47. The others are composite: 42 is even, 45 = 5 × 9, and 49 = 7 × 7.",
+     "timeTakenMs": 15043,
+     "typicalSeconds": 55,
+     "judgement": {
+      "realGap": 0.59,
+      "reason": "conceptual_gap",
+      "reasonConfidence": 0.75,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.8,
+       "procedural_slip": 0.01,
+       "misread_prompt": 0.02,
+       "likely_guess": 0.14,
+       "careless": 0.03
+      },
+      "severity": 2.02,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.34,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 209939,
+     "loId": 281,
+     "at": "2026-09-13T02:44:55.990Z",
+     "mode": "homework",
+     "prompt": "Which statement correctly explains why 39 is composite?",
+     "studentAnswer": "39 is prime because it is odd.",
+     "correctAnswer": "39 is composite because 3 and 13 are factors of 39.",
+     "options": [
+      {
+       "text": "39 is prime because it is odd.",
+       "correct": false
+      },
+      {
+       "text": "39 is composite because 3 and 13 are factors of 39.",
+       "correct": true
+      },
+      {
+       "text": "39 is prime because it is not in the 2 times table.",
+       "correct": false
+      },
+      {
+       "text": "39 is composite because only even numbers can be composite.",
+       "correct": false
+      }
+     ],
+     "explanation": "39 is composite because 39 = 3 × 13, so it has factors other than 1 and 39. Being odd does not make a number prime, and composite numbers can be odd or even.",
+     "timeTakenMs": 5351,
+     "typicalSeconds": 55,
+     "judgement": {
+      "realGap": 0.71,
+      "reason": "conceptual_gap",
+      "reasonConfidence": 0.61,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.69,
+       "procedural_slip": 0,
+       "misread_prompt": 0.02,
+       "likely_guess": 0.29,
+       "careless": 0
+      },
+      "severity": 2.85,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.73,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 209941,
+     "loId": 281,
+     "at": "2026-09-13T02:44:55.990Z",
+     "mode": "homework",
+     "prompt": "Look at this idea: \"91 is prime because it is odd and does not end in 0, 2, 4, 6, or 8.\" Choose the best judgment.",
+     "studentAnswer": "The idea is correct because all odd numbers are prime.",
+     "correctAnswer": "The idea is not correct because 91 = 7 × 13.",
+     "options": [
+      {
+       "text": "The idea is correct because all odd numbers are prime.",
+       "correct": false
+      },
+      {
+       "text": "The idea is not correct because 91 = 7 × 13.",
+       "correct": true
+      },
+      {
+       "text": "The idea is correct because 91 is not in the 10 times table.",
+       "correct": false
+      },
+      {
+       "text": "The idea is not correct because prime numbers must be even.",
+       "correct": false
+      }
+     ],
+     "explanation": "Good thinking! 91 is composite because 7 × 13 = 91. An odd number can still be composite.",
+     "timeTakenMs": 6478,
+     "typicalSeconds": 55,
+     "judgement": {
+      "realGap": 0.74,
+      "reason": "conceptual_gap",
+      "reasonConfidence": 0.79,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.83,
+       "procedural_slip": 0,
+       "misread_prompt": 0,
+       "likely_guess": 0.17,
+       "careless": 0
+      },
+      "severity": 2.91,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.63,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 215680,
+     "loId": 281,
+     "at": "2026-09-13T20:16:23.605Z",
+     "mode": "homework",
+     "prompt": "Compare these number checks and choose the one that correctly shows a prime number: 21, 29, 35, 51.",
+     "studentAnswer": "21 is prime because it is odd.",
+     "correctAnswer": "29 is prime because only 1 and 29 divide it exactly.",
+     "options": [
+      {
+       "text": "21 is prime because it is odd.",
+       "correct": false
+      },
+      {
+       "text": "29 is prime because only 1 and 29 divide it exactly.",
+       "correct": true
+      },
+      {
+       "text": "35 is prime because it ends in 5.",
+       "correct": false
+      },
+      {
+       "text": "51 is prime because it is greater than 50.",
+       "correct": false
+      }
+     ],
+     "explanation": "Great job! 29 has only 1 and 29 as factors, so it is prime. The others can be divided by other numbers.",
+     "timeTakenMs": 2216,
+     "typicalSeconds": 55,
+     "judgement": {
+      "realGap": 0.73,
+      "reason": "conceptual_gap",
+      "reasonConfidence": 0.69,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.75,
+       "procedural_slip": 0,
+       "misread_prompt": 0,
+       "likely_guess": 0.25,
+       "careless": 0
+      },
+      "severity": 2.85,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.72,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 216167,
+     "loId": 281,
+     "at": "2026-09-13T20:55:34.613Z",
+     "mode": "homework",
+     "prompt": "Choose the rule that correctly helps decide that 51 is not prime.",
+     "studentAnswer": "51 ends in 1, so it is prime.",
+     "correctAnswer": "5 + 1 = 6, and since 6 is a multiple of 3, 51 is divisible by 3.",
+     "options": [
+      {
+       "text": "51 is odd, so it must be composite.",
+       "correct": false
+      },
+      {
+       "text": "5 + 1 = 6, and 6 is even, so 51 is composite.",
+       "correct": false
+      },
+      {
+       "text": "5 + 1 = 6, and since 6 is a multiple of 3, 51 is divisible by 3.",
+       "correct": true
+      },
+      {
+       "text": "51 ends in 1, so it is prime.",
+       "correct": false
+      }
+     ],
+     "explanation": "Clever work! The digits of 51 add to 6, and 6 is a multiple of 3, so 51 is divisible by 3. That means 51 is composite.",
+     "timeTakenMs": 3244,
+     "typicalSeconds": 55,
+     "judgement": {
+      "realGap": 0.77,
+      "reason": "conceptual_gap",
+      "reasonConfidence": 0.56,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.65,
+       "procedural_slip": 0,
+       "misread_prompt": 0.05,
+       "likely_guess": 0.3,
+       "careless": 0
+      },
+      "severity": 2.76,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.74,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 218535,
+     "loId": 281,
+     "at": "2026-09-14T01:55:04.529Z",
+     "mode": "homework",
+     "prompt": "Select the true statement about 49.",
+     "studentAnswer": "49 is prime because it is odd.",
+     "correctAnswer": "49 is composite because 7 × 7 = 49.",
+     "options": [
+      {
+       "text": "49 is prime because it is odd.",
+       "correct": false
+      },
+      {
+       "text": "49 is composite because 7 × 7 = 49.",
+       "correct": true
+      },
+      {
+       "text": "49 is prime because it does not end in 0 or 5.",
+       "correct": false
+      },
+      {
+       "text": "49 is composite because all square numbers are even.",
+       "correct": false
+      }
+     ],
+     "explanation": "Great job spotting it! 49 = 7 × 7, so it has more than 2 factors. That means it is composite.",
+     "timeTakenMs": 5642,
+     "typicalSeconds": 55,
+     "judgement": {
+      "realGap": 0.7,
+      "reason": "conceptual_gap",
+      "reasonConfidence": 0.73,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.78,
+       "procedural_slip": 0,
+       "misread_prompt": 0,
+       "likely_guess": 0.22,
+       "careless": 0
+      },
+      "severity": 2.7,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.59,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 218536,
+     "loId": 281,
+     "at": "2026-09-14T01:55:04.529Z",
+     "mode": "homework",
+     "prompt": "A game board has spaces numbered 71, 72, 73, and 74. The winning token lands on the smallest odd prime number shown. Which space is the winner?",
+     "studentAnswer": "74",
+     "correctAnswer": "71",
+     "options": [
+      {
+       "text": "71",
+       "correct": true
+      },
+      {
+       "text": "72",
+       "correct": false
+      },
+      {
+       "text": "73",
+       "correct": false
+      },
+      {
+       "text": "74",
+       "correct": false
+      }
+     ],
+     "explanation": "Both 71 and 73 are odd prime numbers, but the question asks for the smallest odd prime number shown. 71 is smaller than 73, so 71 is the winner. 72 and 74 are even, so they are not prime.",
+     "timeTakenMs": 10702,
+     "typicalSeconds": 55,
+     "judgement": {
+      "realGap": 0.39,
+      "reason": "conceptual_gap",
+      "reasonConfidence": 0.25,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.4,
+       "procedural_slip": 0,
+       "misread_prompt": 0.27,
+       "likely_guess": 0.31,
+       "careless": 0.02
+      },
+      "severity": 2.27,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.43,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 215687,
+     "loId": 282,
+     "at": "2026-09-13T20:16:23.605Z",
+     "mode": "homework",
+     "prompt": "A snack pack has 22 crackers. They cannot be split into equal groups of 3, 4, or 5, but they can be split into 2 equal groups of 11. What is the best description of 22?",
+     "studentAnswer": "22 is composite because all even numbers are prime.",
+     "correctAnswer": "22 is composite because 2 and 11 are factors.",
+     "options": [
+      {
+       "text": "22 is prime because 11 is prime.",
+       "correct": false
+      },
+      {
+       "text": "22 is composite because 2 and 11 are factors.",
+       "correct": true
+      },
+      {
+       "text": "22 is prime because it does not split into 3, 4, or 5 groups.",
+       "correct": false
+      },
+      {
+       "text": "22 is composite because all even numbers are prime.",
+       "correct": false
+      }
+     ],
+     "explanation": "Wonderful! Since 22 can be split into 2 groups of 11, it has factors 2 and 11. That means 22 is composite.",
+     "timeTakenMs": 1176,
+     "typicalSeconds": 55,
+     "judgement": {
+      "realGap": 0.63,
+      "reason": "conceptual_gap",
+      "reasonConfidence": 0.44,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.55,
+       "procedural_slip": 0,
+       "misread_prompt": 0,
+       "likely_guess": 0.45,
+       "careless": 0
+      },
+      "severity": 2.73,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.79,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 215896,
+     "loId": 282,
+     "at": "2026-09-13T20:25:23.736Z",
+     "mode": "homework",
+     "prompt": "Circle the number that is composite: 17, 19, 21, 23.",
+     "studentAnswer": "17",
+     "correctAnswer": "21",
+     "options": [
+      {
+       "text": "17",
+       "correct": false
+      },
+      {
+       "text": "19",
+       "correct": false
+      },
+      {
+       "text": "21",
+       "correct": true
+      },
+      {
+       "text": "23",
+       "correct": false
+      }
+     ],
+     "explanation": "Great work! 21 is composite because 3 and 7 are also factors. The others have only 1 and themselves as factors.",
+     "timeTakenMs": 6466,
+     "typicalSeconds": 45,
+     "judgement": {
+      "realGap": 0.63,
+      "reason": "likely_guess",
+      "reasonConfidence": 0.18,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.32,
+       "procedural_slip": 0,
+       "misread_prompt": 0.32,
+       "likely_guess": 0.34,
+       "careless": 0.02
+      },
+      "severity": 2.19,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.55,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 215898,
+     "loId": 282,
+     "at": "2026-09-13T20:25:23.736Z",
+     "mode": "homework",
+     "prompt": "Select the true statement about the number 2.",
+     "studentAnswer": "2 is not prime or composite.",
+     "correctAnswer": "2 is prime because it has exactly 2 factors.",
+     "options": [
+      {
+       "text": "2 is composite because it is even.",
+       "correct": false
+      },
+      {
+       "text": "2 is prime because it has exactly 2 factors.",
+       "correct": true
+      },
+      {
+       "text": "2 is composite because it is small.",
+       "correct": false
+      },
+      {
+       "text": "2 is not prime or composite.",
+       "correct": false
+      }
+     ],
+     "explanation": "Super! 2 is prime because its only factors are 1 and 2. It is the only even prime number.",
+     "timeTakenMs": 8409,
+     "typicalSeconds": 45,
+     "judgement": {
+      "realGap": 0.74,
+      "reason": "conceptual_gap",
+      "reasonConfidence": 0.64,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.71,
+       "procedural_slip": 0,
+       "misread_prompt": 0,
+       "likely_guess": 0.28,
+       "careless": 0.01
+      },
+      "severity": 2.78,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.43,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 216169,
+     "loId": 282,
+     "at": "2026-09-13T20:55:34.613Z",
+     "mode": "homework",
+     "prompt": "Look at these checks for 31: 1 × 31, 2 does not divide 31, 3 does not divide 31, 5 does not divide 31. Decide the best answer about 31.",
+     "studentAnswer": "31 is composite because it is greater than 30.",
+     "correctAnswer": "31 is prime because no factors other than 1 and 31 were found.",
+     "options": [
+      {
+       "text": "31 is composite because it is greater than 30.",
+       "correct": false
+      },
+      {
+       "text": "31 is prime because no factors other than 1 and 31 were found.",
+       "correct": true
+      },
+      {
+       "text": "31 is composite because odd numbers have many factors.",
+       "correct": false
+      },
+      {
+       "text": "31 is prime because all numbers ending in 1 are prime.",
+       "correct": false
+      }
+     ],
+     "explanation": "You got it! The checks show no factor pairs except 1 and 31, so 31 is prime. Ending in 1 does not always mean a number is prime.",
+     "timeTakenMs": 2632,
+     "typicalSeconds": 55,
+     "judgement": {
+      "realGap": 0.68,
+      "reason": "likely_guess",
+      "reasonConfidence": 0.47,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.42,
+       "procedural_slip": 0,
+       "misread_prompt": 0,
+       "likely_guess": 0.58,
+       "careless": 0
+      },
+      "severity": 2.73,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.76,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 216243,
+     "loId": 282,
+     "at": "2026-09-13T21:16:00.393Z",
+     "mode": "homework",
+     "prompt": "Choose the sentence that is correct about the number made from 3 tens and 9 ones.",
+     "studentAnswer": "It is 39, and it is prime because it is odd.",
+     "correctAnswer": "It is 39, and it is composite because 3 × 13 = 39.",
+     "options": [
+      {
+       "text": "It is 39, and it is prime because it is odd.",
+       "correct": false
+      },
+      {
+       "text": "It is 39, and it is composite because 3 × 13 = 39.",
+       "correct": true
+      },
+      {
+       "text": "It is 49, and it is prime because 7 × 7 = 49.",
+       "correct": false
+      },
+      {
+       "text": "It is 39, and it is prime because it is not even.",
+       "correct": false
+      }
+     ],
+     "explanation": "Great careful work! 3 tens and 9 ones makes 39. Since 3 × 13 = 39, it has more than two factors, so it is composite.",
+     "timeTakenMs": 14924,
+     "typicalSeconds": 55,
+     "judgement": {
+      "realGap": 0.62,
+      "reason": "conceptual_gap",
+      "reasonConfidence": 0.92,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.94,
+       "procedural_slip": 0,
+       "misread_prompt": 0,
+       "likely_guess": 0.05,
+       "careless": 0.01
+      },
+      "severity": 2.43,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.37,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 216245,
+     "loId": 282,
+     "at": "2026-09-13T21:16:00.393Z",
+     "mode": "homework",
+     "prompt": "A game rule says you may keep an equation only if its answer is a prime number. Which equation can be kept, and why?",
+     "studentAnswer": "14 + 16 = 30, because 30 is even so it is prime.",
+     "correctAnswer": "14 + 15 = 29, because 29 has only the factors 1 and 29.",
+     "options": [
+      {
+       "text": "14 + 15 = 29, because 29 has only the factors 1 and 29.",
+       "correct": true
+      },
+      {
+       "text": "14 + 16 = 30, because 30 is even so it is prime.",
+       "correct": false
+      },
+      {
+       "text": "18 + 15 = 33, because 33 is odd so it is prime.",
+       "correct": false
+      },
+      {
+       "text": "20 + 15 = 35, because numbers ending in 5 are prime.",
+       "correct": false
+      }
+     ],
+     "explanation": "14 + 15 = 29, and 29 is prime because its only factors are 1 and 29. The other answers are composite: 30 has many factors, 33 = 3 × 11, and 35 = 5 × 7. Odd numbers and numbers ending in 5 are not always prime.",
+     "timeTakenMs": 8660,
+     "typicalSeconds": 55,
+     "judgement": {
+      "realGap": 0.67,
+      "reason": "conceptual_gap",
+      "reasonConfidence": 0.9,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.92,
+       "procedural_slip": 0,
+       "misread_prompt": 0,
+       "likely_guess": 0.08,
+       "careless": 0
+      },
+      "severity": 2.91,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.53,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 218476,
+     "loId": 282,
+     "at": "2026-09-14T01:47:21.268Z",
+     "mode": "homework",
+     "prompt": "A game rule says you may keep an equation only if its answer is a prime number. Which equation can be kept, and why?",
+     "studentAnswer": "14 + 16 = 30, because 30 is even so it is prime.",
+     "correctAnswer": "14 + 15 = 29, because 29 has only the factors 1 and 29.",
+     "options": [
+      {
+       "text": "14 + 15 = 29, because 29 has only the factors 1 and 29.",
+       "correct": true
+      },
+      {
+       "text": "14 + 16 = 30, because 30 is even so it is prime.",
+       "correct": false
+      },
+      {
+       "text": "18 + 15 = 33, because 33 is odd so it is prime.",
+       "correct": false
+      },
+      {
+       "text": "20 + 15 = 35, because numbers ending in 5 are prime.",
+       "correct": false
+      }
+     ],
+     "explanation": "14 + 15 = 29, and 29 is prime because its only factors are 1 and 29. The other answers are composite: 30 has many factors, 33 = 3 × 11, and 35 = 5 × 7. Odd numbers and numbers ending in 5 are not always prime.",
+     "timeTakenMs": 8066,
+     "typicalSeconds": 55,
+     "judgement": {
+      "realGap": 0.71,
+      "reason": "conceptual_gap",
+      "reasonConfidence": 0.85,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.88,
+       "procedural_slip": 0,
+       "misread_prompt": 0,
+       "likely_guess": 0.12,
+       "careless": 0
+      },
+      "severity": 2.9,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.58,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 218537,
+     "loId": 282,
+     "at": "2026-09-14T01:55:04.529Z",
+     "mode": "homework",
+     "prompt": "Decide which claim about 33 is true.",
+     "studentAnswer": "33 is prime because it is odd.",
+     "correctAnswer": "33 is composite because 3 and 11 are factors.",
+     "options": [
+      {
+       "text": "33 is prime because it is odd.",
+       "correct": false
+      },
+      {
+       "text": "33 is composite because 3 and 11 are factors.",
+       "correct": true
+      },
+      {
+       "text": "33 is prime because it is not in the 2 times table.",
+       "correct": false
+      },
+      {
+       "text": "33 is composite because prime numbers are always bigger than 30.",
+       "correct": false
+      }
+     ],
+     "explanation": "Great reasoning! 33 = 3 × 11, so it has more than two factors. That means 33 is composite.",
+     "timeTakenMs": 14558,
+     "typicalSeconds": 55,
+     "judgement": {
+      "realGap": 0.71,
+      "reason": "conceptual_gap",
+      "reasonConfidence": 0.84,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.87,
+       "procedural_slip": 0,
+       "misread_prompt": 0,
+       "likely_guess": 0.12,
+       "careless": 0.01
+      },
+      "severity": 2.69,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.42,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 215679,
+     "loId": 280,
+     "at": "2026-09-13T20:16:23.605Z",
+     "mode": "homework",
+     "prompt": "Compare these two checks: 18 ÷ 3 = 6 and 18 ÷ 5 = 3 remainder 3. Choose the correct idea about factors of 18.",
+     "studentAnswer": "Only 5 is a factor of 18.",
+     "correctAnswer": "Only 3 is a factor of 18.",
+     "options": [
+      {
+       "text": "Both 3 and 5 are factors of 18.",
+       "correct": false
+      },
+      {
+       "text": "Only 3 is a factor of 18.",
+       "correct": true
+      },
+      {
+       "text": "Only 5 is a factor of 18.",
+       "correct": false
+      },
+      {
+       "text": "Neither 3 nor 5 is a factor of 18.",
+       "correct": false
+      }
+     ],
+     "explanation": "Wonderful! 18 ÷ 3 has no remainder, so 3 is a factor. 18 ÷ 5 leaves a remainder, so 5 is not a factor.",
+     "timeTakenMs": 1408,
+     "typicalSeconds": 55,
+     "judgement": {
+      "realGap": 0.35,
+      "reason": "likely_guess",
+      "reasonConfidence": 0.46,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.36,
+       "procedural_slip": 0.01,
+       "misread_prompt": 0.03,
+       "likely_guess": 0.57,
+       "careless": 0.03
+      },
+      "severity": 2.13,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.72,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 215888,
+     "loId": 280,
+     "at": "2026-09-13T20:25:23.736Z",
+     "mode": "homework",
+     "prompt": "Choose the sentence that is correct about 9 and 45.",
+     "studentAnswer": "9 is a multiple of 45.",
+     "correctAnswer": "45 is a multiple of 9.",
+     "options": [
+      {
+       "text": "45 is a multiple of 9.",
+       "correct": true
+      },
+      {
+       "text": "9 is a multiple of 45.",
+       "correct": false
+      },
+      {
+       "text": "45 is a factor of 9.",
+       "correct": false
+      },
+      {
+       "text": "9 is not a factor of 45.",
+       "correct": false
+      }
+     ],
+     "explanation": "You’ve got it! 45 = 9 × 5, so 45 is a multiple of 9.",
+     "timeTakenMs": 8879,
+     "typicalSeconds": 45,
+     "judgement": {
+      "realGap": 0.54,
+      "reason": "conceptual_gap",
+      "reasonConfidence": 0.61,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.69,
+       "procedural_slip": 0,
+       "misread_prompt": 0.06,
+       "likely_guess": 0.19,
+       "careless": 0.06
+      },
+      "severity": 2.03,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.43,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 216235,
+     "loId": 280,
+     "at": "2026-09-13T21:16:00.393Z",
+     "mode": "homework",
+     "prompt": "At the playground, 32 balls are put into equal boxes. Choose the number that makes 32 a multiple of it but 24 not a multiple of it.",
+     "studentAnswer": "8",
+     "correctAnswer": "16",
+     "options": [
+      {
+       "text": "4",
+       "correct": false
+      },
+      {
+       "text": "6",
+       "correct": false
+      },
+      {
+       "text": "8",
+       "correct": false
+      },
+      {
+       "text": "16",
+       "correct": true
+      }
+     ],
+     "explanation": "Test each choice against both conditions. 32 is a multiple of 4, but 24 is also a multiple of 4, so 4 does not work. 32 is not a multiple of 6. 32 is a multiple of 8, but 24 is also a multiple of 8, so 8 does not work. 32 is a multiple of 16 because 32 ÷ 16 = 2, and 24 is not a multiple of 16 because 24 ÷ 16 is not a whole number. So 16 is the only correct answer.",
+     "timeTakenMs": 11176,
+     "typicalSeconds": 55,
+     "judgement": {
+      "realGap": 0.28,
+      "reason": "misread_prompt",
+      "reasonConfidence": 0.1,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.25,
+       "procedural_slip": 0.08,
+       "misread_prompt": 0.27999999999999997,
+       "likely_guess": 0.19,
+       "careless": 0.2
+      },
+      "severity": 1.2,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.52,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 218466,
+     "loId": 280,
+     "at": "2026-09-14T01:47:21.268Z",
+     "mode": "homework",
+     "prompt": "At the playground, 32 balls are put into equal boxes. Choose the number that makes 32 a multiple of it but 24 not a multiple of it.",
+     "studentAnswer": "4",
+     "correctAnswer": "16",
+     "options": [
+      {
+       "text": "4",
+       "correct": false
+      },
+      {
+       "text": "6",
+       "correct": false
+      },
+      {
+       "text": "8",
+       "correct": false
+      },
+      {
+       "text": "16",
+       "correct": true
+      }
+     ],
+     "explanation": "Test each choice against both conditions. 32 is a multiple of 4, but 24 is also a multiple of 4, so 4 does not work. 32 is not a multiple of 6. 32 is a multiple of 8, but 24 is also a multiple of 8, so 8 does not work. 32 is a multiple of 16 because 32 ÷ 16 = 2, and 24 is not a multiple of 16 because 24 ÷ 16 is not a whole number. So 16 is the only correct answer.",
+     "timeTakenMs": 21265,
+     "typicalSeconds": 55,
+     "judgement": {
+      "realGap": 0.33,
+      "reason": "misread_prompt",
+      "reasonConfidence": 0.36,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.26,
+       "procedural_slip": 0.05,
+       "misread_prompt": 0.49,
+       "likely_guess": 0.05,
+       "careless": 0.15
+      },
+      "severity": 1.23,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.38,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 218513,
+     "loId": 280,
+     "at": "2026-09-14T01:53:15.347Z",
+     "mode": "homework",
+     "prompt": "Choose the sentence that is correct about 9 and 45.",
+     "studentAnswer": "9 is a multiple of 45.",
+     "correctAnswer": "45 is a multiple of 9.",
+     "options": [
+      {
+       "text": "45 is a multiple of 9.",
+       "correct": true
+      },
+      {
+       "text": "9 is a multiple of 45.",
+       "correct": false
+      },
+      {
+       "text": "45 is a factor of 9.",
+       "correct": false
+      },
+      {
+       "text": "9 is not a factor of 45.",
+       "correct": false
+      }
+     ],
+     "explanation": "You’ve got it! 45 = 9 × 5, so 45 is a multiple of 9.",
+     "timeTakenMs": 13577,
+     "typicalSeconds": 45,
+     "judgement": {
+      "realGap": 0.56,
+      "reason": "conceptual_gap",
+      "reasonConfidence": 0.76,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.81,
+       "procedural_slip": 0,
+       "misread_prompt": 0.05,
+       "likely_guess": 0.09,
+       "careless": 0.05
+      },
+      "severity": 2.27,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.32,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 218529,
+     "loId": 280,
+     "at": "2026-09-14T01:55:04.529Z",
+     "mode": "homework",
+     "prompt": "Look at the steps: 40 ÷ 10 = 4, so 40 is a factor of 10. Decide what is wrong.",
+     "studentAnswer": "Nothing is wrong because 4 is correct.",
+     "correctAnswer": "The division shows that 10 is a factor of 40, not that 40 is a factor of 10.",
+     "options": [
+      {
+       "text": "Nothing is wrong because 4 is correct.",
+       "correct": false
+      },
+      {
+       "text": "The numbers should be added, not divided.",
+       "correct": false
+      },
+      {
+       "text": "The division shows that 10 is a factor of 40, not that 40 is a factor of 10.",
+       "correct": true
+      },
+      {
+       "text": "40 cannot be used in factor questions.",
+       "correct": false
+      }
+     ],
+     "explanation": "Nice catch! Since 40 ÷ 10 = 4, that shows 10 is a factor of 40. It does not show 40 is a factor of 10.",
+     "timeTakenMs": 6974,
+     "typicalSeconds": 55,
+     "judgement": {
+      "realGap": 0.43,
+      "reason": "conceptual_gap",
+      "reasonConfidence": 0.76,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.81,
+       "procedural_slip": 0.01,
+       "misread_prompt": 0.04,
+       "likely_guess": 0.12,
+       "careless": 0.02
+      },
+      "severity": 2.65,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.5,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 218532,
+     "loId": 280,
+     "at": "2026-09-14T01:55:04.529Z",
+     "mode": "homework",
+     "prompt": "Choose the number that fits both clues: it is a factor of 48, and 96 is also a multiple of it, but 50 is not a multiple of it.",
+     "studentAnswer": "2",
+     "correctAnswer": "6",
+     "options": [
+      {
+       "text": "2",
+       "correct": false
+      },
+      {
+       "text": "4",
+       "correct": false
+      },
+      {
+       "text": "6",
+       "correct": true
+      },
+      {
+       "text": "10",
+       "correct": false
+      }
+     ],
+     "explanation": "Brilliant! 6 is a factor of 48, and 96 ÷ 6 = 16, so 96 is a multiple of 6. But 50 ÷ 6 does not work exactly.",
+     "timeTakenMs": 16696,
+     "typicalSeconds": 55,
+     "judgement": {
+      "realGap": 0.29,
+      "reason": "misread_prompt",
+      "reasonConfidence": 0.16,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.3,
+       "procedural_slip": 0.04,
+       "misread_prompt": 0.33,
+       "likely_guess": 0.12,
+       "careless": 0.21
+      },
+      "severity": 1.17,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.34,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 218546,
+     "loId": 280,
+     "at": "2026-09-14T01:55:04.529Z",
+     "mode": "homework",
+     "prompt": "Which statement correctly explains the relationships among 24, 6, and 25?",
+     "studentAnswer": "24 is a factor of 6 because 24 is larger.",
+     "correctAnswer": "6 is a factor of 24 because 24 ÷ 6 = 4, but 6 is not a factor of 25 because 25 ÷ 6 is not a whole number.",
+     "options": [
+      {
+       "text": "24 is a factor of 6 because 24 is larger.",
+       "correct": false
+      },
+      {
+       "text": "6 is a factor of 24 because 24 ÷ 6 = 4, but 6 is not a factor of 25 because 25 ÷ 6 is not a whole number.",
+       "correct": true
+      },
+      {
+       "text": "24 is a multiple of 6 because 6 ÷ 24 = 4, and 25 is also a multiple of 6.",
+       "correct": false
+      },
+      {
+       "text": "6, 24, and 25 are not related by factors or multiples because they are different numbers.",
+       "correct": false
+      }
+     ],
+     "explanation": "24 ÷ 6 = 4, so 6 is a factor of 24 and 24 is a multiple of 6. But 25 ÷ 6 is not a whole number, so 6 is not a factor of 25. That is why the second choice is correct. The first choice uses size instead of division, the third uses an incorrect equation and false claim about 25, and the last ignores the exact division relationship between 6 and 24.",
+     "timeTakenMs": 4329,
+     "typicalSeconds": 55,
+     "judgement": {
+      "realGap": 0.71,
+      "reason": "conceptual_gap",
+      "reasonConfidence": 0.87,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.9,
+       "procedural_slip": 0,
+       "misread_prompt": 0,
+       "likely_guess": 0.1,
+       "careless": 0
+      },
+      "severity": 2.93,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.74,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 209949,
+     "loId": 283,
+     "at": "2026-09-13T02:44:55.990Z",
+     "mode": "homework",
+     "prompt": "Look at the two factor trees for 30. Tree A ends with 2, 3, and 5. Tree B ends with 6 and 5. Decide which judgment is correct.",
+     "studentAnswer": "Tree B is correct because 6 × 5 = 30.",
+     "correctAnswer": "Tree A is correct because all the end numbers are prime.",
+     "options": [
+      {
+       "text": "Tree A is correct because all the end numbers are prime.",
+       "correct": true
+      },
+      {
+       "text": "Tree B is correct because 6 × 5 = 30.",
+       "correct": false
+      },
+      {
+       "text": "Both trees are correct because they both make 30.",
+       "correct": false
+      },
+      {
+       "text": "Neither tree is correct because 30 has only two factors.",
+       "correct": false
+      }
+     ],
+     "explanation": "Excellent checking! Tree A is correct because factor trees must end with prime numbers only. Tree B stops at 6, and 6 is composite.",
+     "timeTakenMs": 5470,
+     "typicalSeconds": 55,
+     "judgement": {
+      "realGap": 0.69,
+      "reason": "conceptual_gap",
+      "reasonConfidence": 0.75,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.8,
+       "procedural_slip": 0,
+       "misread_prompt": 0.03,
+       "likely_guess": 0.16,
+       "careless": 0.01
+      },
+      "severity": 2.69,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.6,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 215691,
+     "loId": 283,
+     "at": "2026-09-13T20:16:23.605Z",
+     "mode": "homework",
+     "prompt": "A box of sweets has 32 candies. It is split in a factor tree until only prime numbers are left. Pick the final set of prime factors.",
+     "studentAnswer": "16 × 2",
+     "correctAnswer": "2 × 2 × 2 × 2 × 2",
+     "options": [
+      {
+       "text": "2 × 2 × 2 × 2 × 2",
+       "correct": true
+      },
+      {
+       "text": "4 × 8",
+       "correct": false
+      },
+      {
+       "text": "16 × 2",
+       "correct": false
+      },
+      {
+       "text": "2 × 2 × 8",
+       "correct": false
+      }
+     ],
+     "explanation": "Fantastic! 32 keeps splitting into 2s, so the prime factorization is 2 × 2 × 2 × 2 × 2. The other choices still include composite numbers like 4, 8, or 16.",
+     "timeTakenMs": 5976,
+     "typicalSeconds": 55,
+     "judgement": {
+      "realGap": 0.58,
+      "reason": "conceptual_gap",
+      "reasonConfidence": 0.73,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.78,
+       "procedural_slip": 0.06,
+       "misread_prompt": 0.04,
+       "likely_guess": 0.1,
+       "careless": 0.02
+      },
+      "severity": 2.17,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.65,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 215901,
+     "loId": 283,
+     "at": "2026-09-13T20:25:23.736Z",
+     "mode": "homework",
+     "prompt": "A pirate chest has 18 gold stickers. A factor tree starts with 2 and 9. Pick the prime number from these choices that also appears at the end of the tree.",
+     "studentAnswer": "18",
+     "correctAnswer": "3",
+     "options": [
+      {
+       "text": "3",
+       "correct": true
+      },
+      {
+       "text": "9",
+       "correct": false
+      },
+      {
+       "text": "18",
+       "correct": false
+      },
+      {
+       "text": "6",
+       "correct": false
+      }
+     ],
+     "explanation": "Nice job! Since 9 splits into 3 and 3, one prime at the end is 3. The numbers 9, 18, and 6 are composite.",
+     "timeTakenMs": 5079,
+     "typicalSeconds": 45,
+     "judgement": {
+      "realGap": 0.64,
+      "reason": "conceptual_gap",
+      "reasonConfidence": 0.45,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.56,
+       "procedural_slip": 0,
+       "misread_prompt": 0.2,
+       "likely_guess": 0.23,
+       "careless": 0.01
+      },
+      "severity": 2.41,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.61,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 216247,
+     "loId": 283,
+     "at": "2026-09-13T21:16:00.393Z",
+     "mode": "homework",
+     "prompt": "Compare these two ideas about 27. Idea 1 ends with 3 × 3 × 3. Idea 2 ends with 9 × 3. Decide which comparison is correct.",
+     "studentAnswer": "Both are prime factorizations because both equal 27.",
+     "correctAnswer": "Idea 1 is better because it ends with only prime numbers.",
+     "options": [
+      {
+       "text": "Idea 1 is better because it ends with only prime numbers.",
+       "correct": true
+      },
+      {
+       "text": "Idea 2 is better because it uses fewer numbers.",
+       "correct": false
+      },
+      {
+       "text": "Both are prime factorizations because both equal 27.",
+       "correct": false
+      },
+      {
+       "text": "Neither works because 27 cannot be split into factors.",
+       "correct": false
+      }
+     ],
+     "explanation": "You spotted it! 3 × 3 × 3 is correct because all the end numbers are prime. The number 9 in Idea 2 is composite, so that tree is not finished.",
+     "timeTakenMs": 32154,
+     "typicalSeconds": 55,
+     "judgement": {
+      "realGap": 0.64,
+      "reason": "conceptual_gap",
+      "reasonConfidence": 0.99,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.99,
+       "procedural_slip": 0,
+       "misread_prompt": 0.01,
+       "likely_guess": 0,
+       "careless": 0
+      },
+      "severity": 2.47,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.19,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 218478,
+     "loId": 283,
+     "at": "2026-09-14T01:47:21.268Z",
+     "mode": "homework",
+     "prompt": "Compare these two ideas about 27. Idea 1 ends with 3 × 3 × 3. Idea 2 ends with 9 × 3. Decide which comparison is correct.",
+     "studentAnswer": "Both are prime factorizations because both equal 27.",
+     "correctAnswer": "Idea 1 is better because it ends with only prime numbers.",
+     "options": [
+      {
+       "text": "Idea 1 is better because it ends with only prime numbers.",
+       "correct": true
+      },
+      {
+       "text": "Idea 2 is better because it uses fewer numbers.",
+       "correct": false
+      },
+      {
+       "text": "Both are prime factorizations because both equal 27.",
+       "correct": false
+      },
+      {
+       "text": "Neither works because 27 cannot be split into factors.",
+       "correct": false
+      }
+     ],
+     "explanation": "You spotted it! 3 × 3 × 3 is correct because all the end numbers are prime. The number 9 in Idea 2 is composite, so that tree is not finished.",
+     "timeTakenMs": 10228,
+     "typicalSeconds": 55,
+     "judgement": {
+      "realGap": 0.68,
+      "reason": "conceptual_gap",
+      "reasonConfidence": 0.91,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.9299999999999999,
+       "procedural_slip": 0,
+       "misread_prompt": 0.02,
+       "likely_guess": 0.04,
+       "careless": 0.01
+      },
+      "severity": 2.65,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.39,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 218541,
+     "loId": 283,
+     "at": "2026-09-14T01:55:04.529Z",
+     "mode": "homework",
+     "prompt": "Choose the sentence that is correct about a factor tree for 24 toy dinosaurs. One branch splits 24 into 6 and 4, and the tree must end with prime numbers only.",
+     "studentAnswer": "The finished tree ends with 6 and 4 because they are factors of 24.",
+     "correctAnswer": "The finished tree must end with 2, 2, 2, and 3 because 6 and 4 need to be split again into primes.",
+     "options": [
+      {
+       "text": "The finished tree can end with 2, 3, and 4 because 2 × 3 × 4 = 24.",
+       "correct": false
+      },
+      {
+       "text": "The finished tree must end with 2, 2, 2, and 3 because 6 and 4 need to be split again into primes.",
+       "correct": true
+      },
+      {
+       "text": "The finished tree ends with 6 and 4 because they are factors of 24.",
+       "correct": false
+      },
+      {
+       "text": "The finished tree must end with 1, 2, 3, and 4 because 1 can be used in any factor tree.",
+       "correct": false
+      }
+     ],
+     "explanation": "Nice thinking! The correct answer is 2, 2, 2, and 3. Split 6 into 2 and 3, and split 4 into 2 and 2. A finished factor tree ends with prime numbers only, so 4 and 6 cannot stay at the end, and 1 is not a prime factor.",
+     "timeTakenMs": 9342,
+     "typicalSeconds": 55,
+     "judgement": {
+      "realGap": 0.67,
+      "reason": "conceptual_gap",
+      "reasonConfidence": 0.8,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.84,
+       "procedural_slip": 0.01,
+       "misread_prompt": 0.1,
+       "likely_guess": 0.05,
+       "careless": 0
+      },
+      "severity": 2.7,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.51,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 218542,
+     "loId": 283,
+     "at": "2026-09-14T01:55:04.529Z",
+     "mode": "homework",
+     "prompt": "A snack box has a number of crackers with prime factors 2, 2, 3, and 5 at the ends of its factor tree. Choose the number of crackers in the box.",
+     "studentAnswer": "12",
+     "correctAnswer": "60",
+     "options": [
+      {
+       "text": "12",
+       "correct": false
+      },
+      {
+       "text": "30",
+       "correct": false
+      },
+      {
+       "text": "60",
+       "correct": true
+      },
+      {
+       "text": "90",
+       "correct": false
+      }
+     ],
+     "explanation": "Great job! Multiply the prime factors: 2 × 2 × 3 × 5 = 60. The other numbers miss one of the factors or use a different total.",
+     "timeTakenMs": 13381,
+     "typicalSeconds": 55,
+     "judgement": {
+      "realGap": 0.45,
+      "reason": "conceptual_gap",
+      "reasonConfidence": 0.34,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.47,
+       "procedural_slip": 0.23,
+       "misread_prompt": 0.19,
+       "likely_guess": 0.09,
+       "careless": 0.02
+      },
+      "severity": 1.84,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.4,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 218544,
+     "loId": 283,
+     "at": "2026-09-14T01:55:04.529Z",
+     "mode": "homework",
+     "prompt": "A factor tree for 36 ends with prime numbers only. Sort the cards into numbers that belong at the ends of the tree and numbers that do not.",
+     "studentAnswer": "{\"2\":\"End numbers in the factor tree for 36\",\"3\":\"End numbers in the factor tree for 36\",\"4\":\"Not end numbers\",\"6\":\"End numbers in the factor tree for 36\",\"9\":\"End numbers in the factor tree for 36\"}",
+     "correctAnswer": "",
+     "options": [],
+     "explanation": "36 = 2 × 2 × 3 × 3. So 2 and 3 belong at the ends of a complete factor tree because they are prime factors. The numbers 4, 6, and 9 are factors of 36, but they are composite, so they are not final leaves.",
+     "timeTakenMs": 26609,
+     "typicalSeconds": 55,
+     "judgement": {
+      "realGap": 0.43,
+      "reason": "conceptual_gap",
+      "reasonConfidence": 0.81,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.85,
+       "procedural_slip": 0.06,
+       "misread_prompt": 0.01,
+       "likely_guess": 0.02,
+       "careless": 0.06
+      },
+      "severity": 1.82,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.28,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 218464,
+     "loId": 279,
+     "at": "2026-09-14T01:47:21.268Z",
+     "mode": "homework",
+     "prompt": "A sticker machine prints 9 stickers on each strip. It prints 3 strips, then 2 more strips. Choose the total number of stickers and tell if that total is a multiple of 9.",
+     "studentAnswer": "27, and yes it is a multiple of 9",
+     "correctAnswer": "45, and yes it is a multiple of 9",
+     "options": [
+      {
+       "text": "45, and yes it is a multiple of 9",
+       "correct": true
+      },
+      {
+       "text": "27, and yes it is a multiple of 9",
+       "correct": false
+      },
+      {
+       "text": "45, and no it is not a multiple of 9",
+       "correct": false
+      },
+      {
+       "text": "54, and yes it is a multiple of 9",
+       "correct": false
+      }
+     ],
+     "explanation": "Fantastic! 3 strips and 2 more strips make 5 strips. Then 5 × 9 = 45, and 45 is a multiple of 9.",
+     "timeTakenMs": 8090,
+     "typicalSeconds": 55,
+     "judgement": {
+      "realGap": 0.25,
+      "reason": "misread_prompt",
+      "reasonConfidence": 0.74,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.02,
+       "procedural_slip": 0.13,
+       "misread_prompt": 0.79,
+       "likely_guess": 0.04,
+       "careless": 0.02
+      },
+      "severity": 0.95,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.55,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 218509,
+     "loId": 279,
+     "at": "2026-09-14T01:53:15.347Z",
+     "mode": "homework",
+     "prompt": "A puppy gets 6 treats in each packet. Choose the number of treats that could be in 1, 2, 3 or more packets.",
+     "studentAnswer": "32",
+     "correctAnswer": "30",
+     "options": [
+      {
+       "text": "25",
+       "correct": false
+      },
+      {
+       "text": "30",
+       "correct": true
+      },
+      {
+       "text": "31",
+       "correct": false
+      },
+      {
+       "text": "32",
+       "correct": false
+      }
+     ],
+     "explanation": "Great job! 30 is 6 × 5, so it fits the packets of 6.",
+     "timeTakenMs": 31230,
+     "typicalSeconds": 45,
+     "judgement": {
+      "realGap": 0.42,
+      "reason": "conceptual_gap",
+      "reasonConfidence": 0.21,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.37,
+       "procedural_slip": 0.07,
+       "misread_prompt": 0.02,
+       "likely_guess": 0.3,
+       "careless": 0.24
+      },
+      "severity": 1.33,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.2,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    }
+   ]
+  },
+  "DL5z7dnm7w": {
+   "measurements": [
+    {
+     "sessionId": 7750,
+     "mode": "homework",
+     "at": "2026-08-29T10:14:37.010Z",
+     "loId": 278,
+     "answered": 4,
+     "correct": 3,
+     "speedRatio": 0.5625099613494742
+    },
+    {
+     "sessionId": 7750,
+     "mode": "homework",
+     "at": "2026-08-29T10:14:37.010Z",
+     "loId": 279,
+     "answered": 3,
+     "correct": 1,
+     "speedRatio": 0.5625099613494742
+    },
+    {
+     "sessionId": 7750,
+     "mode": "homework",
+     "at": "2026-08-29T10:14:37.010Z",
+     "loId": 280,
+     "answered": 3,
+     "correct": 1,
+     "speedRatio": 0.5625099613494742
+    },
+    {
+     "sessionId": 7754,
+     "mode": "homework",
+     "at": "2026-08-29T10:20:42.816Z",
+     "loId": 278,
+     "answered": 4,
+     "correct": 2,
+     "speedRatio": 0.06944249577824385
+    },
+    {
+     "sessionId": 7754,
+     "mode": "homework",
+     "at": "2026-08-29T10:20:42.816Z",
+     "loId": 279,
+     "answered": 3,
+     "correct": 1,
+     "speedRatio": 0.06944249577824385
+    },
+    {
+     "sessionId": 7754,
+     "mode": "homework",
+     "at": "2026-08-29T10:20:42.816Z",
+     "loId": 280,
+     "answered": 3,
+     "correct": 2,
+     "speedRatio": 0.06944249577824385
+    },
+    {
+     "sessionId": 7757,
+     "mode": "homework",
+     "at": "2026-08-29T10:25:03.921Z",
+     "loId": 278,
+     "answered": 4,
+     "correct": 1,
+     "speedRatio": 0.16536051045435424
+    },
+    {
+     "sessionId": 7757,
+     "mode": "homework",
+     "at": "2026-08-29T10:25:03.921Z",
+     "loId": 279,
+     "answered": 3,
+     "correct": 1,
+     "speedRatio": 0.16536051045435424
+    },
+    {
+     "sessionId": 7757,
+     "mode": "homework",
+     "at": "2026-08-29T10:25:03.921Z",
+     "loId": 280,
+     "answered": 3,
+     "correct": 0,
+     "speedRatio": 0.16536051045435424
+    },
+    {
+     "sessionId": 7758,
+     "mode": "homework",
+     "at": "2026-08-29T10:26:32.036Z",
+     "loId": 278,
+     "answered": 5,
+     "correct": 2,
+     "speedRatio": 0.23716262301471305
+    },
+    {
+     "sessionId": 7758,
+     "mode": "homework",
+     "at": "2026-08-29T10:26:32.036Z",
+     "loId": 279,
+     "answered": 4,
+     "correct": 2,
+     "speedRatio": 0.23716262301471305
+    },
+    {
+     "sessionId": 7758,
+     "mode": "homework",
+     "at": "2026-08-29T10:26:32.036Z",
+     "loId": 280,
+     "answered": 4,
+     "correct": 1,
+     "speedRatio": 0.23716262301471305
+    },
+    {
+     "sessionId": 7758,
+     "mode": "homework",
+     "at": "2026-08-29T10:26:32.036Z",
+     "loId": 281,
+     "answered": 4,
+     "correct": 1,
+     "speedRatio": 0.23716262301471305
+    },
+    {
+     "sessionId": 7758,
+     "mode": "homework",
+     "at": "2026-08-29T10:26:32.036Z",
+     "loId": 282,
+     "answered": 4,
+     "correct": 0,
+     "speedRatio": 0.23716262301471305
+    },
+    {
+     "sessionId": 7758,
+     "mode": "homework",
+     "at": "2026-08-29T10:26:32.036Z",
+     "loId": 283,
+     "answered": 4,
+     "correct": 1,
+     "speedRatio": 0.23716262301471305
+    },
+    {
+     "sessionId": 7760,
+     "mode": "homework",
+     "at": "2026-08-29T10:29:10.083Z",
+     "loId": 278,
+     "answered": 4,
+     "correct": 4,
+     "speedRatio": 0.8258468208168317
+    },
+    {
+     "sessionId": 7760,
+     "mode": "homework",
+     "at": "2026-08-29T10:29:10.083Z",
+     "loId": 279,
+     "answered": 3,
+     "correct": 3,
+     "speedRatio": 0.8258468208168317
+    },
+    {
+     "sessionId": 7760,
+     "mode": "homework",
+     "at": "2026-08-29T10:29:10.083Z",
+     "loId": 280,
+     "answered": 3,
+     "correct": 1,
+     "speedRatio": 0.8258468208168317
+    },
+    {
+     "sessionId": 9944,
+     "mode": "diagnostic",
+     "at": "2026-09-03T07:59:00.113Z",
+     "loId": 278,
+     "answered": 3,
+     "correct": 2,
+     "speedRatio": 3.864754595031307
+    },
+    {
+     "sessionId": 9944,
+     "mode": "diagnostic",
+     "at": "2026-09-03T07:59:00.113Z",
+     "loId": 279,
+     "answered": 3,
+     "correct": 3,
+     "speedRatio": 3.864754595031307
+    },
+    {
+     "sessionId": 9944,
+     "mode": "diagnostic",
+     "at": "2026-09-03T07:59:00.113Z",
+     "loId": 280,
+     "answered": 3,
+     "correct": 2,
+     "speedRatio": 3.864754595031307
+    },
+    {
+     "sessionId": 9944,
+     "mode": "diagnostic",
+     "at": "2026-09-03T07:59:00.113Z",
+     "loId": 281,
+     "answered": 3,
+     "correct": 1,
+     "speedRatio": 3.864754595031307
+    },
+    {
+     "sessionId": 9944,
+     "mode": "diagnostic",
+     "at": "2026-09-03T07:59:00.113Z",
+     "loId": 282,
+     "answered": 3,
+     "correct": 2,
+     "speedRatio": 3.864754595031307
+    },
+    {
+     "sessionId": 9949,
+     "mode": "homework",
+     "at": "2026-09-03T08:19:55.041Z",
+     "loId": 278,
+     "answered": 3,
+     "correct": 1,
+     "speedRatio": 0.26688147569157394
+    },
+    {
+     "sessionId": 9949,
+     "mode": "homework",
+     "at": "2026-09-03T08:19:55.041Z",
+     "loId": 279,
+     "answered": 4,
+     "correct": 0,
+     "speedRatio": 0.26688147569157394
+    },
+    {
+     "sessionId": 9949,
+     "mode": "homework",
+     "at": "2026-09-03T08:19:55.041Z",
+     "loId": 280,
+     "answered": 3,
+     "correct": 0,
+     "speedRatio": 0.26688147569157394
+    },
+    {
+     "sessionId": 9951,
+     "mode": "homework",
+     "at": "2026-09-03T08:22:21.560Z",
+     "loId": 278,
+     "answered": 3,
+     "correct": 1,
+     "speedRatio": 0.9626349637876477
+    },
+    {
+     "sessionId": 9951,
+     "mode": "homework",
+     "at": "2026-09-03T08:22:21.560Z",
+     "loId": 279,
+     "answered": 4,
+     "correct": 3,
+     "speedRatio": 0.9626349637876477
+    },
+    {
+     "sessionId": 9951,
+     "mode": "homework",
+     "at": "2026-09-03T08:22:21.560Z",
+     "loId": 280,
+     "answered": 3,
+     "correct": 1,
+     "speedRatio": 0.9626349637876477
+    },
+    {
+     "sessionId": 9953,
+     "mode": "homework",
+     "at": "2026-09-03T08:27:08.284Z",
+     "loId": 281,
+     "answered": 4,
+     "correct": 1,
+     "speedRatio": 0.11336249848658898
+    },
+    {
+     "sessionId": 9953,
+     "mode": "homework",
+     "at": "2026-09-03T08:27:08.284Z",
+     "loId": 282,
+     "answered": 3,
+     "correct": 1,
+     "speedRatio": 0.11336249848658898
+    },
+    {
+     "sessionId": 9953,
+     "mode": "homework",
+     "at": "2026-09-03T08:27:08.284Z",
+     "loId": 283,
+     "answered": 3,
+     "correct": 1,
+     "speedRatio": 0.11336249848658898
+    },
+    {
+     "sessionId": 9954,
+     "mode": "homework",
+     "at": "2026-09-03T08:29:48.137Z",
+     "loId": 281,
+     "answered": 4,
+     "correct": 3,
+     "speedRatio": null
+    },
+    {
+     "sessionId": 9954,
+     "mode": "homework",
+     "at": "2026-09-03T08:29:48.137Z",
+     "loId": 282,
+     "answered": 3,
+     "correct": 0,
+     "speedRatio": null
+    },
+    {
+     "sessionId": 9954,
+     "mode": "homework",
+     "at": "2026-09-03T08:29:48.137Z",
+     "loId": 283,
+     "answered": 3,
+     "correct": 1,
+     "speedRatio": null
+    }
+   ],
+   "placement": null,
+   "answers": [
+    {
+     "tsq": 117745,
+     "loId": 280,
+     "at": "2026-08-29T10:29:10.083Z",
+     "mode": "homework",
+     "prompt": "Which statement correctly describes the factor or multiple relationship between 27 and 3?",
+     "studentAnswer": "27 is a factor of 3.",
+     "correctAnswer": "27 is a multiple of 3.",
+     "options": [
+      {
+       "text": "27 is a multiple of 3.",
+       "correct": true
+      },
+      {
+       "text": "3 is a multiple of 27.",
+       "correct": false
+      },
+      {
+       "text": "27 is a factor of 3.",
+       "correct": false
+      },
+      {
+       "text": "27 is not a multiple of 3.",
+       "correct": false
+      }
+     ],
+     "explanation": "27 = 3 × 9, so 27 is a multiple of 3. Since 3 divides 27 exactly, 3 is a factor of 27, not a multiple of 27. Therefore the correct statement is that 27 is a multiple of 3.",
+     "timeTakenMs": 6135,
+     "typicalSeconds": 45,
+     "judgement": {
+      "realGap": 0.62,
+      "reason": "conceptual_gap",
+      "reasonConfidence": 0.68,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.74,
+       "procedural_slip": 0,
+       "misread_prompt": 0.03,
+       "likely_guess": 0.2,
+       "careless": 0.03
+      },
+      "severity": 2.61,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.5,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 117746,
+     "loId": 280,
+     "at": "2026-08-29T10:29:10.083Z",
+     "mode": "homework",
+     "prompt": "Choose the equation that matches this fact: 8 is a factor of 40.",
+     "studentAnswer": "40 + 8 = 48",
+     "correctAnswer": "40 ÷ 8 = 5",
+     "options": [
+      {
+       "text": "40 ÷ 8 = 5",
+       "correct": true
+      },
+      {
+       "text": "40 ÷ 8 = 4",
+       "correct": false
+      },
+      {
+       "text": "40 + 8 = 48",
+       "correct": false
+      },
+      {
+       "text": "40 - 8 = 30",
+       "correct": false
+      }
+     ],
+     "explanation": "Fantastic! 40 ÷ 8 = 5, so 8 is a factor of 40.",
+     "timeTakenMs": 13821,
+     "typicalSeconds": 45,
+     "judgement": {
+      "realGap": 0.59,
+      "reason": "conceptual_gap",
+      "reasonConfidence": 0.64,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.71,
+       "procedural_slip": 0,
+       "misread_prompt": 0.12,
+       "likely_guess": 0.15,
+       "careless": 0.02
+      },
+      "severity": 2.48,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.27,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 144865,
+     "loId": 280,
+     "at": "2026-09-03T07:59:00.113Z",
+     "mode": "diagnostic",
+     "prompt": "Decide which claim about 4 and 19 is true.",
+     "studentAnswer": "4 is a factor of 19.",
+     "correctAnswer": "4 is not a factor of 19.",
+     "options": [
+      {
+       "text": "4 is not a factor of 19.",
+       "correct": true
+      },
+      {
+       "text": "4 is a factor of 19.",
+       "correct": false
+      },
+      {
+       "text": "19 is a multiple of 4 and 1 more.",
+       "correct": false
+      },
+      {
+       "text": "19 ÷ 4 = 4 exactly.",
+       "correct": false
+      }
+     ],
+     "explanation": "Good work! 19 cannot be divided by 4 exactly, so 4 is not a factor of 19.",
+     "timeTakenMs": 7016,
+     "typicalSeconds": 45,
+     "judgement": {
+      "realGap": 0.56,
+      "reason": "conceptual_gap",
+      "reasonConfidence": 0.5,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.6,
+       "procedural_slip": 0.01,
+       "misread_prompt": 0.01,
+       "likely_guess": 0.33,
+       "careless": 0.05
+      },
+      "severity": 2.33,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.56,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 144880,
+     "loId": 280,
+     "at": "2026-09-03T08:19:55.041Z",
+     "mode": "homework",
+     "prompt": "A toy shop packs 24 stickers into equal rows. The rows can have 6 stickers or 8 stickers. Choose the number that is a factor of 24 and also a multiple of 2 from these choices.",
+     "studentAnswer": "9",
+     "correctAnswer": "6",
+     "options": [
+      {
+       "text": "5",
+       "correct": false
+      },
+      {
+       "text": "6",
+       "correct": true
+      },
+      {
+       "text": "7",
+       "correct": false
+      },
+      {
+       "text": "9",
+       "correct": false
+      }
+     ],
+     "explanation": "Well done! 6 divides 24 exactly, and 6 is also a multiple of 2. The others do not fit both rules.",
+     "timeTakenMs": 15684,
+     "typicalSeconds": 55,
+     "judgement": {
+      "realGap": 0.45,
+      "reason": "conceptual_gap",
+      "reasonConfidence": 0.56,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.65,
+       "procedural_slip": 0.01,
+       "misread_prompt": 0.1,
+       "likely_guess": 0.2,
+       "careless": 0.04
+      },
+      "severity": 2.14,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.27,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 144883,
+     "loId": 280,
+     "at": "2026-09-03T08:19:55.041Z",
+     "mode": "homework",
+     "prompt": "Which statement correctly describes the factor or multiple relationship between 27 and 3?",
+     "studentAnswer": "27 is a factor of 3.",
+     "correctAnswer": "27 is a multiple of 3.",
+     "options": [
+      {
+       "text": "27 is a multiple of 3.",
+       "correct": true
+      },
+      {
+       "text": "3 is a multiple of 27.",
+       "correct": false
+      },
+      {
+       "text": "27 is a factor of 3.",
+       "correct": false
+      },
+      {
+       "text": "27 is not a multiple of 3.",
+       "correct": false
+      }
+     ],
+     "explanation": "27 = 3 × 9, so 27 is a multiple of 3. Since 3 divides 27 exactly, 3 is a factor of 27, not a multiple of 27. Therefore the correct statement is that 27 is a multiple of 3.",
+     "timeTakenMs": 1906,
+     "typicalSeconds": 45,
+     "judgement": {
+      "realGap": 0.58,
+      "reason": "conceptual_gap",
+      "reasonConfidence": 0.74,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.79,
+       "procedural_slip": 0,
+       "misread_prompt": 0.03,
+       "likely_guess": 0.17,
+       "careless": 0.01
+      },
+      "severity": 2.6,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.57,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 144886,
+     "loId": 280,
+     "at": "2026-09-03T08:19:55.041Z",
+     "mode": "homework",
+     "prompt": "Choose the equation that matches this fact: 8 is a factor of 40.",
+     "studentAnswer": "40 ÷ 8 = 4",
+     "correctAnswer": "40 ÷ 8 = 5",
+     "options": [
+      {
+       "text": "40 ÷ 8 = 5",
+       "correct": true
+      },
+      {
+       "text": "40 ÷ 8 = 4",
+       "correct": false
+      },
+      {
+       "text": "40 + 8 = 48",
+       "correct": false
+      },
+      {
+       "text": "40 - 8 = 30",
+       "correct": false
+      }
+     ],
+     "explanation": "Fantastic! 40 ÷ 8 = 5, so 8 is a factor of 40.",
+     "timeTakenMs": 3137,
+     "typicalSeconds": 45,
+     "judgement": {
+      "realGap": 0.27,
+      "reason": "procedural_slip",
+      "reasonConfidence": 0.62,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.05,
+       "procedural_slip": 0.7,
+       "misread_prompt": 0,
+       "likely_guess": 0.1,
+       "careless": 0.15
+      },
+      "severity": 0.67,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.55,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 144893,
+     "loId": 280,
+     "at": "2026-09-03T08:22:21.560Z",
+     "mode": "homework",
+     "prompt": "Look at this work: 30 ÷ 4 = 7 remainder 2, so 4 is a factor of 30. Choose the best judgment.",
+     "studentAnswer": "The judgment is correct because 30 is even.",
+     "correctAnswer": "The judgment is wrong because a factor must divide with no remainder.",
+     "options": [
+      {
+       "text": "The judgment is correct because 7 is close to 8.",
+       "correct": false
+      },
+      {
+       "text": "The judgment is wrong because a factor must divide with no remainder.",
+       "correct": true
+      },
+      {
+       "text": "The judgment is correct because 30 is even.",
+       "correct": false
+      },
+      {
+       "text": "The judgment is wrong because 4 is bigger than 30.",
+       "correct": false
+      }
+     ],
+     "explanation": "You spotted it! A factor must divide exactly with no remainder. Since 30 ÷ 4 leaves 2, 4 is not a factor of 30.",
+     "timeTakenMs": 31369,
+     "typicalSeconds": 55,
+     "judgement": {
+      "realGap": 0.54,
+      "reason": "conceptual_gap",
+      "reasonConfidence": 0.97,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.98,
+       "procedural_slip": 0,
+       "misread_prompt": 0,
+       "likely_guess": 0.02,
+       "careless": 0
+      },
+      "severity": 2.54,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.2,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 144909,
+     "loId": 280,
+     "at": "2026-09-03T08:22:21.560Z",
+     "mode": "homework",
+     "prompt": "Which statement correctly describes the factor or multiple relationship between 14 and 2?",
+     "studentAnswer": "14 is not a multiple of 2.",
+     "correctAnswer": "2 is a factor of 14.",
+     "options": [
+      {
+       "text": "2 is a factor of 14.",
+       "correct": true
+      },
+      {
+       "text": "14 is a factor of 2.",
+       "correct": false
+      },
+      {
+       "text": "14 is not a multiple of 2.",
+       "correct": false
+      },
+      {
+       "text": "2 is a multiple of 14.",
+       "correct": false
+      }
+     ],
+     "explanation": "14 ÷ 2 = 7 with no remainder, so 2 is a factor of 14. Also, 14 = 2 × 7, so 14 is a multiple of 2. That rules out the other choices.",
+     "timeTakenMs": 1099,
+     "typicalSeconds": 45,
+     "judgement": {
+      "realGap": 0.5,
+      "reason": "likely_guess",
+      "reasonConfidence": 0.36,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.42,
+       "procedural_slip": 0,
+       "misread_prompt": 0.01,
+       "likely_guess": 0.49,
+       "careless": 0.08
+      },
+      "severity": 2,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.69,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 117688,
+     "loId": 278,
+     "at": "2026-08-29T10:26:32.036Z",
+     "mode": "homework",
+     "prompt": "A toy shop has 28 bouncing balls. The shop wants to pack them into equal rows with no balls left over. One pack plan uses 4 rows. Choose the number of balls in each row and the matching factor pair.",
+     "studentAnswer": "9 balls in each row; 4 × 9",
+     "correctAnswer": "7 balls in each row; 4 × 7",
+     "options": [
+      {
+       "text": "6 balls in each row; 4 × 6",
+       "correct": false
+      },
+      {
+       "text": "7 balls in each row; 4 × 7",
+       "correct": true
+      },
+      {
+       "text": "8 balls in each row; 4 × 8",
+       "correct": false
+      },
+      {
+       "text": "9 balls in each row; 4 × 9",
+       "correct": false
+      }
+     ],
+     "explanation": "You’ve got it! 28 shared into 4 equal rows gives 7 in each row, so 4 × 7 = 28. That is a factor pair of 28.",
+     "timeTakenMs": 12336,
+     "typicalSeconds": 55,
+     "judgement": {
+      "realGap": 0.36,
+      "reason": "likely_guess",
+      "reasonConfidence": 0.19,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.15,
+       "procedural_slip": 0.31,
+       "misread_prompt": 0.01,
+       "likely_guess": 0.35,
+       "careless": 0.18
+      },
+      "severity": 1.43,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.36,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 117724,
+     "loId": 278,
+     "at": "2026-08-29T10:26:32.036Z",
+     "mode": "homework",
+     "prompt": "Choose the correct result for the factor pair of 32 that uses 4.",
+     "studentAnswer": "7",
+     "correctAnswer": "8",
+     "options": [
+      {
+       "text": "8",
+       "correct": true
+      },
+      {
+       "text": "6",
+       "correct": false
+      },
+      {
+       "text": "7",
+       "correct": false
+      },
+      {
+       "text": "9",
+       "correct": false
+      }
+     ],
+     "explanation": "Excellent! 4 × 8 = 32, so 8 is the matching factor. The other numbers do not make 32 with 4.",
+     "timeTakenMs": 805,
+     "typicalSeconds": 45,
+     "judgement": {
+      "realGap": 0.43,
+      "reason": "likely_guess",
+      "reasonConfidence": 0.8,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.1,
+       "procedural_slip": 0.03,
+       "misread_prompt": 0,
+       "likely_guess": 0.84,
+       "careless": 0.03
+      },
+      "severity": 1.15,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.6,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 117730,
+     "loId": 278,
+     "at": "2026-08-29T10:26:32.036Z",
+     "mode": "homework",
+     "prompt": "Look at the number 16 and choose the correct factor pair.",
+     "studentAnswer": "3 and 5",
+     "correctAnswer": "2 and 8",
+     "options": [
+      {
+       "text": "2 and 8",
+       "correct": true
+      },
+      {
+       "text": "3 and 5",
+       "correct": false
+      },
+      {
+       "text": "4 and 5",
+       "correct": false
+      },
+      {
+       "text": "6 and 2",
+       "correct": false
+      }
+     ],
+     "explanation": "Super! 2 × 8 = 16, so that pair is correct. The others multiply to different numbers.",
+     "timeTakenMs": 4951,
+     "typicalSeconds": 45,
+     "judgement": {
+      "realGap": 0.58,
+      "reason": "likely_guess",
+      "reasonConfidence": 0.5,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.31,
+       "procedural_slip": 0.01,
+       "misread_prompt": 0.01,
+       "likely_guess": 0.6,
+       "careless": 0.07
+      },
+      "severity": 1.85,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.53,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 144858,
+     "loId": 278,
+     "at": "2026-09-03T07:59:00.113Z",
+     "mode": "diagnostic",
+     "prompt": "At the rabbit playground, 56 carrot sticks are put into equal rows for snack time. One chart says the full factor-pair list is 1×56, 2×28, 4×14, 7×8. Another chart says 1×56, 2×28, 4×14, 7×8, 8×7. Choose the chart that is complete and correct.",
+     "studentAnswer": "The second chart, because 8×7 is a missing new pair.",
+     "correctAnswer": "The first chart, because it lists each factor pair once.",
+     "options": [
+      {
+       "text": "The first chart, because it lists each factor pair once.",
+       "correct": true
+      },
+      {
+       "text": "The second chart, because 8×7 is a missing new pair.",
+       "correct": false
+      },
+      {
+       "text": "Neither chart, because 56 should also have 6×9 as a factor pair.",
+       "correct": false
+      },
+      {
+       "text": "Both charts, because every factor pair must be written twice.",
+       "correct": false
+      }
+     ],
+     "explanation": "You’re doing super work! The first chart is complete: 1×56, 2×28, 4×14, and 7×8. The pair 8×7 is the same as 7×8, so the second chart repeats it.",
+     "timeTakenMs": 5252,
+     "typicalSeconds": 70,
+     "judgement": {
+      "realGap": 0.48,
+      "reason": "conceptual_gap",
+      "reasonConfidence": 0.79,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.83,
+       "procedural_slip": 0.01,
+       "misread_prompt": 0.02,
+       "likely_guess": 0.13,
+       "careless": 0.01
+      },
+      "severity": 1.6,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.61,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 144878,
+     "loId": 278,
+     "at": "2026-09-03T08:19:55.041Z",
+     "mode": "homework",
+     "prompt": "A toy shop has 28 bouncing balls. The shop wants to pack them into equal rows with no balls left over. One pack plan uses 4 rows. Choose the number of balls in each row and the matching factor pair.",
+     "studentAnswer": "6 balls in each row; 4 × 6",
+     "correctAnswer": "7 balls in each row; 4 × 7",
+     "options": [
+      {
+       "text": "6 balls in each row; 4 × 6",
+       "correct": false
+      },
+      {
+       "text": "7 balls in each row; 4 × 7",
+       "correct": true
+      },
+      {
+       "text": "8 balls in each row; 4 × 8",
+       "correct": false
+      },
+      {
+       "text": "9 balls in each row; 4 × 9",
+       "correct": false
+      }
+     ],
+     "explanation": "You’ve got it! 28 shared into 4 equal rows gives 7 in each row, so 4 × 7 = 28. That is a factor pair of 28.",
+     "timeTakenMs": 47674,
+     "typicalSeconds": 55,
+     "judgement": {
+      "realGap": 0.29,
+      "reason": "procedural_slip",
+      "reasonConfidence": 0.49,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.15,
+       "procedural_slip": 0.59,
+       "misread_prompt": 0.01,
+       "likely_guess": 0.03,
+       "careless": 0.22
+      },
+      "severity": 0.95,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.11,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 144884,
+     "loId": 278,
+     "at": "2026-09-03T08:19:55.041Z",
+     "mode": "homework",
+     "prompt": "Look at the number 45 and choose the correct factor pair.",
+     "studentAnswer": "7 and 5",
+     "correctAnswer": "5 and 9",
+     "options": [
+      {
+       "text": "5 and 9",
+       "correct": true
+      },
+      {
+       "text": "4 and 9",
+       "correct": false
+      },
+      {
+       "text": "6 and 8",
+       "correct": false
+      },
+      {
+       "text": "7 and 5",
+       "correct": false
+      }
+     ],
+     "explanation": "Great spotting! 5 × 9 = 45, so that pair is correct. The other options do not multiply to 45.",
+     "timeTakenMs": 4176,
+     "typicalSeconds": 45,
+     "judgement": {
+      "realGap": 0.41,
+      "reason": "likely_guess",
+      "reasonConfidence": 0.68,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.17,
+       "procedural_slip": 0.02,
+       "misread_prompt": 0,
+       "likely_guess": 0.74,
+       "careless": 0.07
+      },
+      "severity": 1.19,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.57,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 144891,
+     "loId": 278,
+     "at": "2026-09-03T08:22:21.560Z",
+     "mode": "homework",
+     "prompt": "Select the true statement about the factor pairs of 30.",
+     "studentAnswer": "30 has factor pairs 1×30, 3×10, 4×7, and 5×6.",
+     "correctAnswer": "30 has factor pairs 1×30, 2×15, 3×10, and 5×6.",
+     "options": [
+      {
+       "text": "30 has factor pairs 1×30, 2×15, 3×10, and 5×6.",
+       "correct": true
+      },
+      {
+       "text": "30 has factor pairs 1×30, 2×15, 4×8, and 5×6.",
+       "correct": false
+      },
+      {
+       "text": "30 has factor pairs 1×30, 3×10, 4×7, and 5×6.",
+       "correct": false
+      },
+      {
+       "text": "30 has factor pairs 2×15, 3×9, and 5×6 only.",
+       "correct": false
+      }
+     ],
+     "explanation": "Well done! The true factor pairs of 30 are 1×30, 2×15, 3×10, and 5×6. The other choices use products that do not make 30 or miss a pair.",
+     "timeTakenMs": 17278,
+     "typicalSeconds": 55,
+     "judgement": {
+      "realGap": 0.35,
+      "reason": "conceptual_gap",
+      "reasonConfidence": 0.26,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.41,
+       "procedural_slip": 0.38,
+       "misread_prompt": 0,
+       "likely_guess": 0.07,
+       "careless": 0.14
+      },
+      "severity": 1.39,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.29,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 144913,
+     "loId": 278,
+     "at": "2026-09-03T08:22:21.560Z",
+     "mode": "homework",
+     "prompt": "Look at these factor-pair lists for 20. Decide which list is correct and complete.",
+     "studentAnswer": "1×20, 2×10, 5×5",
+     "correctAnswer": "1×20, 2×10, 4×5",
+     "options": [
+      {
+       "text": "1×20, 2×10, 4×5",
+       "correct": true
+      },
+      {
+       "text": "1×20, 2×10, 3×7, 4×5",
+       "correct": false
+      },
+      {
+       "text": "1×20, 2×10, 5×5",
+       "correct": false
+      },
+      {
+       "text": "2×10, 4×5",
+       "correct": false
+      }
+     ],
+     "explanation": "Excellent! The complete factor pairs of 20 are 1×20, 2×10, and 4×5. Some other choices add a wrong pair or leave one out.",
+     "timeTakenMs": 1949,
+     "typicalSeconds": 55,
+     "judgement": {
+      "realGap": 0.36,
+      "reason": "conceptual_gap",
+      "reasonConfidence": 0.2,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.36,
+       "procedural_slip": 0.24,
+       "misread_prompt": 0.01,
+       "likely_guess": 0.28,
+       "careless": 0.11
+      },
+      "severity": 1.37,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.65,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 117685,
+     "loId": 279,
+     "at": "2026-08-29T10:25:03.921Z",
+     "mode": "homework",
+     "prompt": "A puppy gets 6 treats in each packet. Choose the number of treats that could be in 1, 2, 3 or more packets.",
+     "studentAnswer": "25",
+     "correctAnswer": "30",
+     "options": [
+      {
+       "text": "25",
+       "correct": false
+      },
+      {
+       "text": "30",
+       "correct": true
+      },
+      {
+       "text": "31",
+       "correct": false
+      },
+      {
+       "text": "32",
+       "correct": false
+      }
+     ],
+     "explanation": "Great job! 30 is 6 × 5, so it fits the packets of 6.",
+     "timeTakenMs": 3990,
+     "typicalSeconds": 45,
+     "judgement": {
+      "realGap": 0.58,
+      "reason": "likely_guess",
+      "reasonConfidence": 0.66,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.23,
+       "procedural_slip": 0.01,
+       "misread_prompt": 0.01,
+       "likely_guess": 0.73,
+       "careless": 0.02
+      },
+      "severity": 1.86,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.71,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 117717,
+     "loId": 279,
+     "at": "2026-08-29T10:26:32.036Z",
+     "mode": "homework",
+     "prompt": "Compare the numbers 27, 28, 29 and 30. Choose the multiple of 9.",
+     "studentAnswer": "28",
+     "correctAnswer": "27",
+     "options": [
+      {
+       "text": "27",
+       "correct": true
+      },
+      {
+       "text": "28",
+       "correct": false
+      },
+      {
+       "text": "29",
+       "correct": false
+      },
+      {
+       "text": "30",
+       "correct": false
+      }
+     ],
+     "explanation": "Super! 27 is 9 × 3, so it is the multiple of 9.",
+     "timeTakenMs": 1446,
+     "typicalSeconds": 45,
+     "judgement": {
+      "realGap": 0.49,
+      "reason": "likely_guess",
+      "reasonConfidence": 0.69,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.09,
+       "procedural_slip": 0.01,
+       "misread_prompt": 0.06,
+       "likely_guess": 0.75,
+       "careless": 0.09
+      },
+      "severity": 1.42,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.72,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 117731,
+     "loId": 279,
+     "at": "2026-08-29T10:26:32.036Z",
+     "mode": "homework",
+     "prompt": "Which number is a multiple of 11?",
+     "studentAnswer": "23",
+     "correctAnswer": "22",
+     "options": [
+      {
+       "text": "21",
+       "correct": false
+      },
+      {
+       "text": "22",
+       "correct": true
+      },
+      {
+       "text": "23",
+       "correct": false
+      },
+      {
+       "text": "24",
+       "correct": false
+      }
+     ],
+     "explanation": "22 is a multiple of 11 because 11 × 2 = 22. The other options, 21, 23, and 24, are not in the 11 times table.",
+     "timeTakenMs": 1828,
+     "typicalSeconds": 45,
+     "judgement": {
+      "realGap": 0.53,
+      "reason": "likely_guess",
+      "reasonConfidence": 0.76,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.13,
+       "procedural_slip": 0.01,
+       "misread_prompt": 0,
+       "likely_guess": 0.81,
+       "careless": 0.05
+      },
+      "severity": 1.25,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.55,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 144879,
+     "loId": 279,
+     "at": "2026-09-03T08:19:55.041Z",
+     "mode": "homework",
+     "prompt": "Choose the equation that matches this idea: 6 bags hold the same number of marbles, and there are 42 marbles in all. The total shows that 42 is a multiple of 6.",
+     "studentAnswer": "6 + 7 = 42",
+     "correctAnswer": "6 × 7 = 42",
+     "options": [
+      {
+       "text": "6 × 7 = 42",
+       "correct": true
+      },
+      {
+       "text": "6 + 7 = 42",
+       "correct": false
+      },
+      {
+       "text": "42 - 6 = 7",
+       "correct": false
+      },
+      {
+       "text": "42 + 6 = 48",
+       "correct": false
+      }
+     ],
+     "explanation": "Excellent! 6 × 7 = 42 shows 42 is made from equal groups of 6, so 42 is a multiple of 6.",
+     "timeTakenMs": 2391,
+     "typicalSeconds": 55,
+     "judgement": {
+      "realGap": 0.66,
+      "reason": "conceptual_gap",
+      "reasonConfidence": 0.65,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.72,
+       "procedural_slip": 0.03,
+       "misread_prompt": 0.01,
+       "likely_guess": 0.23,
+       "careless": 0.01
+      },
+      "severity": 2.59,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.71,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 144882,
+     "loId": 279,
+     "at": "2026-09-03T08:19:55.041Z",
+     "mode": "homework",
+     "prompt": "Look at the numbers 14, 16, 18 and 20. Decide which number is a multiple of 9.",
+     "studentAnswer": "16",
+     "correctAnswer": "18",
+     "options": [
+      {
+       "text": "14",
+       "correct": false
+      },
+      {
+       "text": "16",
+       "correct": false
+      },
+      {
+       "text": "18",
+       "correct": true
+      },
+      {
+       "text": "20",
+       "correct": false
+      }
+     ],
+     "explanation": "Great work! 18 is 9 × 2, so it is a multiple of 9.",
+     "timeTakenMs": 2036,
+     "typicalSeconds": 45,
+     "judgement": {
+      "realGap": 0.45,
+      "reason": "likely_guess",
+      "reasonConfidence": 0.79,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.1,
+       "procedural_slip": 0,
+       "misread_prompt": 0.02,
+       "likely_guess": 0.83,
+       "careless": 0.05
+      },
+      "severity": 1.37,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.66,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 144885,
+     "loId": 279,
+     "at": "2026-09-03T08:19:55.041Z",
+     "mode": "homework",
+     "prompt": "Choose the equation that matches 24 as a multiple of 8.",
+     "studentAnswer": "8 × 2 = 24",
+     "correctAnswer": "8 × 3 = 24",
+     "options": [
+      {
+       "text": "8 × 2 = 24",
+       "correct": false
+      },
+      {
+       "text": "8 × 3 = 24",
+       "correct": true
+      },
+      {
+       "text": "8 × 4 = 24",
+       "correct": false
+      },
+      {
+       "text": "8 × 5 = 24",
+       "correct": false
+      }
+     ],
+     "explanation": "Excellent thinking! 8 × 3 = 24, so 24 is a multiple of 8.",
+     "timeTakenMs": 4059,
+     "typicalSeconds": 45,
+     "judgement": {
+      "realGap": 0.4,
+      "reason": "likely_guess",
+      "reasonConfidence": 0.2,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.21,
+       "procedural_slip": 0.24,
+       "misread_prompt": 0.01,
+       "likely_guess": 0.36,
+       "careless": 0.18
+      },
+      "severity": 1.2,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.63,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 144887,
+     "loId": 279,
+     "at": "2026-09-03T08:19:55.041Z",
+     "mode": "homework",
+     "prompt": "Pick the number that is a multiple of 12.",
+     "studentAnswer": "38",
+     "correctAnswer": "36",
+     "options": [
+      {
+       "text": "34",
+       "correct": false
+      },
+      {
+       "text": "36",
+       "correct": true
+      },
+      {
+       "text": "38",
+       "correct": false
+      },
+      {
+       "text": "40",
+       "correct": false
+      }
+     ],
+     "explanation": "Well done! 36 is 12 × 3, so it is a multiple of 12.",
+     "timeTakenMs": 2250,
+     "typicalSeconds": 45,
+     "judgement": {
+      "realGap": 0.49,
+      "reason": "likely_guess",
+      "reasonConfidence": 0.8,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.09,
+       "procedural_slip": 0.02,
+       "misread_prompt": 0.01,
+       "likely_guess": 0.84,
+       "careless": 0.04
+      },
+      "severity": 1.47,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.63,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 144906,
+     "loId": 279,
+     "at": "2026-09-03T08:22:21.560Z",
+     "mode": "homework",
+     "prompt": "Look at the numbers 14, 16, 18 and 20. Decide which number is a multiple of 9.",
+     "studentAnswer": "16",
+     "correctAnswer": "18",
+     "options": [
+      {
+       "text": "14",
+       "correct": false
+      },
+      {
+       "text": "16",
+       "correct": false
+      },
+      {
+       "text": "18",
+       "correct": true
+      },
+      {
+       "text": "20",
+       "correct": false
+      }
+     ],
+     "explanation": "Great work! 18 is 9 × 2, so it is a multiple of 9.",
+     "timeTakenMs": 4612,
+     "typicalSeconds": 45,
+     "judgement": {
+      "realGap": 0.51,
+      "reason": "likely_guess",
+      "reasonConfidence": 0.64,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.19,
+       "procedural_slip": 0,
+       "misread_prompt": 0.02,
+       "likely_guess": 0.71,
+       "careless": 0.08
+      },
+      "severity": 1.49,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.5,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 117728,
+     "loId": 282,
+     "at": "2026-08-29T10:26:32.036Z",
+     "mode": "homework",
+     "prompt": "Circle the number that is composite: 17, 19, 21, 23.",
+     "studentAnswer": "19",
+     "correctAnswer": "21",
+     "options": [
+      {
+       "text": "17",
+       "correct": false
+      },
+      {
+       "text": "19",
+       "correct": false
+      },
+      {
+       "text": "21",
+       "correct": true
+      },
+      {
+       "text": "23",
+       "correct": false
+      }
+     ],
+     "explanation": "Great work! 21 is composite because 3 and 7 are also factors. The others have only 1 and themselves as factors.",
+     "timeTakenMs": 1100,
+     "typicalSeconds": 45,
+     "judgement": {
+      "realGap": 0.57,
+      "reason": "likely_guess",
+      "reasonConfidence": 0.49,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.19,
+       "procedural_slip": 0,
+       "misread_prompt": 0.21,
+       "likely_guess": 0.59,
+       "careless": 0.01
+      },
+      "severity": 2.05,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.77,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 117734,
+     "loId": 282,
+     "at": "2026-08-29T10:26:32.036Z",
+     "mode": "homework",
+     "prompt": "A number can make more than two equal groups with no leftovers. What does that tell you about the number?",
+     "studentAnswer": "It is always 1.",
+     "correctAnswer": "It is always composite.",
+     "options": [
+      {
+       "text": "It is always prime.",
+       "correct": false
+      },
+      {
+       "text": "It is always composite.",
+       "correct": true
+      },
+      {
+       "text": "It is always odd.",
+       "correct": false
+      },
+      {
+       "text": "It is always 1.",
+       "correct": false
+      }
+     ],
+     "explanation": "You’ve got it! If a number has more than 2 factors, it is composite. Prime numbers have exactly 2 factors.",
+     "timeTakenMs": 4361,
+     "typicalSeconds": 45,
+     "judgement": {
+      "realGap": 0.69,
+      "reason": "likely_guess",
+      "reasonConfidence": 0.44,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.41,
+       "procedural_slip": 0,
+       "misread_prompt": 0.03,
+       "likely_guess": 0.55,
+       "careless": 0.01
+      },
+      "severity": 2.79,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.62,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 144852,
+     "loId": 282,
+     "at": "2026-09-03T07:59:00.113Z",
+     "mode": "diagnostic",
+     "prompt": "Consider these two claims about 17:\r\nClaim 1: \"17 is composite because it can be put into 1 group of 17.\"\r\nClaim 2: \"17 is prime because its only factor pair is 1 and 17.\"\r\nWhich evaluation is best?",
+     "studentAnswer": "Claim 1 is correct, because making 1 group proves a number is composite.",
+     "correctAnswer": "Claim 2 is correct, because 17 has exactly two factors, 1 and 17, and Claim 1 would also be true for every whole number.",
+     "options": [
+      {
+       "text": "Claim 1 is correct, because making 1 group proves a number is composite.",
+       "correct": false
+      },
+      {
+       "text": "Claim 2 is correct, because 17 has exactly two factors, 1 and 17, and Claim 1 would also be true for every whole number.",
+       "correct": true
+      },
+      {
+       "text": "Both claims are correct, because 17 is odd and odd numbers are both prime and composite.",
+       "correct": false
+      },
+      {
+       "text": "Neither claim is correct, because a prime number must have two different factor pairs.",
+       "correct": false
+      }
+     ],
+     "explanation": "Claim 2 is correct. A prime number has exactly two factors, 1 and itself, and 17 has only 1 and 17. Claim 1 is not a valid test for being composite because every whole number can be put into 1 group of itself, including prime numbers. The idea that odd numbers are both prime and composite is false, and a prime number does not need two different factor pairs.",
+     "timeTakenMs": 218946,
+     "typicalSeconds": 70,
+     "judgement": {
+      "realGap": 0.65,
+      "reason": "conceptual_gap",
+      "reasonConfidence": 1,
+      "reasonProbabilities": {
+       "conceptual_gap": 1,
+       "procedural_slip": 0,
+       "misread_prompt": 0,
+       "likely_guess": 0,
+       "careless": 0
+      },
+      "severity": 2.9,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.07,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 144918,
+     "loId": 282,
+     "at": "2026-09-03T08:27:08.284Z",
+     "mode": "homework",
+     "prompt": "Look at these number cards: 7 and 10. Decide which comparison is correct.",
+     "studentAnswer": "7 and 10 are both composite.",
+     "correctAnswer": "7 is prime and 10 is composite.",
+     "options": [
+      {
+       "text": "7 and 10 are both prime.",
+       "correct": false
+      },
+      {
+       "text": "7 and 10 are both composite.",
+       "correct": false
+      },
+      {
+       "text": "7 is prime and 10 is composite.",
+       "correct": true
+      },
+      {
+       "text": "7 is composite and 10 is prime.",
+       "correct": false
+      }
+     ],
+     "explanation": "Excellent! 7 has only 2 factors, so it is prime. 10 has more than 2 factors, so it is composite.",
+     "timeTakenMs": 2067,
+     "typicalSeconds": 45,
+     "judgement": {
+      "realGap": 0.64,
+      "reason": "conceptual_gap",
+      "reasonConfidence": 0.36,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.49,
+       "procedural_slip": 0,
+       "misread_prompt": 0,
+       "likely_guess": 0.48,
+       "careless": 0.03
+      },
+      "severity": 2.33,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.67,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 144919,
+     "loId": 282,
+     "at": "2026-09-03T08:27:08.284Z",
+     "mode": "homework",
+     "prompt": "Circle the number that is composite: 17, 19, 21, 23.",
+     "studentAnswer": "17",
+     "correctAnswer": "21",
+     "options": [
+      {
+       "text": "17",
+       "correct": false
+      },
+      {
+       "text": "19",
+       "correct": false
+      },
+      {
+       "text": "21",
+       "correct": true
+      },
+      {
+       "text": "23",
+       "correct": false
+      }
+     ],
+     "explanation": "Great work! 21 is composite because 3 and 7 are also factors. The others have only 1 and themselves as factors.",
+     "timeTakenMs": 1586,
+     "typicalSeconds": 45,
+     "judgement": {
+      "realGap": 0.59,
+      "reason": "likely_guess",
+      "reasonConfidence": 0.26,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.23,
+       "procedural_slip": 0,
+       "misread_prompt": 0.35,
+       "likely_guess": 0.41000000000000003,
+       "careless": 0.01
+      },
+      "severity": 2.12,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.74,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 144928,
+     "loId": 282,
+     "at": "2026-09-03T08:29:48.137Z",
+     "mode": "homework",
+     "prompt": "A pet shop has 9 fish in one tank. Choose the best answer about 9.",
+     "studentAnswer": "9 is prime because 1 and 9 are factors.",
+     "correctAnswer": "9 is composite because 3 is also a factor.",
+     "options": [
+      {
+       "text": "9 is prime because 1 and 9 are factors.",
+       "correct": false
+      },
+      {
+       "text": "9 is prime because it is odd.",
+       "correct": false
+      },
+      {
+       "text": "9 is composite because 3 is also a factor.",
+       "correct": true
+      },
+      {
+       "text": "9 is composite because it is bigger than 8.",
+       "correct": false
+      }
+     ],
+     "explanation": "Nice job! 9 is composite because 1, 3, and 9 are factors. Since it has more than 2 factors, it is not prime.",
+     "timeTakenMs": 4994,
+     "typicalSeconds": 45,
+     "judgement": {
+      "realGap": 0.65,
+      "reason": "conceptual_gap",
+      "reasonConfidence": 0.84,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.87,
+       "procedural_slip": 0,
+       "misread_prompt": 0,
+       "likely_guess": 0.12,
+       "careless": 0.01
+      },
+      "severity": 2.7,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.6,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 144929,
+     "loId": 282,
+     "at": "2026-09-03T08:29:48.137Z",
+     "mode": "homework",
+     "prompt": "Compare these two numbers: 29 and 30. Choose the correct idea.",
+     "studentAnswer": "29 and 30 are both prime.",
+     "correctAnswer": "29 is prime and 30 is composite.",
+     "options": [
+      {
+       "text": "29 is composite and 30 is prime.",
+       "correct": false
+      },
+      {
+       "text": "29 and 30 are both prime.",
+       "correct": false
+      },
+      {
+       "text": "29 is prime and 30 is composite.",
+       "correct": true
+      },
+      {
+       "text": "29 and 30 are both composite.",
+       "correct": false
+      }
+     ],
+     "explanation": "Fantastic! 29 has only 1 and 29 as factors, so it is prime. 30 has many factors, so it is composite.",
+     "timeTakenMs": 1089,
+     "typicalSeconds": 45,
+     "judgement": {
+      "realGap": 0.63,
+      "reason": "likely_guess",
+      "reasonConfidence": 0.57,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.33,
+       "procedural_slip": 0,
+       "misread_prompt": 0,
+       "likely_guess": 0.66,
+       "careless": 0.01
+      },
+      "severity": 2.33,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.77,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 144930,
+     "loId": 282,
+     "at": "2026-09-03T08:29:48.137Z",
+     "mode": "homework",
+     "prompt": "A number has exactly 2 factors. What does this tell us?",
+     "studentAnswer": "The number must be even.",
+     "correctAnswer": "The number is prime.",
+     "options": [
+      {
+       "text": "The number is prime.",
+       "correct": true
+      },
+      {
+       "text": "The number is composite.",
+       "correct": false
+      },
+      {
+       "text": "The number must be even.",
+       "correct": false
+      },
+      {
+       "text": "The number must be greater than 10.",
+       "correct": false
+      }
+     ],
+     "explanation": "Yes! A prime number has exactly 2 factors: 1 and itself. That is the special rule for primes.",
+     "timeTakenMs": 1096,
+     "typicalSeconds": 45,
+     "judgement": {
+      "realGap": 0.73,
+      "reason": "likely_guess",
+      "reasonConfidence": 0.51,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.38,
+       "procedural_slip": 0,
+       "misread_prompt": 0,
+       "likely_guess": 0.61,
+       "careless": 0.01
+      },
+      "severity": 2.6,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.7,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 117715,
+     "loId": 283,
+     "at": "2026-08-29T10:26:32.036Z",
+     "mode": "homework",
+     "prompt": "Choose the factor tree that correctly breaks 36 all the way into prime factors.",
+     "studentAnswer": "36 = 12 × 3, 12 = 6 × 2, so 36 = 6 × 2 × 3",
+     "correctAnswer": "36 = 6 × 6, 6 = 2 × 3, 6 = 2 × 3, so 36 = 2 × 2 × 3 × 3",
+     "options": [
+      {
+       "text": "36 = 6 × 6, 6 = 2 × 3, 6 = 2 × 3, so 36 = 2 × 2 × 3 × 3",
+       "correct": true
+      },
+      {
+       "text": "36 = 4 × 9, 4 = 2 × 2, 9 = 9, so 36 = 2 × 2 × 9",
+       "correct": false
+      },
+      {
+       "text": "36 = 12 × 3, 12 = 6 × 2, so 36 = 6 × 2 × 3",
+       "correct": false
+      },
+      {
+       "text": "36 = 18 × 2, 18 = 9 × 2, so 36 = 9 × 2 × 2",
+       "correct": false
+      }
+     ],
+     "explanation": "Nice job thinking about all the branches! A factor tree must end with only prime numbers, so 2 × 2 × 3 × 3 is correct. The other choices stop too soon with 6 or 9, and those are not prime.",
+     "timeTakenMs": 11812,
+     "typicalSeconds": 55,
+     "judgement": {
+      "realGap": 0.41,
+      "reason": "conceptual_gap",
+      "reasonConfidence": 0.69,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.75,
+       "procedural_slip": 0.17,
+       "misread_prompt": 0.03,
+       "likely_guess": 0.04,
+       "careless": 0.01
+      },
+      "severity": 1.94,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.41,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 117723,
+     "loId": 283,
+     "at": "2026-08-29T10:26:32.036Z",
+     "mode": "homework",
+     "prompt": "Choose the correct result for the prime factor tree of 9 stickers.",
+     "studentAnswer": "1 × 9",
+     "correctAnswer": "3 × 3",
+     "options": [
+      {
+       "text": "3 × 3",
+       "correct": true
+      },
+      {
+       "text": "1 × 9",
+       "correct": false
+      },
+      {
+       "text": "2 × 4",
+       "correct": false
+      },
+      {
+       "text": "9 × 1 × 1",
+       "correct": false
+      }
+     ],
+     "explanation": "You got it! 9 splits into 3 and 3, and both 3s are prime.",
+     "timeTakenMs": 1329,
+     "typicalSeconds": 45,
+     "judgement": {
+      "realGap": 0.71,
+      "reason": "likely_guess",
+      "reasonConfidence": 0.41,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.43,
+       "procedural_slip": 0,
+       "misread_prompt": 0.02,
+       "likely_guess": 0.53,
+       "careless": 0.02
+      },
+      "severity": 2.56,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.77,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 117735,
+     "loId": 283,
+     "at": "2026-08-29T10:26:32.036Z",
+     "mode": "homework",
+     "prompt": "A pirate chest has 18 gold stickers. A factor tree starts with 2 and 9. Pick the prime number from these choices that also appears at the end of the tree.",
+     "studentAnswer": "9",
+     "correctAnswer": "3",
+     "options": [
+      {
+       "text": "3",
+       "correct": true
+      },
+      {
+       "text": "9",
+       "correct": false
+      },
+      {
+       "text": "18",
+       "correct": false
+      },
+      {
+       "text": "6",
+       "correct": false
+      }
+     ],
+     "explanation": "Nice job! Since 9 splits into 3 and 3, one prime at the end is 3. The numbers 9, 18, and 6 are composite.",
+     "timeTakenMs": 4854,
+     "typicalSeconds": 45,
+     "judgement": {
+      "realGap": 0.52,
+      "reason": "conceptual_gap",
+      "reasonConfidence": 0.66,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.73,
+       "procedural_slip": 0.03,
+       "misread_prompt": 0.11,
+       "likely_guess": 0.09,
+       "careless": 0.04
+      },
+      "severity": 1.95,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.54,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 144921,
+     "loId": 283,
+     "at": "2026-09-03T08:27:08.284Z",
+     "mode": "homework",
+     "prompt": "Choose the correct result for the prime factor tree of 9 stickers.",
+     "studentAnswer": "1 × 9",
+     "correctAnswer": "3 × 3",
+     "options": [
+      {
+       "text": "3 × 3",
+       "correct": true
+      },
+      {
+       "text": "1 × 9",
+       "correct": false
+      },
+      {
+       "text": "2 × 4",
+       "correct": false
+      },
+      {
+       "text": "9 × 1 × 1",
+       "correct": false
+      }
+     ],
+     "explanation": "You got it! 9 splits into 3 and 3, and both 3s are prime.",
+     "timeTakenMs": 1344,
+     "typicalSeconds": 45,
+     "judgement": {
+      "realGap": 0.72,
+      "reason": "conceptual_gap",
+      "reasonConfidence": 0.41,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.53,
+       "procedural_slip": 0,
+       "misread_prompt": 0.03,
+       "likely_guess": 0.42,
+       "careless": 0.02
+      },
+      "severity": 2.63,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.79,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 144923,
+     "loId": 283,
+     "at": "2026-09-03T08:27:08.284Z",
+     "mode": "homework",
+     "prompt": "A pirate chest has 18 gold stickers. A factor tree starts with 2 and 9. Pick the prime number from these choices that also appears at the end of the tree.",
+     "studentAnswer": "18",
+     "correctAnswer": "3",
+     "options": [
+      {
+       "text": "3",
+       "correct": true
+      },
+      {
+       "text": "9",
+       "correct": false
+      },
+      {
+       "text": "18",
+       "correct": false
+      },
+      {
+       "text": "6",
+       "correct": false
+      }
+     ],
+     "explanation": "Nice job! Since 9 splits into 3 and 3, one prime at the end is 3. The numbers 9, 18, and 6 are composite.",
+     "timeTakenMs": 2070,
+     "typicalSeconds": 45,
+     "judgement": {
+      "realGap": 0.61,
+      "reason": "conceptual_gap",
+      "reasonConfidence": 0.36,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.49,
+       "procedural_slip": 0,
+       "misread_prompt": 0.16,
+       "likely_guess": 0.34,
+       "careless": 0.01
+      },
+      "severity": 2.4,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.74,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 144931,
+     "loId": 283,
+     "at": "2026-09-03T08:29:48.137Z",
+     "mode": "homework",
+     "prompt": "What does this result tell us about 16 crayons: 16 = 2 × 2 × 2 × 2? Choose the best answer.",
+     "studentAnswer": "16 cannot be shown in a factor tree.",
+     "correctAnswer": "The prime factors of 16 are all 2s.",
+     "options": [
+      {
+       "text": "The prime factors of 16 are all 2s.",
+       "correct": true
+      },
+      {
+       "text": "16 is a prime number.",
+       "correct": false
+      },
+      {
+       "text": "16 has prime factors 8 and 2.",
+       "correct": false
+      },
+      {
+       "text": "16 cannot be shown in a factor tree.",
+       "correct": false
+      }
+     ],
+     "explanation": "Brilliant! 16 = 2 × 2 × 2 × 2, so all the prime factors are 2.",
+     "timeTakenMs": 1750,
+     "typicalSeconds": 45,
+     "judgement": {
+      "realGap": 0.72,
+      "reason": "likely_guess",
+      "reasonConfidence": 0.44,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.45,
+       "procedural_slip": 0,
+       "misread_prompt": 0,
+       "likely_guess": 0.55,
+       "careless": 0
+      },
+      "severity": 2.75,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.69,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 144933,
+     "loId": 283,
+     "at": "2026-09-03T08:29:48.137Z",
+     "mode": "homework",
+     "prompt": "Choose the correct result for the prime factors of 6 little robots.",
+     "studentAnswer": "6 × 1",
+     "correctAnswer": "2 × 3",
+     "options": [
+      {
+       "text": "2 × 3",
+       "correct": true
+      },
+      {
+       "text": "1 × 6",
+       "correct": false
+      },
+      {
+       "text": "6 × 1",
+       "correct": false
+      },
+      {
+       "text": "4 × 2",
+       "correct": false
+      }
+     ],
+     "explanation": "Lovely work! 6 splits into 2 and 3, and both are prime numbers.",
+     "timeTakenMs": 1515,
+     "typicalSeconds": 45,
+     "judgement": {
+      "realGap": 0.67,
+      "reason": "conceptual_gap",
+      "reasonConfidence": 0.45,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.56,
+       "procedural_slip": 0,
+       "misread_prompt": 0.07,
+       "likely_guess": 0.36,
+       "careless": 0.01
+      },
+      "severity": 2.6,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.75,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 117727,
+     "loId": 281,
+     "at": "2026-08-29T10:26:32.036Z",
+     "mode": "homework",
+     "prompt": "Choose the sentence that is correct about 9.",
+     "studentAnswer": "9 has exactly 2 factors.",
+     "correctAnswer": "9 is composite.",
+     "options": [
+      {
+       "text": "9 is prime.",
+       "correct": false
+      },
+      {
+       "text": "9 is composite.",
+       "correct": true
+      },
+      {
+       "text": "9 has exactly 2 factors.",
+       "correct": false
+      },
+      {
+       "text": "9 is an odd prime number.",
+       "correct": false
+      }
+     ],
+     "explanation": "Nice job! 9 is composite because it has factors 1, 3, and 9.",
+     "timeTakenMs": 889,
+     "typicalSeconds": 45,
+     "judgement": {
+      "realGap": 0.54,
+      "reason": "conceptual_gap",
+      "reasonConfidence": 0.56,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.65,
+       "procedural_slip": 0,
+       "misread_prompt": 0.01,
+       "likely_guess": 0.31,
+       "careless": 0.03
+      },
+      "severity": 2.32,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.76,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 117733,
+     "loId": 281,
+     "at": "2026-08-29T10:26:32.036Z",
+     "mode": "homework",
+     "prompt": "A puppy has 37 stickers on a card. Choose the best answer about 37.",
+     "studentAnswer": "37 is composite.",
+     "correctAnswer": "37 is prime.",
+     "options": [
+      {
+       "text": "37 is composite.",
+       "correct": false
+      },
+      {
+       "text": "37 is prime.",
+       "correct": true
+      },
+      {
+       "text": "37 is even.",
+       "correct": false
+      },
+      {
+       "text": "37 is a multiple of 5.",
+       "correct": false
+      }
+     ],
+     "explanation": "Excellent! 37 is prime because only 1 and 37 divide it exactly.",
+     "timeTakenMs": 2600,
+     "typicalSeconds": 45,
+     "judgement": {
+      "realGap": 0.67,
+      "reason": "conceptual_gap",
+      "reasonConfidence": 0.45,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.56,
+       "procedural_slip": 0,
+       "misread_prompt": 0,
+       "likely_guess": 0.39,
+       "careless": 0.04
+      },
+      "severity": 2.14,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.61,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 144806,
+     "loId": 281,
+     "at": "2026-09-03T07:59:00.113Z",
+     "mode": "diagnostic",
+     "prompt": "A school is choosing a locker number between 40 and 50 for a special prize. The number must be prime. Which locker number should they choose?",
+     "studentAnswer": "49",
+     "correctAnswer": "47",
+     "options": [
+      {
+       "text": "42",
+       "correct": false
+      },
+      {
+       "text": "45",
+       "correct": false
+      },
+      {
+       "text": "47",
+       "correct": true
+      },
+      {
+       "text": "49",
+       "correct": false
+      }
+     ],
+     "explanation": "47 is the correct choice because it is between 40 and 50 and has exactly 2 factors, 1 and 47. The others are composite: 42 is even, 45 = 5 × 9, and 49 = 7 × 7.",
+     "timeTakenMs": 143472,
+     "typicalSeconds": 55,
+     "judgement": {
+      "realGap": 0.47,
+      "reason": "conceptual_gap",
+      "reasonConfidence": 0.91,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.93,
+       "procedural_slip": 0.03,
+       "misread_prompt": 0,
+       "likely_guess": 0.01,
+       "careless": 0.03
+      },
+      "severity": 1.63,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.07,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 144866,
+     "loId": 281,
+     "at": "2026-09-03T07:59:00.113Z",
+     "mode": "diagnostic",
+     "prompt": "Decide which number is prime: 33, 43, 55, 57.",
+     "studentAnswer": "57",
+     "correctAnswer": "43",
+     "options": [
+      {
+       "text": "33",
+       "correct": false
+      },
+      {
+       "text": "43",
+       "correct": true
+      },
+      {
+       "text": "55",
+       "correct": false
+      },
+      {
+       "text": "57",
+       "correct": false
+      }
+     ],
+     "explanation": "Awesome! 43 is prime. The other numbers can be divided by numbers other than 1 and themselves.",
+     "timeTakenMs": 14429,
+     "typicalSeconds": 45,
+     "judgement": {
+      "realGap": 0.53,
+      "reason": "conceptual_gap",
+      "reasonConfidence": 0.69,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.75,
+       "procedural_slip": 0.03,
+       "misread_prompt": 0,
+       "likely_guess": 0.17,
+       "careless": 0.05
+      },
+      "severity": 1.82,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.4,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 144914,
+     "loId": 281,
+     "at": "2026-09-03T08:27:08.284Z",
+     "mode": "homework",
+     "prompt": "Decide which claim about 21 is true.",
+     "studentAnswer": "21 is prime.",
+     "correctAnswer": "21 is composite.",
+     "options": [
+      {
+       "text": "21 is prime.",
+       "correct": false
+      },
+      {
+       "text": "21 is composite.",
+       "correct": true
+      },
+      {
+       "text": "21 has only 2 factors.",
+       "correct": false
+      },
+      {
+       "text": "21 is even.",
+       "correct": false
+      }
+     ],
+     "explanation": "Good job! 21 is composite because 3 and 7 are also factors of 21.",
+     "timeTakenMs": 74180,
+     "typicalSeconds": 45,
+     "judgement": {
+      "realGap": 0.61,
+      "reason": "conceptual_gap",
+      "reasonConfidence": 0.99,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.99,
+       "procedural_slip": 0,
+       "misread_prompt": 0,
+       "likely_guess": 0.01,
+       "careless": 0
+      },
+      "severity": 2.28,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.08,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 144915,
+     "loId": 281,
+     "at": "2026-09-03T08:27:08.284Z",
+     "mode": "homework",
+     "prompt": "Pick the prime number from these snack counts: 27, 41, 45, 51.",
+     "studentAnswer": "45",
+     "correctAnswer": "41",
+     "options": [
+      {
+       "text": "27",
+       "correct": false
+      },
+      {
+       "text": "41",
+       "correct": true
+      },
+      {
+       "text": "45",
+       "correct": false
+      },
+      {
+       "text": "51",
+       "correct": false
+      }
+     ],
+     "explanation": "Great choice! 41 is prime. The others are composite because they have more than 2 factors.",
+     "timeTakenMs": 1313,
+     "typicalSeconds": 45,
+     "judgement": {
+      "realGap": 0.58,
+      "reason": "likely_guess",
+      "reasonConfidence": 0.47,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.4,
+       "procedural_slip": 0,
+       "misread_prompt": 0.01,
+       "likely_guess": 0.58,
+       "careless": 0.01
+      },
+      "severity": 2.04,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.72,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 144917,
+     "loId": 281,
+     "at": "2026-09-03T08:27:08.284Z",
+     "mode": "homework",
+     "prompt": "A puppy has 37 stickers on a card. Choose the best answer about 37.",
+     "studentAnswer": "37 is a multiple of 5.",
+     "correctAnswer": "37 is prime.",
+     "options": [
+      {
+       "text": "37 is composite.",
+       "correct": false
+      },
+      {
+       "text": "37 is prime.",
+       "correct": true
+      },
+      {
+       "text": "37 is even.",
+       "correct": false
+      },
+      {
+       "text": "37 is a multiple of 5.",
+       "correct": false
+      }
+     ],
+     "explanation": "Excellent! 37 is prime because only 1 and 37 divide it exactly.",
+     "timeTakenMs": 1947,
+     "typicalSeconds": 45,
+     "judgement": {
+      "realGap": 0.67,
+      "reason": "likely_guess",
+      "reasonConfidence": 0.61,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.29,
+       "procedural_slip": 0,
+       "misread_prompt": 0,
+       "likely_guess": 0.6900000000000001,
+       "careless": 0.02
+      },
+      "severity": 2.47,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.69,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    },
+    {
+     "tsq": 144924,
+     "loId": 281,
+     "at": "2026-09-03T08:29:48.137Z",
+     "mode": "homework",
+     "prompt": "A number is prime if it has only 2 factors. Choose the prime number.",
+     "studentAnswer": "51",
+     "correctAnswer": "47",
+     "options": [
+      {
+       "text": "39",
+       "correct": false
+      },
+      {
+       "text": "47",
+       "correct": true
+      },
+      {
+       "text": "49",
+       "correct": false
+      },
+      {
+       "text": "51",
+       "correct": false
+      }
+     ],
+     "explanation": "Great thinking! 47 is prime, so it has just 2 factors. 49 is 7 × 7, so it is not prime.",
+     "timeTakenMs": 16143,
+     "typicalSeconds": 45,
+     "judgement": {
+      "realGap": 0.47,
+      "reason": "conceptual_gap",
+      "reasonConfidence": 0.77,
+      "reasonProbabilities": {
+       "conceptual_gap": 0.82,
+       "procedural_slip": 0.02,
+       "misread_prompt": 0,
+       "likely_guess": 0.1,
+       "careless": 0.06
+      },
+      "severity": 1.58,
+      "severityLegend": {
+       "0": "No re-teaching at all — the method is clearly there and this was an execution error",
+       "1": "Mostly there — practice would firm up the execution",
+       "2": "Shaky — they need guided practice with someone watching",
+       "3": "Not there — the objective needs teaching again from the start"
+      },
+      "tooFast": 0.29,
+      "luckyGuess": null,
+      "error": null,
+      "model": "jev-1.13.0"
+     }
+    }
+   ]
+  }
+ }
+}

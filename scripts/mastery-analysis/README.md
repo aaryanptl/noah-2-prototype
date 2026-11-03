@@ -28,3 +28,16 @@ node scripts/mastery-analysis/analyze-3.mjs        # homework/practice predictiv
 ```
 
 Decisions taken from these are in `docs/mastery-analysis/decisions.md`.
+
+## Story page snapshot
+
+`/mastery/story` reads its three students from `app/mastery/story/story-data.json`, so it runs
+without the database or the Jev key (e.g. on Vercel). To refresh it (needs `.env.local` and a dev
+server on :3000 for the cached wrong-answer reads):
+
+```
+npx tsx --env-file=.env.local scripts/mastery-analysis/build-story-snapshot.mts
+```
+
+The students and the freeze date are in `app/mastery/story/cast.ts`. The engine runs on the saved
+sessions in the browser, so a rule change in `lib/mastery/rules.ts` needs no new snapshot.
